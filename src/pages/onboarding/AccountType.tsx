@@ -6,6 +6,7 @@ import {
   Check,
   GraduationCap,
   Heart,
+  Package,
   PenTool,
   User,
   UsersRound,
@@ -23,12 +24,14 @@ type Opt = {
   icon: typeof PenTool;
   title: string;
   desc: string;
+  locked?: boolean;
 };
 
 const OPTS: Opt[] = [
   { id: "designer", icon: PenTool, title: "Designer", desc: "Architects, artists, photographers, studios — anyone who makes." },
   { id: "client", icon: Briefcase, title: "Client", desc: "Post a project or call out and find the right creative." },
   { id: "institution", icon: GraduationCap, title: "Institution", desc: "Design schools & universities — give every student Tangle." },
+  { id: "supplier", icon: Package, title: "Supplier", desc: "Materials, fabricators and vendors for creative work.", locked: true },
   { id: "collector", icon: Heart, title: "Collector", desc: "Just here to browse, follow and collect the design you love." },
 ];
 
@@ -170,6 +173,29 @@ function OptCard({
   selected: boolean;
   onClick: () => void;
 }) {
+  if (opt.locked) {
+    return (
+      <div className="flex items-center gap-3.5 rounded-lg border-[1.5px] border-tg-line bg-tg-card p-3.5 opacity-70">
+        <span className="flex h-11 w-11 flex-none items-center justify-center rounded-md bg-tg-stone2">
+          <opt.icon size={22} className="text-tg-brown-soft" />
+        </span>
+        <span className="flex-1">
+          <span className="flex items-center gap-2">
+            <span className="block font-display text-[17px] font-semibold text-tg-brown">
+              {opt.title}
+            </span>
+            <span className="inline-flex items-center rounded-chip bg-tg-stone2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-tg-brown">
+              Coming soon
+            </span>
+          </span>
+          <span className="mt-1 block font-body text-[13px] leading-snug text-tg-brown-soft">
+            {opt.desc}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
   return (
     <button
       type="button"
