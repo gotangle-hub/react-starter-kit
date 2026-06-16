@@ -120,13 +120,23 @@ export function LocationField({
 }
 
 /** Apple / Google continue button. */
-export function SocialButton({ brand }: { brand: "apple" | "google" }) {
+export function SocialButton({
+  brand,
+  onClick,
+  disabled,
+}: {
+  brand: "apple" | "google";
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   const isApple = brand === "apple";
   return (
     <button
       type="button"
+      onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "flex w-full items-center justify-center gap-2.5 rounded-DEFAULT py-3 text-[14.5px] font-semibold transition-all duration-fast active:scale-[0.99]",
+        "flex w-full items-center justify-center gap-2.5 rounded-DEFAULT py-3 text-[14.5px] font-semibold transition-all duration-fast active:scale-[0.99] disabled:opacity-60",
         isApple
           ? "bg-tg-inv text-tg-inv-text"
           : "border-[1.5px] border-tg-line bg-tg-card text-tg-ink",
