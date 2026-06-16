@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader, RefreshHint } from "@/components/app/bits";
@@ -7,8 +7,9 @@ import { Segmented } from "@/components/app/segmented";
 import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta, Pill } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { makers } from "@/lib/fixtures";
+import { makers as allMakers, makerById } from "@/lib/fixtures";
 import { path, routes } from "@/lib/routes";
+import { semanticSearch, type SearchMatch } from "@/services/search";
 
 const DISCIPLINES = ["Any discipline", "Architecture", "Product", "Type & brand", "Ceramics", "Textiles"];
 const CITIES = ["Any city", "Dubai", "Abu Dhabi", "Beirut", "Lisbon", "Amman"];
@@ -21,9 +22,26 @@ const AVAILABILITY = ["Anyone", "Available now", "Open to hire", "Open to collab
  */
 export default function SearchPeople() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const q = params.get("q") ?? "";
   const [discipline, setDiscipline] = useState("Any discipline");
   const [city, setCity] = useState("Any city");
   const [availability, setAvailability] = useState("Anyone");
+  const [matches, setMatches] = useState<SearchMatch[] | null>(q ? null : []);
+
+  useEffect(() => {
+    let cancel = false;
+    if (!q) { setMatches([]); return; }
+    semanticSearch({ mode: "people", query: q, limit: 20 }).then((m) => { if (!cancel) setMatches(m); });
+    return () => { cancel = true; };
+  }, [q]);
+
+  const makers = useMemo(() => {
+    if (!q) return allMakers;
+    if (matches === null) return [] as typeof allMakers;
+    return matches.map((m) => makerById(m.ref_id)).filter(Boolean);
+  }, [q, matches]);
+  const queryLabel = q || "Designers near me, warm materials";
 
   return (
     <MobileShell footer={null} header={<BackHeader title="People" />}>
@@ -31,7 +49,7 @@ export default function SearchPeople() {
         <div className="flex items-center gap-2.5 rounded-DEFAULT border-[1.5px] border-tg-blue-accent bg-tg-card px-3.5 py-2.5">
           <Search size={18} className="text-tg-blue-accent" />
           <span className="flex-1 font-display text-[15px] font-medium text-tg-ink">
-            Designers near me, warm materials
+            {queryLabel}
           </span>
         </div>
 
