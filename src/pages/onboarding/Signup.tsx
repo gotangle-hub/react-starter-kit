@@ -7,15 +7,24 @@ import { LocationField, TextField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { disciplines } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { useAccountType } from "@/hooks/use-account-type";
+import { supabase } from "@/integrations/supabase/client";
 
 /** 07 · Create your designer profile. All design fields + Other (free text). */
 export default function Signup() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const { accountType } = useAccountType();
   // Studio journey skips the personal "add work" step and goes to studio consent.
-  const next = params.get("type") === "studio" ? routes.studioConsent : routes.addWork;
+  const isStudio = params.get("type") === "studio";
+  const next = isStudio ? routes.studioConsent : routes.addWork;
   const [selected, setSelected] = useState<Set<string>>(new Set(["Architecture", "Graphic"]));
   const [other, setOther] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const toggle = (d: string) =>
     setSelected((prev) => {
@@ -24,12 +33,48 @@ export default function Signup() {
       return next;
     });
 
+  const handleContinue = async () => {
+    setError(null);
+    if (!email || !password) {
+      setError("Enter an email and password to continue.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    setBusy(true);
+    const resolvedType = isStudio ? "studio" : accountType;
+    const { error: err } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}${routes.home}`,
+        data: {
+          account_type: resolvedType,
+          display_name: name || undefined,
+        },
+      },
+    });
+    setBusy(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    navigate(next);
+  };
+
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(next)}>
-            Continue
+          {error && (
+            <p className="mb-2 text-[12.5px] text-tg-terra" role="alert">
+              {error}
+            </p>
+          )}
+          <Button full size="lg" onClick={handleContinue} disabled={busy}>
+            {busy ? "Creating account…" : "Continue"}
           </Button>
         </div>
       }
@@ -53,9 +98,27 @@ export default function Signup() {
         </div>
 
         <div className="flex flex-col gap-3.5">
-          <TextField label="Name" defaultValue="" placeholder="Your name" />
-          <TextField label="Email" mono defaultValue="" placeholder="you@studio.co" type="email" />
-          <TextField label="Password" defaultValue="" placeholder="••••••••" type="password" />
+          <TextField
+            label="Name"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            label="Email"
+            mono
+            placeholder="you@studio.co"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            placeholder="••••••••"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
           <div>
             <div className="mb-2 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
