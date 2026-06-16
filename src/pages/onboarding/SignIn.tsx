@@ -111,7 +111,7 @@ export default function SignIn() {
           />
         </div>
         {error && (
-          <p className="mt-2.5 text-[12.5px] text-tg-red" role="alert">
+          <p className="mt-2.5 text-[12.5px] text-tg-terra" role="alert">
             {error}
           </p>
         )}
