@@ -152,6 +152,36 @@ export type Database = {
         }
         Relationships: []
       }
+      post_metrics: {
+        Row: {
+          audience_size: number
+          computed_at: string
+          events_recent: number
+          post_id: string
+          reach_tier: number
+          score: number
+          velocity: number
+        }
+        Insert: {
+          audience_size?: number
+          computed_at?: string
+          events_recent?: number
+          post_id: string
+          reach_tier?: number
+          score?: number
+          velocity?: number
+        }
+        Update: {
+          audience_size?: number
+          computed_at?: string
+          events_recent?: number
+          post_id?: string
+          reach_tier?: number
+          score?: number
+          velocity?: number
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           author_id: string
@@ -161,6 +191,7 @@ export type Database = {
           image_path: string | null
           place: string | null
           promoted: boolean
+          reach_tier: number
           title: string
           updated_at: string
           year: number | null
@@ -173,6 +204,7 @@ export type Database = {
           image_path?: string | null
           place?: string | null
           promoted?: boolean
+          reach_tier?: number
           title: string
           updated_at?: string
           year?: number | null
@@ -185,6 +217,7 @@ export type Database = {
           image_path?: string | null
           place?: string | null
           promoted?: boolean
+          reach_tier?: number
           title?: string
           updated_at?: string
           year?: number | null
@@ -321,6 +354,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_post_metrics: { Args: never; Returns: undefined }
     }
     Enums: {
       account_type:
