@@ -251,6 +251,39 @@ export type Database = {
         }
         Relationships: []
       }
+      search_documents: {
+        Row: {
+          content: string
+          embedding: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          metadata: Json
+          ref_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          embedding?: string | null
+          id?: string
+          image_url?: string | null
+          kind: string
+          metadata?: Json
+          ref_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          embedding?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          metadata?: Json
+          ref_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -336,6 +369,19 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      match_search_documents: {
+        Args: {
+          match_count?: number
+          match_kind: string
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          metadata: Json
+          ref_id: string
+          similarity: number
+        }[]
       }
       move_to_dlq: {
         Args: {
