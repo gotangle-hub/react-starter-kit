@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Tangle — a space for designers</title>
+    <meta name="description" content="A space for designers — matched, collaborating, discovered, hired." />
+    <!-- color-scheme drives the browser's native UI to follow our theme (G15) -->
+    <meta name="color-scheme" content="light dark" />
+    <!-- Apply the resolved theme before first paint to avoid a flash (G15). -->
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem("tangle.theme") || "system";
+          var sysDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark = pref === "dark" || (pref === "system" && sysDark);
+          var root = document.documentElement;
+          root.classList.toggle("dark", dark);
+          root.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

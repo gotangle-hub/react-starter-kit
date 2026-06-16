@@ -1,0 +1,64 @@
+import { useNavigate } from "react-router-dom";
+import { Camera, ImagePlus, Search } from "lucide-react";
+import { MobileShell } from "@/components/app/mobile-shell";
+import { BackHeader } from "@/components/app/bits";
+import { Meta } from "@/components/brand/atoms";
+import { Button } from "@/components/ui/button";
+import { routes } from "@/lib/routes";
+
+/**
+ * 29 · Search by image (G4). Entry screen for visual search — upload or take a
+ * photo to search by meaning instead of words. Never names the technology.
+ */
+export default function SearchVisual() {
+  const navigate = useNavigate();
+
+  return (
+    <MobileShell header={<BackHeader title="Search by image" />}>
+      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-6">
+        <h1 className="font-serif text-[27px] font-medium leading-[1.05] tracking-[-0.02em]">
+          Search using a picture.
+        </h1>
+        <p className="mt-2 font-body text-[15px] leading-relaxed text-tg-brown">
+          Add a photo of a chair, a stair, a wordmark — anything. We read the image
+          itself and surface work that means the same thing, even when no caption
+          says it.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => navigate(routes.visualSearch)}
+          className="mt-6 flex w-full flex-col items-center justify-center gap-3 rounded-xl border-[1.5px] border-dashed border-tg-blue-accent bg-tg-card px-6 py-12 text-center"
+        >
+          <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2">
+            <ImagePlus size={26} className="text-tg-blue-accent" />
+          </span>
+          <span className="font-display text-[15.5px] font-semibold text-tg-ink">
+            Upload an image
+          </span>
+          <Meta>JPG, PNG or HEIC · drag in or tap to choose</Meta>
+        </button>
+
+        <div className="mt-4 flex gap-2.5">
+          <Button variant="outline" size="md" full onClick={() => navigate(routes.visualSearch)}>
+            <Camera size={17} className="mr-1.5" />
+            Take a photo
+          </Button>
+          <Button variant="outlineAccent" size="md" full onClick={() => navigate(routes.visualSearch)}>
+            <ImagePlus size={17} className="mr-1.5" />
+            From library
+          </Button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate(routes.search)}
+          className="mt-6 flex w-full items-center justify-center gap-2 text-tg-terra"
+        >
+          <Search size={15} />
+          <span className="font-display text-[13.5px] font-semibold">Search with words instead</span>
+        </button>
+      </div>
+    </MobileShell>
+  );
+}

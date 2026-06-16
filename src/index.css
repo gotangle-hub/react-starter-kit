@@ -1,0 +1,255 @@
+/* ============================================================
+   Tangle — global stylesheet (ported from tokens/*.css + app/theme.jsx)
+   The G15 light/dark swap is encoded entirely in CSS variables:
+   .dark overrides the same tokens, so components never branch on mode.
+   ============================================================ */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500;1,6..72,600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* -------- LIGHT (default) -------- */
+  :root {
+    color-scheme: light;
+
+    /* Fonts */
+    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+    --font-marker: "Caveat", "Comic Sans MS", cursive;
+
+    /* ---- Tangle brand tokens (raw, semantic) ---- */
+    /* Blue is FILL-ONLY and never swaps (buttons/badges, white on top) */
+    --tg-blue: #0107ff;
+    /* Blue used as text / icon / border — swaps to yellow in dark */
+    --tg-blue-accent: #0107ff;
+    /* Yellow chip background — swaps to blue in dark */
+    --tg-yellow: #f4d738;
+
+    --tg-ink: #161514;
+    --tg-ink-soft: #2a2825;
+    --tg-brown: #6e665b;
+    --tg-brown-soft: #9c9387;
+
+    --tg-bg: #faf7f0; /* surface-page / stone */
+    --tg-stone2: #f1eadd;
+    --tg-card: #ffffff;
+    --tg-line: #ece4d4;
+    --tg-line-soft: #f3ece0;
+    --tg-cream: #faf1e0;
+    --tg-terra: #a85c3a;
+    --tg-purple: #6b4eff;
+
+    --tg-emph: #161514;
+    --tg-emph-text: #faf1e0;
+    --tg-inv: #161514;
+    --tg-inv-text: #faf1e0;
+
+    --tg-page-board: #e7e0d2;
+    --tg-board-line: #d6cdbb;
+    --tg-feed-bg: #050505;
+
+    /* Ghost / hairline ink tints (beige-based in dark) */
+    --tg-ink-12: rgba(22, 21, 20, 0.12);
+    --tg-ink-08: rgba(22, 21, 20, 0.08);
+    --tg-ink-05: rgba(22, 21, 20, 0.05);
+
+    /* Verified tick — FIXED, never swaps (G15 exception) */
+    --tg-verified-badge: #f4d738;
+    --tg-verified-check: #161514;
+
+    /* Radii (from spacing.css) */
+    --radius-chip: 4px;
+    --radius-sm: 6px;
+    --radius: 10px; /* md — shadcn base */
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    /* Soft warm-cast shadows */
+    --shadow-card: 0 1px 2px rgba(22, 21, 20, 0.04), 0 8px 24px rgba(22, 21, 20, 0.06);
+    --shadow-float: 0 4px 12px rgba(22, 21, 20, 0.08), 0 24px 48px rgba(22, 21, 20, 0.1);
+    --shadow-swipe: 0 12px 40px rgba(22, 21, 20, 0.16);
+
+    /* Motion */
+    --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-fast: 140ms;
+    --dur-base: 240ms;
+    --dur-slow: 480ms;
+
+    /* ---- shadcn/ui semantic mappings (full colour values) ---- */
+    --background: var(--tg-bg);
+    --foreground: var(--tg-ink);
+    --card: var(--tg-card);
+    --card-foreground: var(--tg-ink);
+    --popover: var(--tg-card);
+    --popover-foreground: var(--tg-ink);
+    --primary: var(--tg-blue);
+    --primary-foreground: #ffffff;
+    --secondary: var(--tg-stone2);
+    --secondary-foreground: var(--tg-ink);
+    --muted: var(--tg-stone2);
+    --muted-foreground: var(--tg-brown);
+    --accent: var(--tg-stone2);
+    --accent-foreground: var(--tg-ink);
+    --destructive: #b3261e;
+    --destructive-foreground: #ffffff;
+    --border: var(--tg-line);
+    --input: var(--tg-line);
+    --ring: var(--tg-blue-accent);
+  }
+
+  /* -------- DARK (warm taupe, NOT black) — G15 swap -------- */
+  .dark {
+    color-scheme: dark;
+
+    /* Blue fill stays; blue-as-accent and yellow SWAP */
+    --tg-blue: #0107ff; /* fill stays */
+    --tg-blue-accent: #f4d738; /* blue text/icon/border -> yellow */
+    --tg-yellow: #0107ff; /* yellow -> blue */
+
+    --tg-ink: #f3ece0; /* black text -> beige */
+    --tg-ink-soft: #d8cfc1;
+    --tg-brown: rgba(243, 236, 224, 0.6);
+    --tg-brown-soft: rgba(243, 236, 224, 0.42);
+
+    --tg-bg: #3a342d;
+    --tg-stone2: rgba(243, 236, 224, 0.07);
+    --tg-card: #463e36;
+    --tg-line: rgba(243, 236, 224, 0.14);
+    --tg-line-soft: rgba(243, 236, 224, 0.08);
+    --tg-cream: #faf1e0;
+    --tg-terra: #d9966b;
+    --tg-purple: #8270de;
+
+    --tg-emph: #1b1815;
+    --tg-emph-text: #f3ece0;
+    --tg-inv: #f3ece0;
+    --tg-inv-text: #161514;
+
+    --tg-page-board: #2e2820;
+    --tg-board-line: rgba(243, 236, 224, 0.13);
+    --tg-feed-bg: #0b0907;
+
+    --tg-ink-12: rgba(243, 236, 224, 0.12);
+    --tg-ink-08: rgba(243, 236, 224, 0.08);
+    --tg-ink-05: rgba(243, 236, 224, 0.05);
+
+    /* Verified tick stays identical (G15 exception) */
+    --tg-verified-badge: #f4d738;
+    --tg-verified-check: #161514;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.5);
+    --shadow-swipe: 0 12px 40px rgba(0, 0, 0, 0.55);
+
+    --muted-foreground: var(--tg-brown);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: #f4d738;
+    color: #161514;
+  }
+
+  /* Hide scrollbars app-wide — scrolling stays fully functional, the bar is just
+     invisible (matches the prototype). Applies to every scroll container. */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* legacy Edge / IE */
+  }
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; /* WebKit (Chrome, Safari, Edge) */
+  }
+  html,
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ---- Brand primitives (ported from tokens/base.css) ---- */
+@layer components {
+  /* The Tangle wordmark — dot + "t" carry the accent, word is ink/beige */
+  .tangle-wordmark {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--tg-ink);
+    white-space: nowrap;
+  }
+  .tangle-mark {
+    /* the ".t" lockup — blue in light, yellow in dark */
+    color: var(--tg-blue-accent);
+  }
+  .tangle-mark-dot {
+    font-style: italic;
+  }
+
+  /* Signature yellow chip (4px radius, wide all-caps) */
+  .tangle-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px 4px;
+    background: var(--tg-yellow);
+    color: var(--tg-ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    border-radius: var(--radius-chip);
+    white-space: nowrap;
+  }
+  /* In dark the chip background becomes blue — keep its label readable */
+  .dark .tangle-chip {
+    color: #ffffff;
+  }
+
+  .tangle-meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    color: var(--tg-brown);
+  }
+
+  .tangle-eyebrow {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tg-brown);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
