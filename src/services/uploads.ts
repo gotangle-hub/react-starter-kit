@@ -155,13 +155,6 @@ async function compressVideo(
   }
 }
 
-// ---------- public api ----------
-async function currentUserId(): Promise<string> {
-  const { data, error } = await getSupabase().auth.getUser();
-  if (error || !data.user) throw new Error("Not signed in");
-  return data.user.id;
-}
-
 // ---------- pdf ----------
 async function renderPdfPages(file: File, onProgress?: (p: UploadProgress) => void): Promise<Blob[]> {
   // Lazy-load pdfjs so first-paint isn't penalised.
@@ -171,9 +164,10 @@ async function renderPdfPages(file: File, onProgress?: (p: UploadProgress) => vo
   (pdfjs as any).GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
   const buf = new Uint8Array(await file.arrayBuffer());
-  const pdf = await pdfjs.getDocument({ data: buf, isEvalSupported: false, disableFontFace: true }).promise;
+  const pdf = await pdfjs.getDocument({ data: buf, disableFontFace: true }).promise;
   const pageCount = Math.min(pdf.numPages, 40);
   const out: Blob[] = [];
+
 
   for (let i = 1; i <= pageCount; i++) {
     const page = await pdf.getPage(i);
