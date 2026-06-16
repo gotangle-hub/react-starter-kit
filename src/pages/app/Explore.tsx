@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bookmark, Heart, MessageCircle, MoreHorizontal, Plus } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -6,7 +6,8 @@ import { AppTabBar } from "@/components/app/app-tab-bar";
 import { PromotedTag } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
-import { feed, makerById, posts } from "@/lib/fixtures";
+import { feed, makerById, posts as fixturePosts, type Post } from "@/lib/fixtures";
+import { rankItems, logInteraction } from "@/services/feed";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,8 +19,20 @@ export default function Explore() {
   const navigate = useNavigate();
   const [revealed, setRevealed] = useState(false);
   const [index, setIndex] = useState(0);
-  const post = posts[index];
+  const [posts, setPosts] = useState<Post[]>(fixturePosts);
+  useEffect(() => {
+    rankItems("posts", fixturePosts.map((p) => ({
+      id: p.id, category: p.cat, promoted: p.promoted, base_score: p.likes + p.saves * 2,
+    }))).then((ranked) => {
+      const byId = new Map(fixturePosts.map((p) => [p.id, p]));
+      setPosts(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
+    });
+  }, []);
+  const post = posts[index] ?? fixturePosts[0];
   const maker = makerById(post.maker);
+  useEffect(() => {
+    logInteraction({ target_kind: "post", target_id: post.id, kind: "view", category: post.cat });
+  }, [post.id, post.cat]);
 
   return (
     <MobileShell footer={<AppTabBar />} className="bg-tg-feed-bg">
