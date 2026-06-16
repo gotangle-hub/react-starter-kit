@@ -12,8 +12,8 @@ import { getSupabase } from "@/lib/supabase";
  *   Zero external service, zero cost. For longer/heavier clips later, the
  *   right upgrade is a hosted transcoder (Mux or Cloudflare Stream); the
  *   service shape here doesn't change.
- * - PDF: uploaded as-is to the user's folder, then an edge function renders
- *   each page to a JPEG and returns the resulting image paths.
+ * - PDF: rendered to JPEG pages in the browser using pdfjs-dist, then each
+ *   page is uploaded as a separate image. The original PDF is not stored.
  */
 
 export const MAX_BYTES: Record<"image" | "video" | "pdf", number> = {
