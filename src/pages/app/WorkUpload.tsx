@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { FileUp, ImagePlus, Play, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -6,6 +7,7 @@ import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { feed } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { uploadService } from "@/services/uploads";
 
 /**
  * 48 · Add to your work (G9). Upload photos/video with size limits and automatic
@@ -14,14 +16,34 @@ import { routes } from "@/lib/routes";
  */
 export default function WorkUpload() {
   const navigate = useNavigate();
+  const mediaInput = useRef<HTMLInputElement>(null);
+  const pdfInput = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handleFile(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const name = `${Date.now()}-${file.name.replace(/[^\w.-]+/g, "_")}`;
+      await uploadService.upload("work", `raw/${name}`, file);
+      navigate(routes.addToExplore);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Upload failed";
+      // eslint-disable-next-line no-alert
+      alert(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   return (
     <MobileShell
       header={<BackHeader title="Add work" />}
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] py-3 pb-6">
-          <Button variant="primary" full size="lg" onClick={() => navigate(routes.addToExplore)}>
-            Add to your work
+          <Button variant="primary" full size="lg" disabled={busy} onClick={() => mediaInput.current?.click()}>
+            {busy ? "Uploading…" : "Add to your work"}
           </Button>
         </div>
       }
