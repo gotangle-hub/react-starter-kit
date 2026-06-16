@@ -34,6 +34,15 @@ export default function Home() {
   const navigate = useNavigate();
   const [seg, setSeg] = useState("Dashboard");
   const comp = competitions[0];
+  const [makers, setMakers] = useState<Maker[]>(fixtureMakers);
+  useEffect(() => {
+    rankItems("makers", fixtureMakers.map((m) => ({
+      id: m.id, category: m.role, base_score: m.match ?? 0,
+    }))).then((ranked) => {
+      const byId = new Map(fixtureMakers.map((m) => [m.id, m]));
+      setMakers(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
+    });
+  }, []);
 
   return (
     <MobileShell footer={<AppTabBar />}>
