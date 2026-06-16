@@ -6,6 +6,7 @@ import {
   Check,
   GraduationCap,
   Heart,
+  Package,
   PenTool,
   User,
   UsersRound,
@@ -23,12 +24,14 @@ type Opt = {
   icon: typeof PenTool;
   title: string;
   desc: string;
+  locked?: boolean;
 };
 
 const OPTS: Opt[] = [
   { id: "designer", icon: PenTool, title: "Designer", desc: "Architects, artists, photographers, studios — anyone who makes." },
   { id: "client", icon: Briefcase, title: "Client", desc: "Post a project or call out and find the right creative." },
   { id: "institution", icon: GraduationCap, title: "Institution", desc: "Design schools & universities — give every student Tangle." },
+  { id: "supplier", icon: Package, title: "Supplier", desc: "Materials, fabricators and vendors for creative work.", locked: true },
   { id: "collector", icon: Heart, title: "Collector", desc: "Just here to browse, follow and collect the design you love." },
 ];
 
