@@ -133,6 +133,8 @@ export default function WorkUpload() {
           {/* Add photo/video target */}
           <button
             type="button"
+            disabled={busy}
+            onClick={() => mediaInput.current?.click()}
             className="flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-tg-line bg-tg-card"
           >
             <ImagePlus size={22} className="text-tg-blue-accent" />
@@ -142,11 +144,30 @@ export default function WorkUpload() {
           {/* Link a PDF */}
           <button
             type="button"
+            disabled={busy}
+            onClick={() => pdfInput.current?.click()}
             className="flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-tg-line bg-tg-card px-2.5 text-center"
           >
             <FileUp size={20} className="text-tg-brown-soft" />
             <Meta>Link a PDF — each project is pulled out for you</Meta>
           </button>
+
+          {/* Hidden real file inputs — no visual change */}
+          <input
+            ref={mediaInput}
+            type="file"
+            accept="image/*,video/*"
+            hidden
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          <input
+            ref={pdfInput}
+            type="file"
+            accept="application/pdf"
+            hidden
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+
         </div>
 
         <p className="mt-5 font-body text-[12.5px] leading-relaxed text-tg-brown-soft">
