@@ -162,11 +162,48 @@ async function currentUserId(): Promise<string> {
   return data.user.id;
 }
 
+// ---------- pdf ----------
+async function renderPdfPages(file: File, onProgress?: (p: UploadProgress) => void): Promise<Blob[]> {
+  // Lazy-load pdfjs so first-paint isn't penalised.
+  const pdfjs = await import("pdfjs-dist");
+  // Worker via CDN — matches the installed version.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (pdfjs as any).GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjs.getDocument({ data: buf, isEvalSupported: false, disableFontFace: true }).promise;
+  const pageCount = Math.min(pdf.numPages, 40);
+  const out: Blob[] = [];
+
+  for (let i = 1; i <= pageCount; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) continue;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
+    const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+    if (blob) out.push(blob);
+    onProgress?.({ phase: "extracting", ratio: i / pageCount });
+  }
+  return out;
+}
+
+// ---------- public api ----------
+async function currentUserId(): Promise<string> {
+  const { data, error } = await getSupabase().auth.getUser();
+  if (error || !data.user) throw new Error("Not signed in");
+  return data.user.id;
+}
+
 export const uploadService = {
   /**
    * Compress (if needed) then upload to the given bucket under the caller's
-   * folder. For PDFs, also triggers the extraction edge function and returns
-   * the extracted image paths.
+   * folder. For PDFs, each rendered page is uploaded as its own JPEG and the
+   * resulting image paths are returned. The PDF itself is not stored.
    */
   async upload(
     bucket: "work" | "class-docs",
@@ -182,37 +219,52 @@ export const uploadService = {
     }
 
     const uid = await currentUserId();
+    const cleanSub = subpath.replace(/^\/+/, "");
+    const supabase = getSupabase();
 
+    // PDF: render pages, upload images, never store the PDF itself.
+    if (kind === "pdf") {
+      onProgress?.({ phase: "extracting", ratio: 0 });
+      const pages = await renderPdfPages(file, onProgress);
+      const baseDir = `${uid}/${cleanSub.replace(/\.[^./]+$/, "")}/pages`;
+      const extractedImages: string[] = [];
+      let total = 0;
+      for (let i = 0; i < pages.length; i++) {
+        const p = pages[i];
+        const path = `${baseDir}/page-${String(i + 1).padStart(3, "0")}.jpg`;
+        const { error } = await supabase.storage
+          .from(bucket)
+          .upload(path, p, { upsert: true, contentType: "image/jpeg" });
+        if (error) throw error;
+        extractedImages.push(path);
+        total += p.size;
+        onProgress?.({ phase: "uploading", ratio: (i + 1) / pages.length, finalBytes: total });
+      }
+      onProgress?.({ phase: "done", ratio: 1, finalBytes: total });
+      return { path: baseDir, finalBytes: total, extractedImages };
+    }
+
+    // Image / video: compress, then upload.
     onProgress?.({ phase: "compressing", ratio: 0 });
     let toStore: File = file;
     if (kind === "image") {
       toStore = await compressImage(file, MAX_BYTES.image);
-    } else if (kind === "video") {
+    } else {
       toStore = await compressVideo(file, MAX_BYTES.video, onProgress);
       if (toStore.size > MAX_BYTES.video) {
         throw new Error("Couldn't bring this clip under the size limit. Trim and try again.");
       }
     }
 
-    const path = `${uid}/${subpath.replace(/^\/+/, "")}`;
+    const path = `${uid}/${cleanSub}`;
     onProgress?.({ phase: "uploading", ratio: 0.5, finalBytes: toStore.size });
-
-    const { error } = await getSupabase()
-      .storage.from(bucket)
+    const { error } = await supabase.storage
+      .from(bucket)
       .upload(path, toStore, { upsert: true, contentType: toStore.type || undefined });
     if (error) throw error;
 
-    let extractedImages: string[] | undefined;
-    if (kind === "pdf" && bucket === "work") {
-      onProgress?.({ phase: "extracting", ratio: 0.8, finalBytes: toStore.size });
-      const { data, error: fnErr } = await getSupabase().functions.invoke("pdf-to-images", {
-        body: { pdf_path: path },
-      });
-      if (fnErr) throw fnErr;
-      extractedImages = (data?.images ?? []).map((i: { path: string }) => i.path);
-    }
-
     onProgress?.({ phase: "done", ratio: 1, finalBytes: toStore.size });
-    return { path, finalBytes: toStore.size, extractedImages };
+    return { path, finalBytes: toStore.size };
   },
 };
+
