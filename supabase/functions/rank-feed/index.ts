@@ -86,16 +86,6 @@ Deno.serve(async (req) => {
     for (const m of metricsRes.data ?? []) {
       reachByPost.set(m.post_id, { tier: Number(m.reach_tier) || 0, score: Number(m.score) || 0 });
     }
-    const [interestsRes, followsRes, interactionsRes] = await Promise.all([
-      supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
-      supabase.from("follows").select("followee_id").eq("follower_id", userId),
-      supabase
-        .from("interactions")
-        .select("category, kind, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
 
     const interestWeight = new Map<string, number>();
     for (const r of interestsRes.data ?? []) {
