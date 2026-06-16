@@ -49,7 +49,7 @@ export default function SearchPeople() {
         <div className="flex items-center gap-2.5 rounded-DEFAULT border-[1.5px] border-tg-blue-accent bg-tg-card px-3.5 py-2.5">
           <Search size={18} className="text-tg-blue-accent" />
           <span className="flex-1 font-display text-[15px] font-medium text-tg-ink">
-            Designers near me, warm materials
+            {queryLabel}
           </span>
         </div>
 
