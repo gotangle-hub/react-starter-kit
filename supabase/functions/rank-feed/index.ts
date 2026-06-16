@@ -70,6 +70,22 @@ Deno.serve(async (req) => {
     }
 
     // Pull signals in parallel.
+    const candidateIds = body.candidates.map((c) => c.id);
+    const [interestsRes, followsRes, interactionsRes, metricsRes] = await Promise.all([
+      supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
+      supabase.from("follows").select("followee_id").eq("follower_id", userId),
+      supabase
+        .from("interactions")
+        .select("category, kind, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(200),
+      supabase.from("post_metrics").select("post_id, reach_tier, score").in("post_id", candidateIds),
+    ]);
+    const reachByPost = new Map<string, { tier: number; score: number }>();
+    for (const m of metricsRes.data ?? []) {
+      reachByPost.set(m.post_id, { tier: Number(m.reach_tier) || 0, score: Number(m.score) || 0 });
+    }
     const [interestsRes, followsRes, interactionsRes] = await Promise.all([
       supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
       supabase.from("follows").select("followee_id").eq("follower_id", userId),
