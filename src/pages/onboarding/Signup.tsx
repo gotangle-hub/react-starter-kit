@@ -53,6 +53,7 @@ export default function Signup() {
         data: {
           account_type: resolvedType,
           display_name: name || undefined,
+          disciplines: Array.from(selected),
         },
       },
     });

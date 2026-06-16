@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, SlidersHorizontal, X, Heart } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Pill, Meta } from "@/components/brand/atoms";
-import { makers, feed, posts } from "@/lib/fixtures";
+import { makers as fixtureMakers, feed, posts, type Maker } from "@/lib/fixtures";
+import { rankItems, logInteraction } from "@/services/feed";
 import { routes } from "@/lib/routes";
 
 const DAILY_CAP = 15;
@@ -19,10 +20,22 @@ export default function Match() {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
   const [left, setLeft] = useState(DAILY_CAP - 3);
+  const [orderedMakers, setOrderedMakers] = useState<Maker[]>(fixtureMakers);
+  useEffect(() => {
+    rankItems("makers", fixtureMakers.map((m) => ({
+      id: m.id, category: m.role, base_score: m.match ?? 0,
+    }))).then((ranked) => {
+      const byId = new Map(fixtureMakers.map((m) => [m.id, m]));
+      setOrderedMakers(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
+    });
+  }, []);
 
-  const maker = makers[index % makers.length];
+  const maker = orderedMakers[index % orderedMakers.length] ?? fixtureMakers[0];
   // Pair each maker with a piece of their work as the card background.
   const work = posts.find((p) => p.maker === maker.id) ?? posts[index % posts.length];
+  useEffect(() => {
+    logInteraction({ target_kind: "maker", target_id: maker.id, kind: "view", category: maker.role });
+  }, [maker.id, maker.role]);
 
   function next() {
     setIndex((i) => i + 1);
@@ -38,6 +51,7 @@ export default function Match() {
       return;
     }
     setLeft((n) => n - 1);
+    logInteraction({ target_kind: "maker", target_id: maker.id, kind: "connect", category: maker.role, weight: 4 });
     // A like that lands as mutual opens the connection celebration.
     navigate(routes.mutualMatch);
   }

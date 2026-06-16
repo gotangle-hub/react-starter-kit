@@ -101,10 +101,101 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string
+          followee_id: string
+          follower_id: string
+        }
+        Insert: {
+          created_at?: string
+          followee_id: string
+          follower_id: string
+        }
+        Update: {
+          created_at?: string
+          followee_id?: string
+          follower_id?: string
+        }
+        Relationships: []
+      }
+      interactions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: number
+          kind: string
+          target_id: string
+          target_kind: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: number
+          kind: string
+          target_id: string
+          target_kind: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: number
+          kind?: string
+          target_id?: string
+          target_kind?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          author_id: string
+          category: string | null
+          created_at: string
+          id: string
+          image_path: string | null
+          place: string | null
+          promoted: boolean
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          author_id: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          place?: string | null
+          promoted?: boolean
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          author_id?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          place?: string | null
+          promoted?: boolean
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
           created_at: string
+          disciplines: string[]
           display_name: string | null
           id: string
           updated_at: string
@@ -112,6 +203,7 @@ export type Database = {
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
           created_at?: string
+          disciplines?: string[]
           display_name?: string | null
           id: string
           updated_at?: string
@@ -119,6 +211,7 @@ export type Database = {
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
           created_at?: string
+          disciplines?: string[]
           display_name?: string | null
           id?: string
           updated_at?: string
@@ -146,6 +239,27 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      user_interests: {
+        Row: {
+          tag: string
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          tag: string
+          updated_at?: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          tag?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number
         }
         Relationships: []
       }

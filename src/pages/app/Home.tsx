@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pin } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -11,7 +11,8 @@ import { NameRow, Meta } from "@/components/brand/atoms";
 import { Chip } from "@/components/brand/chip";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { chats, competitions, makers, me } from "@/lib/fixtures";
+import { chats, competitions, makers as fixtureMakers, me, type Maker } from "@/lib/fixtures";
+import { rankItems } from "@/services/feed";
 import { routes } from "@/lib/routes";
 
 const SEGMENTS = ["Dashboard", "Match", "Projects", "Community"];
@@ -33,6 +34,15 @@ export default function Home() {
   const navigate = useNavigate();
   const [seg, setSeg] = useState("Dashboard");
   const comp = competitions[0];
+  const [makers, setMakers] = useState<Maker[]>(fixtureMakers);
+  useEffect(() => {
+    rankItems("makers", fixtureMakers.map((m) => ({
+      id: m.id, category: m.role, base_score: m.match ?? 0,
+    }))).then((ranked) => {
+      const byId = new Map(fixtureMakers.map((m) => [m.id, m]));
+      setMakers(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
+    });
+  }, []);
 
   return (
     <MobileShell footer={<AppTabBar />}>
