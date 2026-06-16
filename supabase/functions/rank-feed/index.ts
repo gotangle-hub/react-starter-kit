@@ -115,6 +115,9 @@ Deno.serve(async (req) => {
       s += 0.4 * recency(c.created_at);
       if (typeof c.base_score === "number") s += 0.05 * c.base_score;
       if (c.promoted) s += 0.3;
+      // G3 · virality boost — accelerating posts get progressively wider reach.
+      const reach = reachByPost.get(c.id);
+      if (reach) s += 0.9 * reach.tier;
       return s;
     }
 
