@@ -25,8 +25,10 @@ export default function SearchText() {
   const suggested = scope === "People" ? SUGGESTED_PEOPLE : SUGGESTED_PROJECTS;
 
   const run = (q: string) => {
-    if (!q.trim()) return;
-    navigate(scope === "People" ? routes.searchPeople : routes.visualSearch);
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    const target = scope === "People" ? routes.searchPeople : routes.visualSearch;
+    navigate(`${target}?q=${encodeURIComponent(trimmed)}`);
   };
 
   return (
