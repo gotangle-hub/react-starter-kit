@@ -51,6 +51,7 @@ export default function Match() {
       return;
     }
     setLeft((n) => n - 1);
+    logInteraction({ target_kind: "maker", target_id: maker.id, kind: "connect", category: maker.role, weight: 4 });
     // A like that lands as mutual opens the connection celebration.
     navigate(routes.mutualMatch);
   }
