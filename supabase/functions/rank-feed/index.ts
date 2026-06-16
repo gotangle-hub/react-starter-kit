@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
     }
 
     // Pull signals in parallel.
-    const [interestsRes, followsRes, interactionsRes] = await Promise.all([
+    const candidateIds = body.candidates.map((c) => c.id);
+    const [interestsRes, followsRes, interactionsRes, metricsRes] = await Promise.all([
       supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
       supabase.from("follows").select("followee_id").eq("follower_id", userId),
       supabase
@@ -79,7 +80,12 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(200),
+      supabase.from("post_metrics").select("post_id, reach_tier, score").in("post_id", candidateIds),
     ]);
+    const reachByPost = new Map<string, { tier: number; score: number }>();
+    for (const m of metricsRes.data ?? []) {
+      reachByPost.set(m.post_id, { tier: Number(m.reach_tier) || 0, score: Number(m.score) || 0 });
+    }
 
     const interestWeight = new Map<string, number>();
     for (const r of interestsRes.data ?? []) {
@@ -109,6 +115,9 @@ Deno.serve(async (req) => {
       s += 0.4 * recency(c.created_at);
       if (typeof c.base_score === "number") s += 0.05 * c.base_score;
       if (c.promoted) s += 0.3;
+      // G3 · virality boost — accelerating posts get progressively wider reach.
+      const reach = reachByPost.get(c.id);
+      if (reach) s += 0.9 * reach.tier;
       return s;
     }
 
