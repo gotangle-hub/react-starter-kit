@@ -220,6 +220,99 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_registration_requests: {
+        Row: {
+          approx_students: number | null
+          contact_email: string
+          contact_name: string | null
+          created_at: string
+          id: string
+          institution_name: string
+          location: string | null
+          notes: string | null
+          role: string | null
+          status: string
+          submitted_by: string | null
+        }
+        Insert: {
+          approx_students?: number | null
+          contact_email: string
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          institution_name: string
+          location?: string | null
+          notes?: string | null
+          role?: string | null
+          status?: string
+          submitted_by?: string | null
+        }
+        Update: {
+          approx_students?: number | null
+          contact_email?: string
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          institution_name?: string
+          location?: string | null
+          notes?: string | null
+          role?: string | null
+          status?: string
+          submitted_by?: string | null
+        }
+        Relationships: []
+      }
+      institutions: {
+        Row: {
+          alt_domains: string[]
+          city: string
+          country: string | null
+          created_at: string
+          domain: string
+          faculty_email_regex: string | null
+          id: string
+          initials: string | null
+          name: string
+          slug: string
+          sso_provider: string
+          student_email_regex: string | null
+          tint: string | null
+          updated_at: string
+        }
+        Insert: {
+          alt_domains?: string[]
+          city: string
+          country?: string | null
+          created_at?: string
+          domain: string
+          faculty_email_regex?: string | null
+          id?: string
+          initials?: string | null
+          name: string
+          slug: string
+          sso_provider?: string
+          student_email_regex?: string | null
+          tint?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alt_domains?: string[]
+          city?: string
+          country?: string | null
+          created_at?: string
+          domain?: string
+          faculty_email_regex?: string | null
+          id?: string
+          initials?: string | null
+          name?: string
+          slug?: string
+          sso_provider?: string
+          student_email_regex?: string | null
+          tint?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       interactions: {
         Row: {
           category: string | null
@@ -502,6 +595,8 @@ export type Database = {
         }[]
       }
       refresh_post_metrics: { Args: never; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       account_type:

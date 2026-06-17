@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Building2, Search } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -6,18 +6,32 @@ import { BackHeader } from "@/components/app/bits";
 import { InstLogo } from "@/components/app/inst-logo";
 import { Chip } from "@/components/brand/chip";
 import { Meta } from "@/components/brand/atoms";
-import { schools } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { searchInstitutions, rememberInstitution, type Institution } from "@/services/institutions";
 
 /**
  * 03 · Find your school (G13). Predictive search that autocompletes the
- * institution name as you type. A prominent "Register your institution" for
- * unlisted schools.
+ * institution name as you type, querying public.institutions. A prominent
+ * "Register your institution" path covers unlisted schools.
  */
 export default function InstitutionFind() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const matches = q ? schools.filter((s) => s.name.toLowerCase().includes(q.toLowerCase())) : schools;
+  const [matches, setMatches] = useState<Institution[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const t = setTimeout(async () => {
+      const rows = await searchInstitutions(q);
+      if (active) setMatches(rows);
+    }, 120);
+    return () => { active = false; clearTimeout(t); };
+  }, [q]);
+
+  function pick(inst: Institution) {
+    rememberInstitution(inst);
+    navigate(routes.institutionLogin);
+  }
 
   return (
     <MobileShell>
@@ -45,12 +59,12 @@ export default function InstitutionFind() {
         <div className="mt-2.5 overflow-hidden rounded-lg border border-tg-line">
           {matches.map((s, i) => (
             <button
-              key={s.name}
+              key={s.id}
               type="button"
-              onClick={() => navigate(routes.institutionLogin)}
+              onClick={() => pick(s)}
               className={`flex w-full items-center gap-3 px-3.5 py-3 text-left ${i > 0 ? "border-t border-tg-line" : ""} ${i === 0 ? "bg-tg-stone2" : "bg-tg-card"}`}
             >
-              <InstLogo school={s} size={38} />
+              <InstLogo school={{ tint: s.tint ?? "#161514", initials: s.initials ?? s.name.slice(0, 2).toUpperCase() }} size={38} />
               <div className="min-w-0 flex-1">
                 <div className="font-display text-[14.5px] font-semibold">{s.name}</div>
                 <Meta className="mt-0.5 block">{s.city} · {s.domain}</Meta>
