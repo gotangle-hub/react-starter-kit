@@ -42,10 +42,10 @@ export default function InstitutionRegister() {
     });
     setBusy(false);
     if (error) {
-      toast.error("Couldn't send right now — please try again.");
+      console.error("[institution-register] failed", error);
+      alert("Couldn't send right now — please try again.");
       return;
     }
-    toast.success("Request sent — the Tangle team will be in touch.");
     navigate(routes.institutionFind);
   }
 
