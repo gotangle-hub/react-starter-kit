@@ -1,34 +1,56 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, Lock } from "lucide-react";
+import { Lock, ShieldCheck } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
-import { TextField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { useCheckout } from "@/hooks/use-checkout";
-import { routes } from "@/lib/routes";
+import {
+  clearPendingCheckout,
+  DEFAULT_CHECKOUT,
+  getPendingCheckout,
+  type PendingCheckout,
+} from "@/lib/checkout-intent";
 
 /**
- * 59 · Checkout (G6). Plan/boost summary, VAT-inclusive total, pay. The pay
- * action runs through the checkout() seam (no real charge yet — Stripe later).
+ * 59 · Checkout (G6). Reads the pending intent (plan or boost) set by the
+ * upgrade / promote CTAs, then hands off to Ziina hosted checkout. Card
+ * collection happens on Ziina — we never see card data.
  */
 export default function Checkout() {
   const navigate = useNavigate();
   const { checkout, status } = useCheckout();
+  const [error, setError] = useState<string | null>(null);
+  const [intent, setIntent] = useState<PendingCheckout>(DEFAULT_CHECKOUT);
 
-  const subtotal = 57.14;
-  const vat = 2.86;
-  const total = 60;
+  useEffect(() => {
+    setIntent(getPendingCheckout() ?? DEFAULT_CHECKOUT);
+  }, []);
+
+  const totals = useMemo(() => {
+    const totalMajor = intent.total / 100;
+    const subtotal = +(totalMajor / 1.05).toFixed(2);
+    const vat = +(totalMajor - subtotal).toFixed(2);
+    return { totalMajor, subtotal, vat };
+  }, [intent.total]);
 
   const pay = async () => {
+    setError(null);
     const res = await checkout({
-      kind: "plan",
-      reference: "designer-pro-monthly",
-      currency: "AED",
-      lineItems: [{ label: "Tangle Pro — monthly", amount: 6000 }],
-      total: 6000,
+      kind: intent.kind,
+      reference: intent.reference,
+      currency: intent.currency,
+      lineItems: [{ label: intent.label, amount: intent.total }],
+      total: intent.total,
+      test: intent.test,
     });
-    if (res.ok) navigate(routes.paymentSuccess);
+    if (res.ok) {
+      clearPendingCheckout();
+      // Browser is being redirected to Ziina; nothing else to do.
+    } else {
+      setError(res.error ?? "Payment failed");
+    }
   };
 
   return (
@@ -37,47 +59,62 @@ export default function Checkout() {
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
           <Button full size="lg" disabled={status === "processing"} onClick={pay}>
             <Lock size={16} />
-            {status === "processing" ? "Processing…" : `Pay ${total} AED`}
+            {status === "processing"
+              ? "Opening secure checkout…"
+              : `Pay ${totals.totalMajor.toFixed(2)} ${intent.currency}`}
           </Button>
-          <p className="mt-2 text-center">
-            <Meta>Secured payment · cancel anytime</Meta>
+          {error && (
+            <p className="mt-2 text-center font-mono text-[12px] text-red-500">{error}</p>
+          )}
+          <p className="mt-2 flex items-center justify-center gap-1.5">
+            <ShieldCheck size={12} className="text-tg-brown" />
+            <Meta>Secured by Ziina · cards & Apple Pay</Meta>
           </p>
         </div>
       }
     >
-      <BackHeader title="Checkout" />
+      <BackHeader title="Checkout" onBack={() => navigate(-1)} />
       <div className="px-[22px] py-4">
         <div className="rounded-lg border border-tg-line bg-tg-card p-4">
           <div className="flex items-center justify-between">
-            <span className="font-display text-[15px] font-semibold text-tg-ink">Tangle Pro</span>
-            <span className="font-mono text-[13px] text-tg-brown">Monthly</span>
+            <span className="font-display text-[15px] font-semibold text-tg-ink">
+              {intent.label}
+            </span>
+            <span className="font-mono text-[13px] text-tg-brown">
+              {intent.kind === "plan" ? "Subscription" : "One-off"}
+            </span>
           </div>
-          <Meta className="mt-1 block">Unlimited collaborations, who liked you, advanced filters and more.</Meta>
+          {intent.sublabel && (
+            <Meta className="mt-1 block">{intent.sublabel}</Meta>
+          )}
           <div className="mt-4 flex flex-col gap-2 border-t border-tg-line-soft pt-3">
-            <Row label="Subtotal" value={`${subtotal.toFixed(2)} AED`} />
-            <Row label="VAT (5%)" value={`${vat.toFixed(2)} AED`} />
+            <Row label="Subtotal" value={`${totals.subtotal.toFixed(2)} ${intent.currency}`} />
+            <Row label="VAT (5%)" value={`${totals.vat.toFixed(2)} ${intent.currency}`} />
             <div className="mt-1 flex items-center justify-between border-t border-tg-line-soft pt-2.5">
               <span className="font-display text-[15px] font-semibold text-tg-ink">Total</span>
-              <span className="font-display text-[16px] font-semibold text-tg-ink">{total.toFixed(2)} AED</span>
+              <span className="font-display text-[16px] font-semibold text-tg-ink">
+                {totals.totalMajor.toFixed(2)} {intent.currency}
+              </span>
             </div>
             <Meta>Price includes VAT.</Meta>
           </div>
         </div>
 
-        <div className="mb-2.5 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
-          Payment method
-        </div>
-        <div className="flex flex-col gap-3">
-          <TextField label="Card number" mono icon={<CreditCard size={17} />} placeholder="0000 0000 0000 0000" />
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <TextField label="Expiry" mono placeholder="MM / YY" />
-            </div>
-            <div className="flex-1">
-              <TextField label="CVC" mono placeholder="123" />
+        <div className="mt-5 rounded-lg border border-tg-line bg-tg-card p-4">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-pill bg-tg-stone2">
+              <ShieldCheck size={16} className="text-tg-blue-accent" />
+            </span>
+            <div>
+              <div className="font-display text-[13px] font-semibold text-tg-ink">
+                Secure hosted payment
+              </div>
+              <Meta className="mt-1 block">
+                You&rsquo;ll continue on Ziina&rsquo;s secure page to enter card or Apple Pay
+                details, then come straight back to Tangle.
+              </Meta>
             </div>
           </div>
-          <TextField label="Name on card" placeholder="Muna Abbas" />
         </div>
       </div>
     </MobileShell>

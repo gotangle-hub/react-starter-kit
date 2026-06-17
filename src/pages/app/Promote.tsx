@@ -6,7 +6,7 @@ import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { promoProducts } from "@/lib/fixtures";
-import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
 import { cn } from "@/lib/utils";
 
 const AUDIENCES = ["Designers near me", "My disciplines", "Everyone"];
@@ -35,7 +35,21 @@ export default function Promote() {
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(routes.checkout)}>
+          <Button
+            full
+            size="lg"
+            onClick={() => {
+              const selected = promoProducts.find((p) => p.id === product) ?? promoProducts[0];
+              startCheckout(navigate, {
+                kind: "boost",
+                reference: `boost-${selected.id}-${DURATIONS[duration].label.replace(" ", "")}`,
+                label: selected.name,
+                sublabel: `${audience} · ${DURATIONS[duration].label}`,
+                currency: "AED",
+                total: total * 100,
+              });
+            }}
+          >
             Review &amp; pay — {total} AED
           </Button>
           <p className="mt-2 text-center">

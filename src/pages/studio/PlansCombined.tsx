@@ -7,6 +7,8 @@ import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { clientPlans, designerPlans, studioPlans, type TierPlan } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
+import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,16 +21,41 @@ type Aud = (typeof AUDS)[number];
 
 export default function PlansCombined() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSession();
   const [aud, setAud] = useState<Aud>("Studio");
   const plans = aud === "Designer" ? designerPlans : aud === "Studio" ? studioPlans : clientPlans;
+  const featured = plans.find((p) => p.featured) ?? plans[1] ?? plans[0];
   const cta =
     aud === "Designer" ? "Pro — 60 AED/mo" : aud === "Studio" ? "Studio — 399 AED/mo" : "Client Pro — 120 AED/mo";
+  const ref =
+    aud === "Designer"
+      ? "designer-pro-monthly"
+      : aud === "Studio"
+        ? "studio-monthly"
+        : "client-pro-monthly";
+  const totalMinor =
+    aud === "Designer" ? 6000 : aud === "Studio" ? 39900 : 12000;
+
+  const goPaid = () => {
+    if (!isAuthenticated) {
+      navigate(`${routes.signup}?type=${aud.toLowerCase()}`);
+      return;
+    }
+    startCheckout(navigate, {
+      kind: "plan",
+      reference: ref,
+      label: `Tangle ${featured.name}`,
+      sublabel: `${aud} · Monthly`,
+      currency: "AED",
+      total: totalMinor,
+    });
+  };
 
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(`${routes.signup}?type=${aud.toLowerCase()}`)}>
+          <Button full size="lg" onClick={goPaid}>
             Continue with {cta}
           </Button>
           <p className="mt-2.5 text-center">

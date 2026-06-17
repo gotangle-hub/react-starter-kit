@@ -6,17 +6,33 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { designerPlans } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
+import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 /** 06 · Designer plans — Free vs Pro, real pricing, VAT-inclusive note. */
 export default function Plans() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSession();
+  const goPro = () => {
+    if (!isAuthenticated) {
+      navigate(routes.signup);
+      return;
+    }
+    startCheckout(navigate, {
+      kind: "plan",
+      reference: "designer-pro-monthly",
+      label: "Tangle Pro — Designer",
+      sublabel: "Monthly · unlimited swipes, who liked you, advanced filters",
+      currency: "AED",
+      total: 6000,
+    });
+  };
   return (
     <MobileShell
       footer={
         <div className="flex-none px-[22px] pb-7 pt-3">
-          {/* Pro upgrade routes through Checkout → checkout() (no real charge yet). */}
-          <Button full size="lg" onClick={() => navigate(routes.signup)}>
+          <Button full size="lg" onClick={goPro}>
             Continue with Pro — 60 AED/mo
           </Button>
           <p className="mt-3 text-center">
