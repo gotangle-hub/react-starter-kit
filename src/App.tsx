@@ -193,6 +193,7 @@ import EmptyNotifications from "@/pages/app/EmptyNotifications";
 import EmptyCollaborations from "@/pages/app/EmptyCollaborations";
 import EmptySearch from "@/pages/app/EmptySearch";
 import EmptyWork from "@/pages/app/EmptyWork";
+import Unsubscribe from "@/pages/Unsubscribe";
 
 /**
  * App shell. Providers wrap the router so theme (G15) and session (G1) are
