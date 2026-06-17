@@ -193,6 +193,7 @@ import EmptyNotifications from "@/pages/app/EmptyNotifications";
 import EmptyCollaborations from "@/pages/app/EmptyCollaborations";
 import EmptySearch from "@/pages/app/EmptySearch";
 import EmptyWork from "@/pages/app/EmptyWork";
+import Unsubscribe from "@/pages/Unsubscribe";
 
 /**
  * App shell. Providers wrap the router so theme (G15) and session (G1) are
@@ -394,6 +395,7 @@ export default function App() {
             <Route path={routes.emptyCollaborations} element={<ProtectedRoute><EmptyCollaborations /></ProtectedRoute>} />
             <Route path={routes.emptySearch} element={<ProtectedRoute><EmptySearch /></ProtectedRoute>} />
             <Route path={routes.emptyWork} element={<ProtectedRoute><EmptyWork /></ProtectedRoute>} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
           </Routes>
         </BrowserRouter>
         </AccountTypeProvider>
