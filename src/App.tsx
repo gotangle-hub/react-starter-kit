@@ -15,6 +15,7 @@ import AccountType from "@/pages/onboarding/AccountType";
 import SignIn from "@/pages/onboarding/SignIn";
 import Plans from "@/pages/onboarding/Plans";
 import Signup from "@/pages/onboarding/Signup";
+import VerifyEmail from "@/pages/onboarding/VerifyEmail";
 import AddWork from "@/pages/onboarding/AddWork";
 import DesignerConsent from "@/pages/onboarding/DesignerConsent";
 import WelcomeToTangle from "@/pages/onboarding/WelcomeToTangle";
@@ -211,6 +212,7 @@ export default function App() {
             <Route path={routes.plans} element={<Plans />} />
             <Route path={routes.signup} element={<Signup />} />
             <Route path={routes.addWork} element={<AddWork />} />
+            <Route path={routes.verifyEmail} element={<VerifyEmail />} />
             <Route path={routes.consent} element={<DesignerConsent />} />
             <Route path={routes.welcome} element={<WelcomeToTangle />} />
             <Route path={routes.tour} element={<Tour />} />

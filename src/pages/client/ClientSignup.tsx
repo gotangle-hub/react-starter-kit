@@ -7,6 +7,7 @@ import { Meta, Pill } from "@/components/brand/atoms";
 import { LocationField, TextField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
+import { supabase } from "@/integrations/supabase/client";
 
 const CLIENT_TYPES = ["Developer", "Private client", "Brand / company", "Event", "Agency", "Other"];
 const HIRING_FOR = ["One off project", "Ongoing work", "A competition", "Event coverage", "Full time role", "Just looking"];
@@ -16,13 +17,55 @@ export default function ClientSignup() {
   const navigate = useNavigate();
   const [type, setType] = useState("Private client");
   const [hiring, setHiring] = useState("One off project");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const handleContinue = async () => {
+    setError(null);
+    if (!email || !password) {
+      setError("Enter an email and password to continue.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}${routes.clientHome}`,
+        data: {
+          account_type: "client",
+          display_name: name || undefined,
+          client_type: type,
+          hiring_for: hiring,
+        },
+      },
+    });
+    setBusy(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    navigate(routes.verifyEmail, { state: { email: email.trim(), next: routes.clientConsent } });
+  };
 
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(routes.clientConsent)}>
-            Create account
+          {error && (
+            <p className="mb-2 text-[12.5px] text-tg-terra" role="alert">
+              {error}
+            </p>
+          )}
+          <Button full size="lg" onClick={handleContinue} disabled={busy}>
+            {busy ? "Creating account…" : "Create account"}
           </Button>
         </div>
       }
@@ -54,9 +97,29 @@ export default function ClientSignup() {
             <Meta className="mt-2 block">e.g. a developer, someone building their home, or hiring a videographer for an event.</Meta>
           </div>
 
-          <TextField label="Name / company" defaultValue="" placeholder="Your name or company" />
-          <TextField label="Work email" mono icon={<Mail size={17} />} type="email" placeholder="you@company.co" />
-          <TextField label="Password" icon={<Lock size={17} />} type="password" placeholder="••••••••" />
+          <TextField
+            label="Name / company"
+            placeholder="Your name or company"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            label="Work email"
+            mono
+            icon={<Mail size={17} />}
+            type="email"
+            placeholder="you@company.co"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            icon={<Lock size={17} />}
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
           <div>
             <div className="mb-2 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">I'm hiring for</div>

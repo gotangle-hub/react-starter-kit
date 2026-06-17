@@ -12,6 +12,7 @@ export const routes = {
   signup: "/signup",
   addWork: "/signup/work",
   consent: "/signup/consent",
+  verifyEmail: "/signup/verify",
   welcome: "/welcome",
   tour: "/tour",
 
