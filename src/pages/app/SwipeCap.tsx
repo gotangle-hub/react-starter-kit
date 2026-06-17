@@ -44,7 +44,7 @@ export default function SwipeCap() {
       </div>
 
       <div className="px-[22px] pb-6">
-        <Button full size="lg" onClick={() => navigate(routes.plans)}>
+        <Button full size="lg" onClick={() => startCheckout(navigate, { kind: "plan", reference: "designer-pro-monthly", label: "Tangle Pro — Designer", sublabel: "Monthly · unlimited swipes", currency: "AED", total: 6000 })}>
           <Zap size={16} className="mr-1.5" />
           Go unlimited with Pro
         </Button>

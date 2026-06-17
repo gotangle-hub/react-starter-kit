@@ -62,7 +62,7 @@ export default function WhoLiked() {
               Upgrade to Pro to unlock inbound likes and connect instantly — no swiping
               required.
             </p>
-            <Button size="lg" className="mt-4" onClick={() => navigate(routes.plans)}>
+            <Button size="lg" className="mt-4" onClick={() => startCheckout(navigate, { kind: "plan", reference: "designer-pro-monthly", label: "Tangle Pro — Designer", sublabel: "Monthly · unlimited swipes", currency: "AED", total: 6000 })}>
               <Heart size={16} className="mr-1.5" />
               Upgrade to Pro
             </Button>
