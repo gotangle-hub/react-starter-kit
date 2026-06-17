@@ -64,7 +64,7 @@ export default function InstitutionFind() {
               onClick={() => pick(s)}
               className={`flex w-full items-center gap-3 px-3.5 py-3 text-left ${i > 0 ? "border-t border-tg-line" : ""} ${i === 0 ? "bg-tg-stone2" : "bg-tg-card"}`}
             >
-              <InstLogo school={{ name: s.name, tint: s.tint ?? "#161514", initials: s.initials ?? s.name.slice(0, 2).toUpperCase() }} size={38} />
+              <InstLogo school={{ tint: s.tint ?? "#161514", initials: s.initials ?? s.name.slice(0, 2).toUpperCase() }} size={38} />
               <div className="min-w-0 flex-1">
                 <div className="font-display text-[14.5px] font-semibold">{s.name}</div>
                 <Meta className="mt-0.5 block">{s.city} · {s.domain}</Meta>
