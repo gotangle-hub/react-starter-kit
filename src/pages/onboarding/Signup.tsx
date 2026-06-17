@@ -62,7 +62,8 @@ export default function Signup() {
       setError(err.message);
       return;
     }
-    navigate(next);
+    // Email confirmation is required — route to OTP verify, then continue to `next`.
+    navigate(routes.verifyEmail, { state: { email: email.trim(), next } });
   };
 
   return (
