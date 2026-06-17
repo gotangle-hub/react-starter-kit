@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "cozy-starter-kit-83"
+const SITE_NAME = "Tangle"
 const SENDER_DOMAIN = "notify.gotangle.app"
 const ROOT_DOMAIN = "gotangle.app"
 const FROM_DOMAIN = "notify.gotangle.app" // Domain shown in From address (may be root or sender subdomain)

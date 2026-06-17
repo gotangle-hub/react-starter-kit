@@ -13,10 +13,11 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 
 interface ReauthenticationEmailProps {
+  siteName: string
   token: string
 }
 
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
+export const ReauthenticationEmail = ({ siteName, token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your {siteName} verification code</Preview>
