@@ -128,22 +128,22 @@ Tangle — a network built on ideas, made with people who share your passion.`
 }
 
 export function renderRecovery(data: TemplateData): { html: string; text: string } {
-  const url = data.confirmationUrl || ''
+  const token = data.token || ''
   const html = emailShell(
     "Reset password",
     "Reset password",
     "Set a new password.",
-    "We got a request to reset your Tangle password. Tap below to choose a new one.",
-    linkButton(url, "Reset password"),
-    "This link expires in 1 hour. If you didn't request this, your password is still safe — just ignore this email."
+    "We got a request to reset your Tangle password. Enter this 6-digit code in the app to choose a new one.",
+    codeBlock(token),
+    "This code expires in 1 hour. If you didn't request this, your password is still safe — just ignore this email."
   )
   const text = `Tangle
 
-Reset your password: ${url}
+Your password reset code: ${token}
 
-We got a request to reset your Tangle password. Tap the link below to choose a new one.
+Enter this 6-digit code in the app to choose a new password.
 
-This link expires in 1 hour. If you didn't request this, your password is still safe — just ignore this email.
+This code expires in 1 hour. If you didn't request this, your password is still safe — just ignore this email.
 
 Tangle — a network built on ideas, made with people who share your passion.`
   return { html, text }

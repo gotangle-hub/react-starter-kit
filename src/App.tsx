@@ -13,6 +13,11 @@ import Welcome1 from "@/pages/onboarding/Welcome1";
 import Welcome2 from "@/pages/onboarding/Welcome2";
 import AccountType from "@/pages/onboarding/AccountType";
 import SignIn from "@/pages/onboarding/SignIn";
+import ForgotPassword from "@/pages/onboarding/ForgotPassword";
+import ResetCode from "@/pages/onboarding/ResetCode";
+import ResetNewPassword from "@/pages/onboarding/ResetNewPassword";
+import ResetDone from "@/pages/onboarding/ResetDone";
+import ResetOAuth from "@/pages/onboarding/ResetOAuth";
 import Plans from "@/pages/onboarding/Plans";
 import Signup from "@/pages/onboarding/Signup";
 import VerifyEmail from "@/pages/onboarding/VerifyEmail";
@@ -209,6 +214,11 @@ export default function App() {
             <Route path={routes.welcome2} element={<Welcome2 />} />
             <Route path={routes.accountType} element={<AccountType />} />
             <Route path={routes.signIn} element={<SignIn />} />
+            <Route path={routes.forgotPassword} element={<ForgotPassword />} />
+            <Route path={routes.resetCode} element={<ResetCode />} />
+            <Route path={routes.resetNewPassword} element={<ResetNewPassword />} />
+            <Route path={routes.resetDone} element={<ResetDone />} />
+            <Route path={routes.resetOAuth} element={<ResetOAuth />} />
             <Route path={routes.plans} element={<Plans />} />
             <Route path={routes.signup} element={<Signup />} />
             <Route path={routes.addWork} element={<AddWork />} />
