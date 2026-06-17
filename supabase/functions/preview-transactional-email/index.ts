@@ -46,7 +46,19 @@ Deno.serve(async (req) => {
     const entry = TEMPLATES[name]
     const displayName = entry.displayName || name
 
-    if (!entry.previewData) {
+    if (!entry.rawHtml && !entry.component) {
+      results.push({
+        templateName: name,
+        displayName,
+        subject: '',
+        html: '',
+        status: 'render_failed',
+        errorMessage: 'Template has neither rawHtml nor component',
+      })
+      continue
+    }
+
+    if (!entry.rawHtml && !entry.previewData) {
       results.push({
         templateName: name,
         displayName,
@@ -58,12 +70,13 @@ Deno.serve(async (req) => {
     }
 
     try {
-      const html = await renderAsync(
-        React.createElement(entry.component, entry.previewData)
-      )
+      const data = entry.previewData ?? {}
+      const html = entry.rawHtml
+        ? entry.rawHtml(data)
+        : await renderAsync(React.createElement(entry.component!, data))
       const resolvedSubject =
         typeof entry.subject === 'function'
-          ? entry.subject(entry.previewData)
+          ? entry.subject(data)
           : entry.subject
 
       results.push({
