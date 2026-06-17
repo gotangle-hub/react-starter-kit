@@ -7,6 +7,8 @@ import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { clientPlans, designerPlans, studioPlans, type TierPlan } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
+import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 /**
