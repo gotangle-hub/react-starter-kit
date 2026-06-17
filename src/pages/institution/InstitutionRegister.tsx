@@ -7,7 +7,7 @@ import { Pill } from "@/components/brand/atoms";
 import { TextField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
-import { toast } from "sonner";
+
 import { submitRegistrationRequest } from "@/services/institutions";
 
 /**
