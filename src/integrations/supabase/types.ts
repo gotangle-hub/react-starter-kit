@@ -346,6 +346,51 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          kind: string
+          metadata: Json
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string | null
+          ziina_intent_id: string | null
+          ziina_redirect_url: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          id?: string
+          kind: string
+          metadata?: Json
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          ziina_intent_id?: string | null
+          ziina_redirect_url?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          ziina_intent_id?: string | null
+          ziina_redirect_url?: string | null
+        }
+        Relationships: []
+      }
       post_metrics: {
         Row: {
           audience_size: number
