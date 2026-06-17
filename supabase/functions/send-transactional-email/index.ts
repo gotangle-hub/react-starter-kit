@@ -277,14 +277,34 @@ Deno.serve(async (req) => {
     )
   }
 
-  // 4. Render React Email template to HTML and plain text
-  const html = await renderAsync(
-    React.createElement(template.component, templateData)
-  )
-  const plainText = await renderAsync(
-    React.createElement(template.component, templateData),
-    { plainText: true }
-  )
+  // 4. Render template to HTML and plain text.
+  // Templates may either provide a raw HTML producer (used verbatim) or a
+  // React Email component (rendered via renderAsync).
+  let html: string
+  let plainText: string
+  if (typeof template.rawHtml === 'function') {
+    html = template.rawHtml(templateData)
+    plainText =
+      typeof template.rawText === 'function'
+        ? template.rawText(templateData)
+        : html.replace(/<style[\s\S]*?<\/style>/gi, '')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+  } else if (template.component) {
+    html = await renderAsync(
+      React.createElement(template.component, templateData)
+    )
+    plainText = await renderAsync(
+      React.createElement(template.component, templateData),
+      { plainText: true }
+    )
+  } else {
+    return new Response(
+      JSON.stringify({ error: `Template '${templateName}' has neither rawHtml nor component` }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
 
   // Resolve subject — supports static string or dynamic function
   const resolvedSubject =
