@@ -5,7 +5,7 @@ import { BackHeader, RefreshHint } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { makers } from "@/lib/fixtures";
-import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
 
 /**
  * 21 · Who liked you — a Pro feature. The grid of people who liked your work is
