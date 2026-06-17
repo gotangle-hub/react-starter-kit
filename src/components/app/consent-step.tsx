@@ -19,18 +19,24 @@ export function ConsentStep({
   onAgree,
 }: {
   type: AccountType;
-  onAgree: () => void;
+  onAgree: (opts: { marketingOptIn: boolean }) => void;
 }) {
   const navigate = useNavigate();
   const c = CONSENT[type];
   const [ticked, setTicked] = useState<boolean[]>(c.items.map(() => false));
+  const [marketing, setMarketing] = useState(false);
   const allTicked = ticked.every(Boolean);
 
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" disabled={!allTicked} onClick={onAgree}>
+          <Button
+            full
+            size="lg"
+            disabled={!allTicked}
+            onClick={() => onAgree({ marketingOptIn: marketing })}
+          >
             Agree &amp; create account
           </Button>
         </div>
@@ -74,9 +80,21 @@ export function ConsentStep({
           />
         ))}
 
+        <div className="mt-5 mb-1 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
+          Stay in the loop · optional
+        </div>
+        <ConsentRow
+          item={{
+            text:
+              "I'd like to receive product updates, tips and occasional offers from Tangle by email. You can change this any time in Settings.",
+          }}
+          checked={marketing}
+          onToggle={() => setMarketing((v) => !v)}
+        />
+
         <div className="mt-3.5 flex items-center gap-2">
           <ShieldCheck size={14} className="text-tg-brown-soft" />
-          <Meta>Tick all three to continue. You can read each policy in full any time.</Meta>
+          <Meta>Tick all three commitments to continue. The marketing option is up to you.</Meta>
         </div>
       </div>
     </MobileShell>

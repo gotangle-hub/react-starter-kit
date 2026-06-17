@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ConsentStep } from "@/components/app/consent-step";
+import { saveMarketingOptIn } from "@/lib/marketing-opt-in";
 import { routes } from "@/lib/routes";
 
 /**
@@ -14,9 +15,10 @@ export default function InstitutionConsent() {
   return (
     <ConsentStep
       type={faculty ? "institution" : "student"}
-      onAgree={() =>
-        navigate(`${routes.welcome}?next=${faculty ? routes.tourFaculty : routes.tourStudent}`)
-      }
+      onAgree={async ({ marketingOptIn }) => {
+        await saveMarketingOptIn(marketingOptIn);
+        navigate(`${routes.welcome}?next=${faculty ? routes.tourFaculty : routes.tourStudent}`);
+      }}
     />
   );
 }

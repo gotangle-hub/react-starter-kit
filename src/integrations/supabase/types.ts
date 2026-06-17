@@ -470,6 +470,7 @@ export type Database = {
           disciplines: string[]
           display_name: string | null
           id: string
+          marketing_opt_in: boolean
           updated_at: string
         }
         Insert: {
@@ -478,6 +479,7 @@ export type Database = {
           disciplines?: string[]
           display_name?: string | null
           id: string
+          marketing_opt_in?: boolean
           updated_at?: string
         }
         Update: {
@@ -486,6 +488,7 @@ export type Database = {
           disciplines?: string[]
           display_name?: string | null
           id?: string
+          marketing_opt_in?: boolean
           updated_at?: string
         }
         Relationships: []

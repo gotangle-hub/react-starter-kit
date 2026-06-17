@@ -58,23 +58,38 @@ export function SettingsGroup({ title, rows }: { title?: string; rows: SettingRo
   );
 }
 
-/** A labelled toggle row for notification/privacy settings. */
+/** A labelled toggle row for notification/privacy settings. Supports both
+ *  uncontrolled (defaultOn) and controlled (checked + onChange) modes. */
 export function ToggleRow({
   label,
   sub,
   defaultOn = false,
+  checked,
+  onChange,
+  disabled,
 }: {
   label: string;
   sub?: string;
   defaultOn?: boolean;
+  checked?: boolean;
+  onChange?: (next: boolean) => void;
+  disabled?: boolean;
 }) {
+  const controlled = checked !== undefined;
   return (
     <label className="flex cursor-pointer items-center gap-3 border-t border-tg-line-soft px-4 py-3.5 first:border-t-0">
       <span className="flex-1">
         <span className="block font-display text-[14.5px] font-medium text-tg-ink">{label}</span>
         {sub && <span className="block font-body text-[12.5px] text-tg-brown">{sub}</span>}
       </span>
-      <input type="checkbox" defaultChecked={defaultOn} className="peer sr-only" />
+      <input
+        type="checkbox"
+        className="peer sr-only"
+        disabled={disabled}
+        {...(controlled
+          ? { checked, onChange: (e) => onChange?.(e.target.checked) }
+          : { defaultChecked: defaultOn })}
+      />
       <span className="relative h-6 w-10 flex-none rounded-pill bg-tg-line transition-colors peer-checked:bg-tg-blue">
         <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-pill bg-white transition-transform peer-checked:translate-x-4" />
       </span>
