@@ -6,6 +6,8 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { designerPlans } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
+import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 /** 06 · Designer plans — Free vs Pro, real pricing, VAT-inclusive note. */
