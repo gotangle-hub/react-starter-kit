@@ -15,6 +15,7 @@ import AccountType from "@/pages/onboarding/AccountType";
 import SignIn from "@/pages/onboarding/SignIn";
 import Plans from "@/pages/onboarding/Plans";
 import Signup from "@/pages/onboarding/Signup";
+import VerifyEmail from "@/pages/onboarding/VerifyEmail";
 import AddWork from "@/pages/onboarding/AddWork";
 import DesignerConsent from "@/pages/onboarding/DesignerConsent";
 import WelcomeToTangle from "@/pages/onboarding/WelcomeToTangle";
