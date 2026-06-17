@@ -47,7 +47,7 @@ const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, TemplateData> = {
   signup: { token: '123456' },
   magiclink: { confirmationUrl: SAMPLE_PROJECT_URL },
-  recovery: { confirmationUrl: SAMPLE_PROJECT_URL },
+  recovery: { token: '123456' },
   invite: { confirmationUrl: SAMPLE_PROJECT_URL },
   email_change: { token: '123456', oldEmail: SAMPLE_EMAIL, newEmail: 'new@example.test' },
   reauthentication: { token: '123456' },
