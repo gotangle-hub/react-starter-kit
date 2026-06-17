@@ -33,23 +33,14 @@ export interface CheckoutResult {
   error?: string;
 }
 
-import { supabase } from "@/integrations/supabase/client";
-
-async function processPayment(request: CheckoutRequest): Promise<CheckoutResult> {
-  const { data, error } = await supabase.functions.invoke("ziina-checkout", {
-    body: {
-      kind: request.kind,
-      reference: request.reference,
-      currency: request.currency,
-      total: request.total,
-      description: request.lineItems.map((l) => l.label).join(" · "),
-    },
-  });
-  if (error) return { ok: false, error: error.message };
-  if (!data?.redirect_url) return { ok: false, error: data?.error ?? "No redirect URL" };
-  // Hand off to Ziina hosted checkout. The user returns via success_url.
-  window.location.href = data.redirect_url as string;
-  return { ok: true, receiptId: data.id };
+/**
+ * TODO(Lovable/Stripe): replace this stub with a real call to a Stripe
+ * checkout/session edge function. Until then it resolves successfully without
+ * charging anything, so the UI flows end-to-end.
+ */
+async function processPayment(_request: CheckoutRequest): Promise<CheckoutResult> {
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return { ok: true, receiptId: "stub_receipt" };
 }
 
 export function useCheckout() {
