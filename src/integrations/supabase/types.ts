@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      competition_user_state: {
+        Row: {
+          competition_id: string
+          created_at: string
+          interested: boolean
+          pinned: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          interested?: boolean
+          pinned?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          interested?: boolean
+          pinned?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_user_state_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          audience: string
+          created_at: string
+          deadline: string | null
+          deadline_label: string | null
+          eligibility: string
+          external_id: string | null
+          field: string
+          id: string
+          interested_count: number
+          is_official: boolean
+          last_seen_at: string
+          location: string
+          organiser: string
+          prize: string | null
+          prize_kind: string | null
+          source: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          created_at?: string
+          deadline?: string | null
+          deadline_label?: string | null
+          eligibility?: string
+          external_id?: string | null
+          field: string
+          id?: string
+          interested_count?: number
+          is_official?: boolean
+          last_seen_at?: string
+          location: string
+          organiser: string
+          prize?: string | null
+          prize_kind?: string | null
+          source?: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          deadline?: string | null
+          deadline_label?: string | null
+          eligibility?: string
+          external_id?: string | null
+          field?: string
+          id?: string
+          interested_count?: number
+          is_official?: boolean
+          last_seen_at?: string
+          location?: string
+          organiser?: string
+          prize?: string | null
+          prize_kind?: string | null
+          source?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
