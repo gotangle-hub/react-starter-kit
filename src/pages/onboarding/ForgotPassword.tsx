@@ -28,14 +28,14 @@ export default function ForgotPassword() {
     const cleaned = email.trim();
 
     // 1. Determine how this email signs in (password vs OAuth/institution).
-    let method: "password" | "oauth" | "unknown" = "password";
+    let method: string = "password";
     let providers: string[] = [];
     try {
       const { data, error: err } = await supabase.functions.invoke("check-recovery-method", {
         body: { email: cleaned },
       });
       if (!err && data) {
-        method = (data as { method?: string }).method as typeof method;
+        method = (data as { method?: string }).method ?? "password";
         providers = (data as { providers?: string[] }).providers ?? [];
       }
     } catch {

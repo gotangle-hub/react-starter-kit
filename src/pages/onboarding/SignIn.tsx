@@ -116,7 +116,7 @@ export default function SignIn() {
           </p>
         )}
         <div className="mt-2.5 text-right">
-          <button type="button">
+          <button type="button" onClick={() => navigate(routes.forgotPassword)}>
             <Meta>Forgot password?</Meta>
           </button>
         </div>
