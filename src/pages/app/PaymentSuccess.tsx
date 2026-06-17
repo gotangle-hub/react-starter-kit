@@ -69,7 +69,7 @@ export default function PaymentSuccess() {
   return (
     <StateSuccess
       icon={X}
-      tone="warn"
+      tone="yellow"
       chip="Payment not completed"
       title={status === "canceled" ? "Payment canceled." : "Payment failed."}
       body="No charge was made. You can try again from checkout."
