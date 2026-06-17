@@ -6,7 +6,7 @@ import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { promoProducts } from "@/lib/fixtures";
-import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
 import { cn } from "@/lib/utils";
 
 const AUDIENCES = ["Designers near me", "My disciplines", "Everyone"];
