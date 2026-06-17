@@ -4,7 +4,7 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { routes } from "@/lib/routes";
+import { startCheckout } from "@/lib/checkout-intent";
 
 const CAP = 15;
 
