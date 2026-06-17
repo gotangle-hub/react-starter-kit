@@ -19,7 +19,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
 
         <!-- hero -->
         <tr><td class="sec" style="background-color:#161514;border-radius:24px;padding:46px 34px 42px;">
-          <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;font-style:italic;letter-spacing:-.02em;"><span style="color:#F4D738">.t</span><span style="color:#FAF1E0">angle</span></span>
+          <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;font-style:italic;letter-spacing:-.02em;"><span style="color:#0107FF">.t</span><span style="color:#FAF1E0">angle</span></span>
           <div style="height:26px;"></div>
           <div style="font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.05;font-weight:500;letter-spacing:-.025em;color:#FAF1E0;">You&rsquo;re in.<br>Welcome to the network.</div>
           <div style="height:14px;"></div>
