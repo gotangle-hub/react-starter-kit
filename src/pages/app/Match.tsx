@@ -1,59 +1,134 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, SlidersHorizontal, X, Heart } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
-import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Pill, Meta } from "@/components/brand/atoms";
-import { makers as fixtureMakers, feed, posts, type Maker } from "@/lib/fixtures";
-import { rankItems, logInteraction } from "@/services/feed";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  makerFromProfile,
+  workPublicUrl,
+  type ProfileRow,
+} from "@/services/profile";
+import {
+  likeToConnect,
+  passOnMaker,
+  listSeenIds,
+} from "@/services/connections";
+import { logInteraction } from "@/services/feed";
 import { routes } from "@/lib/routes";
 
 const DAILY_CAP = 15;
 
+interface DeckCandidate {
+  profile: ProfileRow;
+  workImage: string | null;
+  workTitle: string | null;
+}
+
 /**
  * 17 · Swipe to connect. A deck of designers/studios shown over their work,
- * ordered for you (the tech is never named). Like → if mutual you CONNECT and a
- * chat opens. Free accounts hit a daily cap; Pro is unlimited.
+ * ordered for you. Like → real connection_request; mutual match auto-accepts
+ * and routes to MutualMatch with the real other-user id.
  */
 export default function Match() {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
-  const [left, setLeft] = useState(DAILY_CAP - 3);
-  const [orderedMakers, setOrderedMakers] = useState<Maker[]>(fixtureMakers);
+  const [left, setLeft] = useState(DAILY_CAP);
+  const [deck, setDeck] = useState<DeckCandidate[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    rankItems("makers", fixtureMakers.map((m) => ({
-      id: m.id, category: m.role, base_score: m.match ?? 0,
-    }))).then((ranked) => {
-      const byId = new Map(fixtureMakers.map((m) => [m.id, m]));
-      setOrderedMakers(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
-    });
+    (async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const seen = await listSeenIds();
+      // Pull a batch of other users (signed-in users can see public profile fields).
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, account_type, display_name, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at")
+        .neq("id", user.id)
+        .limit(60);
+      const filtered = (profiles ?? []).filter((p) => !seen.has(p.id));
+      // Pair each candidate with one of their posts as the card background.
+      const ids = filtered.map((p) => p.id);
+      const { data: posts } = ids.length
+        ? await supabase
+            .from("posts")
+            .select("author_id, title, media")
+            .in("author_id", ids)
+            .order("created_at", { ascending: false })
+        : { data: [] as Array<{ author_id: string; title: string | null; media: unknown }> };
+      const firstByAuthor = new Map<string, { title: string | null; media: unknown }>();
+      for (const p of posts ?? []) {
+        if (!firstByAuthor.has(p.author_id)) firstByAuthor.set(p.author_id, p);
+      }
+      const deckRows: DeckCandidate[] = filtered.map((profile) => {
+        const post = firstByAuthor.get(profile.id);
+        let workImage: string | null = null;
+        if (post?.media && Array.isArray(post.media) && post.media.length > 0) {
+          const first = post.media[0];
+          const path = typeof first === "string" ? first : (first as { path?: string })?.path;
+          workImage = workPublicUrl(path) ?? null;
+        }
+        return { profile, workImage, workTitle: post?.title ?? null };
+      });
+      setDeck(deckRows);
+      setLoading(false);
+    })();
   }, []);
 
-  const maker = orderedMakers[index % orderedMakers.length] ?? fixtureMakers[0];
-  // Pair each maker with a piece of their work as the card background.
-  const work = posts.find((p) => p.maker === maker.id) ?? posts[index % posts.length];
+  const candidate = deck[index];
+  const maker = useMemo(
+    () => (candidate ? makerFromProfile(candidate.profile) : null),
+    [candidate],
+  );
+
   useEffect(() => {
-    logInteraction({ target_kind: "maker", target_id: maker.id, kind: "view", category: maker.role });
-  }, [maker.id, maker.role]);
+    if (!candidate) return;
+    logInteraction({
+      target_kind: "maker",
+      target_id: candidate.profile.id,
+      kind: "view",
+      category: candidate.profile.account_type as string,
+    });
+  }, [candidate]);
 
   function next() {
     setIndex((i) => i + 1);
   }
 
-  function pass() {
+  async function pass() {
+    if (!candidate) return;
+    await passOnMaker(candidate.profile.id);
     next();
   }
 
-  function like() {
+  async function like() {
+    if (!candidate) return;
     if (left <= 0) {
       navigate(routes.swipeCap);
       return;
     }
     setLeft((n) => n - 1);
-    logInteraction({ target_kind: "maker", target_id: maker.id, kind: "connect", category: maker.role, weight: 4 });
-    // A like that lands as mutual opens the connection celebration.
-    navigate(routes.mutualMatch);
+    logInteraction({
+      target_kind: "maker",
+      target_id: candidate.profile.id,
+      kind: "connect",
+      category: candidate.profile.account_type as string,
+      weight: 4,
+    });
+    try {
+      const res = await likeToConnect(candidate.profile.id);
+      if (res.mutual) {
+        navigate(`${routes.mutualMatch}?id=${candidate.profile.id}`);
+        return;
+      }
+    } catch (e) {
+      console.error("[match] like failed", e);
+    }
+    next();
   }
 
   return (
@@ -87,59 +162,77 @@ export default function Match() {
           />
         </div>
 
-        {/* The card — a designer shown over their work */}
+        {/* The card */}
         <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-xl border border-tg-line shadow-card">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${feed(work.img)})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/30" />
+          {candidate && maker ? (
+            <>
+              {candidate.workImage ? (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${candidate.workImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              ) : (
+                <div className="absolute inset-0" style={{ background: maker.tint }} />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/30" />
 
-          {/* Match percentage, top-right */}
-          <div className="absolute right-4 top-4 rounded-pill bg-white/15 px-3 py-1.5 backdrop-blur">
-            <span className="font-display text-[15px] font-semibold text-white">{maker.match}%</span>
-            <span className="ml-1 font-mono text-[10px] uppercase tracking-[0.1em] text-white/70">match</span>
-          </div>
-
-          {/* Maker detail, bottom */}
-          <div className="absolute inset-x-0 bottom-0 p-5">
-            <Meta className="text-white/70">{work.title}</Meta>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className="font-serif text-[27px] font-medium leading-none tracking-[-0.02em] text-white">
-                {maker.name}
-              </span>
-              {maker.verified && <VerifiedBadge size={18} />}
+              {/* Maker detail, bottom */}
+              <div className="absolute inset-x-0 bottom-0 p-5">
+                {candidate.workTitle && (
+                  <Meta className="text-white/70">{candidate.workTitle}</Meta>
+                )}
+                <div className="mt-2 flex items-center gap-1.5">
+                  <span className="font-serif text-[27px] font-medium leading-none tracking-[-0.02em] text-white">
+                    {maker.name}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-white/80">
+                  <span className="font-display text-[13.5px] capitalize">{maker.role}</span>
+                  {candidate.profile.location && (
+                    <>
+                      <span className="text-white/40">·</span>
+                      <MapPin size={13} className="text-white/70" />
+                      <span className="font-display text-[13.5px]">{candidate.profile.location}</span>
+                    </>
+                  )}
+                </div>
+                {candidate.profile.disciplines && candidate.profile.disciplines.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {candidate.profile.disciplines.slice(0, 4).map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-chip bg-white/15 px-2.5 py-1 font-display text-[12px] font-medium text-white backdrop-blur"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full items-center justify-center px-8 text-center">
+              <Meta>
+                {loading
+                  ? "Finding people for you…"
+                  : "No more people to swipe right now. Pull back later."}
+              </Meta>
             </div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-white/80">
-              <span className="font-display text-[13.5px]">{maker.role}</span>
-              <span className="text-white/40">·</span>
-              <MapPin size={13} className="text-white/70" />
-              <span className="font-display text-[13.5px]">{maker.city}</span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(maker.skills ?? []).map((s) => (
-                <span
-                  key={s}
-                  className="rounded-chip bg-white/15 px-2.5 py-1 font-display text-[12px] font-medium text-white backdrop-blur"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Pass / Like */}
+        {/* Pass / Connect */}
         <div className="mt-4 flex items-center justify-center gap-3">
           <button
             type="button"
             aria-label="Pass"
             onClick={pass}
-            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-pill border border-tg-line bg-tg-card text-tg-ink"
+            disabled={!candidate}
+            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-pill border border-tg-line bg-tg-card text-tg-ink disabled:opacity-40"
           >
             <X size={20} />
             <span className="font-display text-[14px] font-semibold">Pass</span>
@@ -148,7 +241,8 @@ export default function Match() {
             type="button"
             aria-label="Like to connect"
             onClick={like}
-            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-pill bg-tg-blue text-white"
+            disabled={!candidate}
+            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-pill bg-tg-blue text-white disabled:opacity-40"
           >
             <Heart size={20} />
             <span className="font-display text-[14px] font-semibold">Connect</span>
