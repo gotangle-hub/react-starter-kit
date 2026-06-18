@@ -28,7 +28,8 @@ export default function Inbox() {
 
   const refresh = async () => {
     const rows = await listMyConversations();
-    setItems(rows);
+    // Group conversations belong to collaborations and live in the Collaborations tracker.
+    setItems(rows.filter((r) => !r.isGroup));
     setLoading(false);
   };
 

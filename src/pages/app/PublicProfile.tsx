@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MessageCircle, MoreHorizontal, Plus } from "lucide-react";
+import { ArrowLeft, MessageCircle, MoreHorizontal, Plus, Users } from "lucide-react";
+import { CreateCollabSheet } from "@/components/app/create-collab-sheet";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { RefreshHint } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
@@ -29,6 +30,7 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [works, setWorks] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creatingCollab, setCreatingCollab] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +150,13 @@ export default function PublicProfile() {
               Message
             </Button>
           </div>
+          <button
+            type="button"
+            onClick={() => setCreatingCollab(true)}
+            className="mt-2.5 inline-flex items-center gap-1.5 font-display text-[12.5px] font-semibold text-tg-blue-accent"
+          >
+            <Users size={14} /> Start a collaboration
+          </button>
 
           {/* Work grid */}
           <div className="mb-3 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
@@ -178,6 +187,21 @@ export default function PublicProfile() {
           )}
         </div>
       </div>
+      {creatingCollab && profile && (
+        <CreateCollabSheet
+          onClose={() => setCreatingCollab(false)}
+          onCreated={(id: string) => {
+            setCreatingCollab(false);
+            navigate(path(routes.projectChat, { id }));
+          }}
+          initialMembers={[{
+            id: profile.id,
+            username: profile.username ?? "",
+            display_name: profile.display_name ?? null,
+            avatar_path: profile.avatar_path ?? null,
+          }]}
+        />
+      )}
     </MobileShell>
   );
 }
