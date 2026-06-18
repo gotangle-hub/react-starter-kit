@@ -163,6 +163,7 @@ import ProfessorUploadDoc from "@/pages/institution/ProfessorUploadDoc";
 import TAInvited from "@/pages/institution/TAInvited";
 import TAInviteEmail from "@/pages/institution/TAInviteEmail";
 import TAInviteAccept from "@/pages/institution/TAInviteAccept";
+import ClassChat from "@/pages/institution/ClassChat";
 import SettingsStudent from "@/pages/institution/SettingsStudent";
 import StudentGraduation from "@/pages/institution/StudentGraduation";
 import SettingsFaculty from "@/pages/institution/SettingsFaculty";
