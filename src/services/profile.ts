@@ -6,7 +6,7 @@ export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 /** Columns any signed-in user is allowed to read (RLS + column grants). */
 const PUBLIC_PROFILE_COLUMNS =
-  "id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at";
+  "id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, verified_at, created_at, updated_at";
 
 /** Public URL helper for any path stored under the `work` bucket. */
 export function workPublicUrl(path: string | null | undefined): string | null {
