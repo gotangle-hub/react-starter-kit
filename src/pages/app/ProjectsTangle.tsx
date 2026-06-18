@@ -68,7 +68,7 @@ export default function ProjectsTangle() {
         <RefreshHint />
 
         <div className="mt-1 flex gap-5 border-b border-tg-line">
-          <Tab label="Live scan" on={false} onClick={() => navigate(routes.aiComps)} />
+          <Tab label="Live scan" on={false} onClick={() => navigate(routes.competitions)} />
           <Tab label="Tangle" on={true} onClick={() => {}} />
         </div>
 
