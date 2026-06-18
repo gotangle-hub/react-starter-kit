@@ -6,7 +6,7 @@ export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 /** Columns any signed-in user is allowed to read (RLS + column grants). */
 const PUBLIC_PROFILE_COLUMNS =
-  "id, account_type, display_name, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at";
+  "id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at";
 
 /** Public URL helper for any path stored under the `work` bucket. */
 export function workPublicUrl(path: string | null | undefined): string | null {
@@ -85,11 +85,12 @@ export function initialsFor(name: string | null | undefined, fallback = "·"): s
 }
 
 /** Build the shape Avatar/UI components expect from a profile row. */
-export function makerFromProfile(p: Pick<ProfileRow, "id" | "display_name" | "avatar_path" | "account_type"> | null | undefined) {
-  const name = p?.display_name || "Member";
+export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_name" | "avatar_path" | "account_type" | "username">> | null | undefined) {
+  const name = p?.display_name || (p?.username ? `@${p.username}` : "Member");
   return {
     id: p?.id ?? "unknown",
     name,
+    handle: p?.username ?? null,
     role: (p?.account_type as string | undefined) ?? "Designer",
     initials: initialsFor(name),
     tint: tintForId(p?.id),

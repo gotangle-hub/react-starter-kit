@@ -66,15 +66,17 @@ export function Meta({
   );
 }
 
-/** Maker name + verified tick. */
+/** Maker name + verified tick. Optionally shows the @handle below or inline. */
 export function NameRow({
   maker,
   size = 14,
   className,
+  showHandle = false,
 }: {
-  maker: Pick<Maker, "name" | "verified">;
+  maker: Pick<Maker, "name" | "verified"> & { handle?: string | null };
   size?: number;
   className?: string;
+  showHandle?: boolean;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
@@ -82,6 +84,9 @@ export function NameRow({
         {maker.name}
       </span>
       {maker.verified && <VerifiedBadge size={size + 1} />}
+      {showHandle && maker.handle && (
+        <span className="font-mono text-[11.5px] text-tg-brown-soft">@{maker.handle}</span>
+      )}
     </span>
   );
 }

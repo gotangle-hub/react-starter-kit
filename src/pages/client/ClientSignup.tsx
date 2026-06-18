@@ -5,9 +5,11 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { Chip } from "@/components/brand/chip";
 import { Meta, Pill } from "@/components/brand/atoms";
 import { LocationField, TextField } from "@/components/app/fields";
+import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { supabase } from "@/integrations/supabase/client";
+import { checkUsernameAvailable } from "@/services/usernames";
 
 const CLIENT_TYPES = ["Developer", "Private client", "Brand / company", "Event", "Agency", "Other"];
 const HIRING_FOR = ["One off project", "Ongoing work", "A competition", "Event coverage", "Full time role", "Just looking"];
@@ -18,6 +20,8 @@ export default function ClientSignup() {
   const [type, setType] = useState("Private client");
   const [hiring, setHiring] = useState("One off project");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameOk, setUsernameOk] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +37,15 @@ export default function ClientSignup() {
       setError("Password must be at least 6 characters.");
       return;
     }
+    if (!usernameOk) {
+      setError("Pick an available username to continue.");
+      return;
+    }
+    const stillFree = await checkUsernameAvailable(username);
+    if (!stillFree) {
+      setError("That username was just taken — try another.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase.auth.signUp({
       email: email.trim(),
@@ -42,6 +55,7 @@ export default function ClientSignup() {
         data: {
           account_type: "client",
           display_name: name || undefined,
+          username,
           client_type: type,
           hiring_for: hiring,
         },
@@ -102,6 +116,13 @@ export default function ClientSignup() {
             placeholder="Your name or company"
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+          <UsernamePicker
+            value={username}
+            onChange={setUsername}
+            onValidityChange={(s) => setUsernameOk(s.valid && s.available)}
+            label="Account username"
+            baseSuggestion={name}
           />
           <TextField
             label="Work email"

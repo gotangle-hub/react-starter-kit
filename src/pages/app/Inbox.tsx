@@ -88,6 +88,9 @@ export default function Inbox() {
                       <span className="flex items-center gap-2">
                         <span className="min-w-0 flex-1 truncate font-display text-[14.5px] font-semibold text-tg-ink">
                           {maker.name}
+                          {maker.handle && (
+                            <span className="ml-1.5 font-mono text-[11px] font-normal text-tg-brown-soft">@{maker.handle}</span>
+                          )}
                         </span>
                         <span className="flex-none font-mono text-[10.5px] text-tg-brown-soft">{timeAgo(row.lastMessageAt)}</span>
                       </span>

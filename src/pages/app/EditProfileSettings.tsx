@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { SettingsScaffold } from "@/components/app/settings-kit";
 import { TextField, LocationField } from "@/components/app/fields";
 import { Pill } from "@/components/brand/atoms";
+import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
 import { disciplines as allDisciplines } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 import { getMyProfile, updateMyProfile, workPublicUrl } from "@/services/profile";
 import { uploadService } from "@/services/uploads";
+import { checkUsernameAvailable, normalizeUsername } from "@/services/usernames";
 
 export default function EditProfileSettings() {
   const navigate = useNavigate();
@@ -18,6 +20,9 @@ export default function EditProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameOk, setUsernameOk] = useState(true);
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [website, setWebsite] = useState("");
@@ -31,6 +36,8 @@ export default function EditProfileSettings() {
       const p = await getMyProfile();
       if (p) {
         setName(p.display_name ?? "");
+        setUsername(p.username ?? "");
+        setOriginalUsername(p.username ?? "");
         setBio(p.bio ?? "");
         setLocation(p.location ?? "");
         setPicked(p.disciplines ?? []);
@@ -67,8 +74,25 @@ export default function EditProfileSettings() {
   async function save() {
     setBusy(true);
     try {
+      const targetUsername = normalizeUsername(username);
+      // Only re-check uniqueness if the handle changed.
+      if (targetUsername !== normalizeUsername(originalUsername)) {
+        if (!usernameOk) {
+          // eslint-disable-next-line no-alert
+          alert("Pick an available username to save.");
+          setBusy(false);
+          return;
+        }
+        if (!(await checkUsernameAvailable(targetUsername))) {
+          // eslint-disable-next-line no-alert
+          alert("That username was just taken — try another.");
+          setBusy(false);
+          return;
+        }
+      }
       await updateMyProfile({
         display_name: name || null,
+        username: targetUsername,
         bio: bio || null,
         location: location || null,
         disciplines: picked,
@@ -148,6 +172,14 @@ export default function EditProfileSettings() {
         <div className="mt-4">
           <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
+
+        <UsernamePicker
+          value={username}
+          onChange={setUsername}
+          onValidityChange={(s) => setUsernameOk((s.valid && s.available) || normalizeUsername(username) === normalizeUsername(originalUsername))}
+          label="Username"
+          baseSuggestion={name}
+        />
 
         <label className="block">
           <span className="mb-1.5 block font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">

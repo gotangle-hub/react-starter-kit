@@ -6,9 +6,11 @@ import { Logo } from "@/components/brand/logo";
 import { Chip } from "@/components/brand/chip";
 import { Meta, Pill } from "@/components/brand/atoms";
 import { LocationField, TextField } from "@/components/app/fields";
+import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { supabase } from "@/integrations/supabase/client";
+import { checkUsernameAvailable } from "@/services/usernames";
 
 const TAGS = ["Architecture", "Interiors", "Product", "Type & lettering", "Ceramics", "Textiles", "Photography", "Furniture", "Graphic", "Illustration", "Landscape", "Jewellery"];
 
@@ -17,6 +19,8 @@ export default function CollectorSignup() {
   const navigate = useNavigate();
   const [tags, setTags] = useState<Set<string>>(new Set(["Architecture", "Product", "Ceramics"]));
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameOk, setUsernameOk] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +43,15 @@ export default function CollectorSignup() {
       setError("Password must be at least 6 characters.");
       return;
     }
+    if (!usernameOk) {
+      setError("Pick an available username to continue.");
+      return;
+    }
+    const stillFree = await checkUsernameAvailable(username);
+    if (!stillFree) {
+      setError("That username was just taken — try another.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase.auth.signUp({
       email: email.trim(),
@@ -48,6 +61,7 @@ export default function CollectorSignup() {
         data: {
           account_type: "collector",
           display_name: name || undefined,
+          username,
           disciplines: Array.from(tags),
         },
       },
@@ -95,6 +109,13 @@ export default function CollectorSignup() {
             placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+          <UsernamePicker
+            value={username}
+            onChange={setUsername}
+            onValidityChange={(s) => setUsernameOk(s.valid && s.available)}
+            label="Username"
+            baseSuggestion={name}
           />
           <TextField
             label="Email"
