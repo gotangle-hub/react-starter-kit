@@ -115,6 +115,33 @@ export type Database = {
         }
         Relationships: []
       }
+      connection_requests: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["connection_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_id: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["connection_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["connection_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -707,6 +734,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      like_to_connect: {
+        Args: { _target: string }
+        Returns: {
+          mutual: boolean
+          status: string
+        }[]
+      }
       match_search_documents: {
         Args: {
           match_count?: number
@@ -729,6 +763,7 @@ export type Database = {
         }
         Returns: number
       }
+      pass_on_maker: { Args: { _target: string }; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -750,6 +785,7 @@ export type Database = {
         | "student"
         | "collector"
       app_role: "admin" | "moderator" | "user"
+      connection_status: "pending" | "accepted" | "declined" | "dismissed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -886,6 +922,7 @@ export const Constants = {
         "collector",
       ],
       app_role: ["admin", "moderator", "user"],
+      connection_status: ["pending", "accepted", "declined", "dismissed"],
     },
   },
 } as const
