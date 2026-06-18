@@ -185,7 +185,7 @@ export default function CollabTracker() {
       {creating && (
         <CreateCollabSheet
           onClose={() => setCreating(false)}
-          onCreated={(id) => {
+          onCreated={(id: string) => {
             setCreating(false);
             refresh();
             navigate(path(routes.projectChat, { id }));
