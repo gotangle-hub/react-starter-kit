@@ -556,6 +556,36 @@ export type Database = {
         }
         Relationships: []
       }
+      salary_entries: {
+        Row: {
+          created_at: string
+          currency: string
+          field: string
+          id: string
+          location: string
+          pay_per_month: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          field: string
+          id?: string
+          location: string
+          pay_per_month: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          field?: string
+          id?: string
+          location?: string
+          pay_per_month?: number
+          title?: string
+        }
+        Relationships: []
+      }
       search_documents: {
         Row: {
           content: string

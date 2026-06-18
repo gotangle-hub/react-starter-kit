@@ -8,22 +8,62 @@ import { Meta, Pill } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { disciplines } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { salaryService } from "@/services/salary";
 
 /**
  * 55 · Anonymous salary submission (G14). Fields: Field, Title, Pay per month,
- * Location. Nothing is linked to the user's account.
+ * Location. Nothing is linked to the user's account — the inserted row carries
+ * no user_id or identifying info.
  */
 export default function SalarySubmit() {
   const navigate = useNavigate();
   const [field, setField] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [pay, setPay] = useState("");
+  const [location, setLocation] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /** Parse "12,000 AED" / "12000" / "AED 12,000" → {amount, currency}. */
+  const parsePay = (raw: string): { amount: number; currency: string } | null => {
+    const digits = raw.replace(/[^\d.]/g, "");
+    const amount = Number(digits);
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    const match = raw.match(/[A-Za-z]{3}/);
+    const currency = (match?.[0] ?? "AED").toUpperCase();
+    return { amount, currency };
+  };
+
+  const canSubmit =
+    !!field && title.trim().length > 1 && !!parsePay(pay) && location.trim().length > 1 && !submitting;
+
+  const onSubmit = async () => {
+    if (!canSubmit) return;
+    const parsed = parsePay(pay)!;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await salaryService.submit({
+        field: field!,
+        title: title.trim(),
+        payPerMonth: parsed.amount,
+        currency: parsed.currency,
+        location: location.trim(),
+      });
+      navigate(routes.salarySubmitted);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not submit. Please try again.");
+      setSubmitting(false);
+    }
+  };
 
   return (
     <MobileShell
       header={<BackHeader title="Add a salary" />}
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(routes.salarySubmitted)}>
-            Submit anonymously
+          <Button full size="lg" onClick={onSubmit} disabled={!canSubmit}>
+            {submitting ? "Submitting…" : "Submit anonymously"}
           </Button>
         </div>
       }
@@ -66,16 +106,27 @@ export default function SalarySubmit() {
             </div>
           </div>
 
-          <TextField label="Title" placeholder="e.g. Senior Designer" />
+          <TextField
+            label="Title"
+            placeholder="e.g. Senior Designer"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
           <TextField
             label="Pay per month"
             mono
             type="text"
             inputMode="numeric"
             placeholder="e.g. 12,000 AED"
+            value={pay}
+            onChange={(e) => setPay(e.target.value)}
           />
-          <LocationField label="Location" />
+          <LocationField label="Location" defaultValue={location} onChange={setLocation} />
         </div>
+
+        {error && (
+          <p className="mt-4 text-[12.5px] text-red-500" role="alert">{error}</p>
+        )}
 
         <Meta className="mt-5 block text-center">
           One honest figure makes the whole community stronger.
