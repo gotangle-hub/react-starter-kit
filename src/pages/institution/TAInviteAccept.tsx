@@ -1,44 +1,63 @@
+import { useEffect, useState } from "react";
 import { Check, Shapes, ShieldCheck, X } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
-import { InstLogo } from "@/components/app/inst-logo";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { schools } from "@/lib/fixtures";
-import { routes } from "@/lib/routes";
-import { useNavigate } from "react-router-dom";
+import { routes, path } from "@/lib/routes";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { acceptClassInvite } from "@/services/classes";
 
-/**
- * 28 · The screen the TA invite link opens — a class card, a "what a TA can /
- * can't do" list, a "verified via your school email" line, and two actions:
- * Accept & join as TA → classList, Decline → back.
- */
-const CAN = [
-  "Post documents and lectures",
-  "Help run the class group chat",
-  "Add and share references",
-];
+const CAN = ["Post documents and lectures", "Help run the class group chat", "Add and share references"];
 const CANNOT = ["Delete the class", "Change the roster"];
 
 export default function TAInviteAccept() {
   const navigate = useNavigate();
-  const school = schools[0];
-  const className = "Spatial Studio";
-  const professor = "Prof. Rakan Lee";
+  const { token } = useParams();
+  const [className, setClassName] = useState("This class");
+  const [email, setEmail] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    supabase
+      .from("class_invites")
+      .select("email, classes(name)")
+      .eq("token", token)
+      .maybeSingle()
+      .then(({ data }) => {
+        const row = data as { email?: string; classes?: { name?: string } } | null;
+        if (row?.email) setEmail(row.email);
+        if (row?.classes?.name) setClassName(row.classes.name);
+      });
+  }, [token]);
+
+  const accept = async () => {
+    if (!token) return;
+    setBusy(true);
+    try {
+      const classId = await acceptClassInvite(token);
+      navigate(path(routes.studioClassPage, { id: classId }));
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Could not accept invite.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(routes.classList)}>
+          <Button full size="lg" onClick={accept} disabled={busy || !token}>
             <Check size={16} />
-            Accept &amp; join as TA
+            {busy ? "Joining…" : "Accept & join as TA"}
           </Button>
           <div className="mt-2.5">
-            <Button variant="ghost" full size="md" onClick={() => navigate(-1)}>
-              Decline
-            </Button>
+            <Button variant="ghost" full size="md" onClick={() => navigate(-1)}>Decline</Button>
           </div>
         </div>
       }
@@ -46,34 +65,22 @@ export default function TAInviteAccept() {
       <BackHeader title="Join as TA" />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-3.5 pb-4">
-        {/* Class card */}
         <div className="mb-[18px] flex items-center gap-3 rounded-[16px] border border-tg-line bg-tg-card p-4">
-          <span
-            className="flex h-[50px] w-[50px] flex-none items-center justify-center rounded-[13px]"
-            style={{ background: school.tint }}
-          >
+          <span className="flex h-[50px] w-[50px] flex-none items-center justify-center rounded-[13px] bg-tg-blue">
             <Shapes size={24} className="text-white" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="font-display text-[16px] font-semibold text-tg-ink">{className}</div>
-            <span className="mt-1 inline-flex items-center gap-1.5">
-              <InstLogo school={school} size={16} />
-              <Meta>{school.name}</Meta>
-            </span>
+            <Meta className="mt-1 block">Private class</Meta>
           </div>
         </div>
 
-        <h1 className="font-serif text-[27px] font-medium leading-[1.08] tracking-[-0.02em]">
-          Join as a teaching assistant.
-        </h1>
-        <p className="my-2.5 font-body text-[14px] leading-relaxed text-tg-brown">
-          {professor} invited you to help run this class.
-        </p>
+        <h1 className="font-serif text-[27px] font-medium leading-[1.08] tracking-[-0.02em]">Join as a teaching assistant.</h1>
+        <p className="my-2.5 font-body text-[14px] leading-relaxed text-tg-brown">You were invited to help run this class.</p>
 
-        {/* What a TA can do */}
-        <div className="mb-2 mt-4 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
-          What a TA can do
-        </div>
+        {err && <div className="mb-3 rounded-md border border-tg-line bg-tg-card p-3 font-body text-[12.5px] text-tg-ink">{err}</div>}
+
+        <div className="mb-2 mt-4 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">What a TA can do</div>
         <div className="flex flex-col gap-2.5">
           {CAN.map((c) => (
             <div key={c} className="flex items-center gap-3">
@@ -85,10 +92,7 @@ export default function TAInviteAccept() {
           ))}
         </div>
 
-        {/* What a TA can't do */}
-        <div className="mb-2 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
-          What a TA can&apos;t do
-        </div>
+        <div className="mb-2 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">What a TA can&apos;t do</div>
         <div className="flex flex-col gap-2.5">
           {CANNOT.map((c) => (
             <div key={c} className="flex items-center gap-3">
@@ -100,12 +104,13 @@ export default function TAInviteAccept() {
           ))}
         </div>
 
-        {/* Verified line */}
-        <div className="mt-[18px] flex items-center gap-2 rounded-[12px] bg-tg-stone2 p-3.5">
-          <ShieldCheck size={15} className="flex-none text-tg-brown-soft" />
-          <Meta>Verified via your school email · mona@{school.domain}</Meta>
-          <VerifiedBadge size={15} />
-        </div>
+        {email && (
+          <div className="mt-[18px] flex items-center gap-2 rounded-[12px] bg-tg-stone2 p-3.5">
+            <ShieldCheck size={15} className="flex-none text-tg-brown-soft" />
+            <Meta>Invite for {email}</Meta>
+            <VerifiedBadge size={15} />
+          </div>
+        )}
       </div>
     </MobileShell>
   );
