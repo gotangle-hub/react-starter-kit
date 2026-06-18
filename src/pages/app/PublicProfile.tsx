@@ -187,6 +187,21 @@ export default function PublicProfile() {
           )}
         </div>
       </div>
+      {creatingCollab && profile && (
+        <CreateCollabSheet
+          onClose={() => setCreatingCollab(false)}
+          onCreated={(id: string) => {
+            setCreatingCollab(false);
+            navigate(path(routes.projectChat, { id }));
+          }}
+          initialMembers={[{
+            id: profile.id,
+            username: profile.username ?? "",
+            display_name: profile.display_name ?? null,
+            avatar_path: profile.avatar_path ?? null,
+          }]}
+        />
+      )}
     </MobileShell>
   );
 }
