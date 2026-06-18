@@ -110,6 +110,13 @@ export default function CollectorSignup() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          <UsernamePicker
+            value={username}
+            onChange={setUsername}
+            onValidityChange={(s) => setUsernameOk(s.valid && s.available)}
+            label="Username"
+            baseSuggestion={name}
+          />
           <TextField
             label="Email"
             mono
