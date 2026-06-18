@@ -173,6 +173,14 @@ export default function EditProfileSettings() {
           <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
 
+        <UsernamePicker
+          value={username}
+          onChange={setUsername}
+          onValidityChange={(s) => setUsernameOk((s.valid && s.available) || normalizeUsername(username) === normalizeUsername(originalUsername))}
+          label="Username"
+          baseSuggestion={name}
+        />
+
         <label className="block">
           <span className="mb-1.5 block font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
             Bio
