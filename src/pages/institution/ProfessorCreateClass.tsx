@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { createClass, type ClassKind } from "@/services/classes";
 import { recallInstitution } from "@/services/institutions";
-import { toast } from "sonner";
+
 
 const TYPES = [
   { id: "studio" as const, icon: Shapes, title: "Studio class", desc: "Project briefs, crits, shared references and student work." },
