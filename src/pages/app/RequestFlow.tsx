@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { getProfileById, makerFromProfile } from "@/services/profile";
-import { profileIdByUsername } from "@/services/usernames";
+import { lookupProfileIdByUsername } from "@/services/usernames";
 import type { Maker } from "@/lib/profile-shape";
 
 /**
@@ -33,7 +33,7 @@ export default function RequestFlow() {
       if (!raw) return;
       let id = raw;
       if (raw.startsWith("@")) {
-        id = (await profileIdByUsername(raw.slice(1))) ?? "";
+        id = (await lookupProfileIdByUsername(raw.slice(1))) ?? "";
       }
       if (!id) return;
       const profile = await getProfileById(id);
