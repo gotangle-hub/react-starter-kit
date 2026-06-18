@@ -28,12 +28,22 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { kind, reference, currency, amount, message, success_url, cancel_url, failure_url, test } = body;
+    const { kind, reference, currency, amount, message, success_url, cancel_url, failure_url, test, boost } = body;
 
     if (!kind || !reference || !currency || !Number.isInteger(amount) || amount <= 0) {
       return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+    if (kind === 'boost') {
+      if (!boost || typeof boost !== 'object' ||
+          !['profile','post','callout','community','creator'].includes(boost.boost_kind) ||
+          !boost.product_id || !boost.product_name ||
+          !Number.isInteger(boost.duration_days) || boost.duration_days <= 0) {
+        return new Response(JSON.stringify({ error: 'Invalid boost payload' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const ziinaRes = await fetch(ZIINA_API, {
