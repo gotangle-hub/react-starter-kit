@@ -1,24 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader, RefreshHint } from "@/components/app/bits";
 import { Segmented } from "@/components/app/segmented";
 import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta, Pill } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { makers as allMakers, makerById } from "@/lib/fixtures";
 import { path, routes } from "@/lib/routes";
 import { semanticSearch, type SearchMatch } from "@/services/search";
+import { getProfilesByIds, listProfiles, makerFromProfile } from "@/services/profile";
+import type { Maker } from "@/lib/profile-shape";
 
 const DISCIPLINES = ["Any discipline", "Architecture", "Product", "Type & brand", "Ceramics", "Textiles"];
 const CITIES = ["Any city", "Dubai", "Abu Dhabi", "Beirut", "Lisbon", "Amman"];
 const AVAILABILITY = ["Anyone", "Available now", "Open to hire", "Open to collaborate"];
 
 /**
- * 32 · People search (G4, G7). Intent-aware results for makers and studios — by
- * meaning, not keyword. Filter by discipline, city and availability. You can
- * search people OR projects.
+ * 32 · People search (G4, G7). Intent-aware real-people results. With no query
+ * we fall back to a recent-designers list (real profiles, no fixtures).
  */
 export default function SearchPeople() {
   const navigate = useNavigate();
@@ -28,20 +28,38 @@ export default function SearchPeople() {
   const [city, setCity] = useState("Any city");
   const [availability, setAvailability] = useState("Anyone");
   const [matches, setMatches] = useState<SearchMatch[] | null>(q ? null : []);
+  const [fallback, setFallback] = useState<Maker[]>([]);
+  const [matchMakers, setMatchMakers] = useState<Map<string, Maker>>(new Map());
 
   useEffect(() => {
     let cancel = false;
-    if (!q) { setMatches([]); return; }
-    semanticSearch({ mode: "people", query: q, limit: 20 }).then((m) => { if (!cancel) setMatches(m); });
+    if (!q) {
+      listProfiles({ limit: 20, excludeSelf: true }).then((rows) => {
+        if (!cancel) setFallback(rows.map((r) => makerFromProfile(r) as Maker));
+      });
+      setMatches([]);
+      return () => { cancel = true; };
+    }
+    semanticSearch({ mode: "people", query: q, limit: 20 }).then(async (m) => {
+      if (cancel) return;
+      setMatches(m);
+      const ids = m.map((x) => x.ref_id);
+      const profiles = await getProfilesByIds(ids);
+      if (cancel) return;
+      const map = new Map<string, Maker>();
+      profiles.forEach((row, id) => map.set(id, makerFromProfile(row) as Maker));
+      setMatchMakers(map);
+    });
     return () => { cancel = true; };
   }, [q]);
 
-  const makers = useMemo(() => {
-    if (!q) return allMakers;
-    if (matches === null) return [] as typeof allMakers;
-    return matches.map((m) => makerById(m.ref_id)).filter(Boolean);
-  }, [q, matches]);
-  const queryLabel = q || "Designers near me, warm materials";
+  const people: Maker[] = useMemo(() => {
+    if (!q) return fallback;
+    if (matches === null) return [];
+    return matches.map((m) => matchMakers.get(m.ref_id)).filter(Boolean) as Maker[];
+  }, [q, matches, matchMakers, fallback]);
+
+  const queryLabel = q || "Recent designers";
 
   return (
     <MobileShell footer={null} header={<BackHeader title="People" />}>
@@ -81,42 +99,46 @@ export default function SearchPeople() {
           <Meta>People matched by meaning, not keyword</Meta>
         </div>
 
-        <div className="mt-3 flex flex-col divide-y divide-tg-line-soft">
-          {makers.map((m) => (
-            <div key={m.id} className="flex items-center gap-3 py-3">
-              <button
-                type="button"
-                onClick={() => navigate(path(routes.publicProfile, { id: m.id }))}
-                aria-label={`Open ${m.name}`}
-              >
-                <Avatar maker={m} size={46} />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(path(routes.publicProfile, { id: m.id }))}
-                className="min-w-0 flex-1 text-left"
-              >
-                <NameRow maker={m} size={14.5} />
-                <Meta className="mt-0.5 block">
-                  {m.role} · {m.city}
-                </Meta>
-              </button>
-              {typeof m.match === "number" && (
-                <div className="text-right">
-                  <div className="font-display text-[15px] font-semibold text-tg-blue-accent">{m.match}%</div>
-                  <Meta>match</Meta>
-                </div>
-              )}
-              <Button
-                variant="outlineAccent"
-                size="sm"
-                onClick={() => navigate(routes.request)}
-              >
-                {m.role.startsWith("Studio") ? "View" : "Connect"}
-              </Button>
-            </div>
-          ))}
-        </div>
+        {people.length === 0 ? (
+          <div className="mt-10 flex flex-col items-center text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
+              <Users size={22} />
+            </span>
+            <h2 className="mt-4 font-serif text-[20px] font-medium tracking-[-0.01em]">{q ? "No people match yet" : "No designers found"}</h2>
+            <Meta className="mt-1.5 block max-w-[260px]">{q ? "Try a different query — search understands meaning." : "Once designers join, you can search and shortlist them here."}</Meta>
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-col divide-y divide-tg-line-soft">
+            {people.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 py-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(path(routes.publicProfile, { id: m.handle ?? m.id }))}
+                  aria-label={`Open ${m.name}`}
+                >
+                  <Avatar maker={m} size={46} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate(path(routes.publicProfile, { id: m.handle ?? m.id }))}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <NameRow maker={m} size={14.5} />
+                  <Meta className="mt-0.5 block">
+                    {m.role}{m.city ? ` · ${m.city}` : ""}
+                  </Meta>
+                </button>
+                <Button
+                  variant="outlineAccent"
+                  size="sm"
+                  onClick={() => navigate(routes.request)}
+                >
+                  Connect
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </MobileShell>
   );

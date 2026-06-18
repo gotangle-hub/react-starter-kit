@@ -1,34 +1,55 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Plus } from "lucide-react";
+import { Bell, Plus, Users } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { AppTabBar } from "@/components/app/app-tab-bar";
 import { RefreshHint } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta } from "@/components/brand/atoms";
-import { makers } from "@/lib/fixtures";
+import { Button } from "@/components/ui/button";
+import { listProfiles, makerFromProfile, getMyProfile, type ProfileRow } from "@/services/profile";
+import { rankItems } from "@/services/feed";
 import { routes } from "@/lib/routes";
+import type { Maker } from "@/lib/profile-shape";
 
 /** 11 · Client home (G2, G6, G7). Post-a-brief CTA, pipeline, matched talent. */
-const STATS = [
-  ["2", "Open briefs"],
-  ["18", "Applicants"],
-  ["5", "Saved talent"],
-];
 
 export default function ClientHome() {
   const navigate = useNavigate();
-  const talent = makers.filter((m) => m.id !== "studio").slice(0, 4);
+  const [me, setMe] = useState<ProfileRow | null>(null);
+  const [talent, setTalent] = useState<Maker[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const [profile, others] = await Promise.all([
+        getMyProfile(),
+        listProfiles({ limit: 8, excludeSelf: true }),
+      ]);
+      if (!alive) return;
+      setMe(profile);
+      const ranked = await rankItems(
+        "makers",
+        others.map((p) => ({ id: p.id, category: p.account_type, base_score: 0 })),
+      );
+      const byId = new Map(others.map((p) => [p.id, p]));
+      const ordered = ranked.map((r) => byId.get(r.id)).filter(Boolean) as ProfileRow[];
+      setTalent(ordered.slice(0, 4).map((p) => makerFromProfile(p) as Maker));
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const studioLabel = me?.display_name ? `Client · ${me.display_name}` : "Client";
 
   return (
     <MobileShell footer={<AppTabBar />}>
       <div className="flex flex-none items-center justify-between px-[22px] pb-3 pt-2">
         <div>
-          <Meta>Client · Studio Habitat</Meta>
+          <Meta>{studioLabel}</Meta>
           <div className="mt-0.5 font-serif text-[24px] font-medium tracking-[-0.02em]">Find your next maker.</div>
         </div>
         <button type="button" className="relative" aria-label="Notifications" onClick={() => navigate(routes.notifications)}>
           <Bell size={23} className="text-tg-ink" />
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-pill bg-tg-blue ring-[1.5px] ring-tg-bg" />
         </button>
       </div>
 
@@ -52,38 +73,39 @@ export default function ClientHome() {
           </button>
         </div>
 
-        {/* Pipeline */}
-        <div className="mt-4 flex gap-2.5">
-          {STATS.map(([n, l]) => (
-            <div key={l} className="flex-1 rounded-lg border border-tg-line bg-tg-card px-3 py-3.5">
-              <div className="font-serif text-[24px] text-tg-blue-accent">{n}</div>
-              <Meta className="mt-1 block">{l}</Meta>
-            </div>
-          ))}
-        </div>
-
         {/* Matched talent */}
         <div className="mb-3 mt-6 flex items-baseline justify-between">
-          <span className="font-serif text-[19px] font-medium tracking-[-0.02em]">Matched to your last brief</span>
+          <span className="font-serif text-[19px] font-medium tracking-[-0.02em]">Suggested makers</span>
           <button type="button" onClick={() => navigate(routes.talentPool)}>
             <Meta>See all</Meta>
           </button>
         </div>
-        <div className="flex flex-col gap-2.5">
-          {talent.map((m) => (
-            <button key={m.id} type="button" onClick={() => navigate(`/u/${m.id}`)} className="flex items-center gap-3 rounded-lg border border-tg-line bg-tg-card p-3 text-left">
-              <Avatar maker={m} size={46} />
-              <div className="min-w-0 flex-1">
-                <NameRow maker={m} size={14.5} />
-                <Meta className="mt-0.5 block">{m.role} · {m.city}</Meta>
-              </div>
-              <div className="text-right">
-                <div className="font-display text-[15px] font-semibold text-tg-blue-accent">{m.match}%</div>
-                <Meta>match</Meta>
-              </div>
-            </button>
-          ))}
-        </div>
+        {talent.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-tg-line bg-tg-card px-4 py-8 text-center">
+            <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
+              <Users size={20} />
+            </span>
+            <Meta className="block">No designers in your network yet. Post a brief to start matching.</Meta>
+            <Button size="sm" className="mt-3" onClick={() => navigate(routes.postCallout)}>Post a brief</Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {talent.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => navigate(`/u/${m.handle ?? m.id}`)}
+                className="flex items-center gap-3 rounded-lg border border-tg-line bg-tg-card p-3 text-left"
+              >
+                <Avatar maker={m} size={46} />
+                <div className="min-w-0 flex-1">
+                  <NameRow maker={m} size={14.5} />
+                  <Meta className="mt-0.5 block">{m.role}{m.city ? ` · ${m.city}` : ""}</Meta>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </MobileShell>
   );

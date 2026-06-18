@@ -2,7 +2,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Compass } from "lucide-react";
 import { BottomSheet } from "@/components/app/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { feed } from "@/lib/fixtures";
+import { feedAsset as feed } from "@/lib/feed-asset";
 import { routes } from "@/lib/routes";
 import { setPostOnExplore } from "@/services/work";
 

@@ -1,4 +1,4 @@
-import type { School } from "@/lib/fixtures";
+import type { School } from "@/lib/schools";
 
 /** Institution monogram tile, tinted per school. */
 export function InstLogo({ school, size = 42 }: { school: Pick<School, "tint" | "initials">; size?: number }) {

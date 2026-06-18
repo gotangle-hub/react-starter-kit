@@ -6,7 +6,7 @@ import { BackHeader } from "@/components/app/bits";
 import { LocationField, TextField } from "@/components/app/fields";
 import { Meta, Pill } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { disciplines } from "@/lib/fixtures";
+import { disciplines } from "@/lib/disciplines";
 import { routes } from "@/lib/routes";
 import { salaryService } from "@/services/salary";
 

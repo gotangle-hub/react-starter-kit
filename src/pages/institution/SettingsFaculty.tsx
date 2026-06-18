@@ -12,7 +12,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
-import { schools } from "@/lib/fixtures";
+import { schools } from "@/lib/schools";
 import { routes } from "@/lib/routes";
 
 /** 45 · Faculty settings — faculty-worded, consistent with the rest of the app. */

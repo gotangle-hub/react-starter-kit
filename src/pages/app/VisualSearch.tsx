@@ -5,16 +5,17 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader, RefreshHint } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { Meta } from "@/components/brand/atoms";
-import { feed, makerById } from "@/lib/fixtures";
 import { path, routes } from "@/lib/routes";
 import { semanticSearch, type SearchMatch } from "@/services/search";
+import { getProfilesByIds, makerFromProfile } from "@/services/profile";
+import type { Maker } from "@/lib/profile-shape";
 
 const HEIGHTS = [150, 200, 170, 230, 160, 210, 190, 180, 220, 150, 200, 175];
 
 /**
  * 30 · Visual search results (G4, G7). A masonry grid of every relevant piece
- * across the platform — matched by meaning, not by keyword. Results come from
- * the platform's intelligent search; the powering technology is never named.
+ * across the platform — matched by meaning, not by keyword. Real results only;
+ * empty surfaces show a real empty state (G14).
  */
 export default function VisualSearch() {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ export default function VisualSearch() {
   const headerLabel = imageDataUrl ? "your image" : q || "all";
 
   const [matches, setMatches] = useState<SearchMatch[] | null>(null);
+  const [makers, setMakers] = useState<Map<string, Maker>>(new Map());
+
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -34,7 +37,14 @@ export default function VisualSearch() {
           ? { mode: "image", image_data_url: imageDataUrl, limit: 24 }
           : { mode: "text", query: q, limit: 24 },
       );
-      if (!cancel) setMatches(m);
+      if (cancel) return;
+      setMatches(m);
+      const ids = Array.from(new Set(m.map((x) => (x.metadata as { maker?: string }).maker).filter(Boolean) as string[]));
+      const profiles = await getProfilesByIds(ids);
+      if (cancel) return;
+      const map = new Map<string, Maker>();
+      profiles.forEach((row, id) => map.set(id, makerFromProfile(row) as Maker));
+      setMakers(map);
     })();
     return () => { cancel = true; };
   }, [q, imageDataUrl]);
@@ -42,17 +52,18 @@ export default function VisualSearch() {
   const tiles = useMemo(() => {
     return (matches ?? []).map((m, i) => {
       const meta = m.metadata as { title?: string; cat?: string; maker?: string; img?: string; swatch?: string };
+      const maker = meta.maker ? makers.get(meta.maker) : undefined;
       return {
         id: m.ref_id,
         img: meta.img,
         swatch: meta.swatch ?? "#161514",
         h: HEIGHTS[i % HEIGHTS.length],
-        maker: makerById(meta.maker ?? ""),
+        maker,
         title: meta.title ?? m.content.split(".")[0],
         cat: meta.cat ?? "",
       };
     });
-  }, [matches]);
+  }, [matches, makers]);
 
   return (
     <MobileShell footer={null} header={<BackHeader title={`Results · "${headerLabel}"`} />}>
@@ -78,7 +89,9 @@ export default function VisualSearch() {
         {matches === null ? (
           <div className="px-2 pt-6"><Meta>Looking…</Meta></div>
         ) : tiles.length === 0 ? (
-          <div className="px-2 pt-6"><Meta>No results yet — try another query.</Meta></div>
+          <div className="px-2 pt-10 text-center">
+            <Meta className="block">No results yet — try another query.</Meta>
+          </div>
         ) : (
           <div className="[column-count:2] [column-gap:10px]">
             {tiles.map((t) => (
@@ -89,7 +102,7 @@ export default function VisualSearch() {
                 className="relative mb-2.5 block w-full overflow-hidden rounded-lg border border-tg-line bg-tg-card text-left [break-inside:avoid]"
               >
                 {t.img ? (
-                  <img src={feed(t.img)} alt={t.title} className="block w-full object-cover" style={{ height: t.h }} />
+                  <img src={t.img} alt={t.title} className="block w-full object-cover" style={{ height: t.h }} />
                 ) : (
                   <div
                     className="flex w-full items-end p-3 font-mono text-[13px] leading-[1.3] text-white"
@@ -103,12 +116,14 @@ export default function VisualSearch() {
                   <Bookmark size={15} className="text-white" />
                 </span>
 
-                <span className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-pill bg-black/45 py-1 pl-1 pr-2.5 backdrop-blur">
-                  <Avatar maker={t.maker} size={18} />
-                  <span className="font-display text-[10.5px] font-semibold text-white">
-                    {t.maker.name.split(" ")[0]}
+                {t.maker && (
+                  <span className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-pill bg-black/45 py-1 pl-1 pr-2.5 backdrop-blur">
+                    <Avatar maker={t.maker} size={18} />
+                    <span className="font-display text-[10.5px] font-semibold text-white">
+                      {t.maker.name.split(" ")[0]}
+                    </span>
                   </span>
-                </span>
+                )}
               </button>
             ))}
           </div>

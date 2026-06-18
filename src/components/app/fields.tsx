@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Apple, MapPin, Search } from "lucide-react";
-import { cities } from "@/lib/fixtures";
+import { cities } from "@/lib/cities";
 import { cn } from "@/lib/utils";
 
 /** Labelled text input matching the editorial field style. */

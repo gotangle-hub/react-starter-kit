@@ -8,7 +8,7 @@ import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Pill, Meta, PhotoTile } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { me as meFallback } from "@/lib/fixtures";
+
 import { routes } from "@/lib/routes";
 import { getMyProfile, workPublicUrl, type ProfileRow } from "@/services/profile";
 import { listMyWork, postCoverUrl, type PostRow } from "@/services/work";
@@ -36,7 +36,7 @@ export default function DesignerProfile() {
     };
   }, []);
 
-  const name = profile?.display_name ?? meFallback.name;
+  const name = profile?.display_name ?? "Your profile";
   const bannerUrl = workPublicUrl(profile?.banner_path);
   const avatarUrl = workPublicUrl(profile?.avatar_path);
   const disciplines = profile?.disciplines?.length ? profile.disciplines : [];

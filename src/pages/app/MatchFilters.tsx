@@ -6,7 +6,7 @@ import { Segmented } from "@/components/app/segmented";
 import { LocationField } from "@/components/app/fields";
 import { Pill, Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { disciplines } from "@/lib/fixtures";
+import { disciplines } from "@/lib/disciplines";
 import { routes } from "@/lib/routes";
 
 const AVAILABILITY = ["Any", "Open to work", "Collaborations", "Full-time"];

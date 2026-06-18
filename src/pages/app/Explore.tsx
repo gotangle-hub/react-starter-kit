@@ -1,104 +1,95 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bookmark, Heart, MessageCircle, MoreHorizontal, Plus } from "lucide-react";
+import { Bookmark, Compass, Heart, MessageCircle, MoreHorizontal, Plus } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { AppTabBar } from "@/components/app/app-tab-bar";
 import { PromotedTag } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
-import { feed, makerById, posts as fixturePosts, type Maker, type Post } from "@/lib/fixtures";
+import { Meta } from "@/components/brand/atoms";
 import { rankItems, logInteraction } from "@/services/feed";
-import { listExploreWork, postCoverUrl } from "@/services/work";
+import { listExploreWork, postCoverUrl, type PostRow } from "@/services/work";
 import { getProfilesByIds, makerFromProfile } from "@/services/profile";
 import { countCommentsForPosts } from "@/services/comments";
 import { cn } from "@/lib/utils";
+import type { Maker } from "@/lib/profile-shape";
 
 /**
- * 22/23 · Explore (G2, G3, G6, G7). Edge-to-edge personalised feed with NO chrome.
- * Tapping reveals overlay controls (save/pin, follow, comment, open, menu); tap
- * again hides them. Strong work breaks out via G3; boosted work woven in (G6).
+ * 22/23 · Explore (G2, G3, G6, G7). Edge-to-edge personalised feed with NO
+ * chrome, built from real published work. Tapping reveals overlay controls.
  */
 export default function Explore() {
   const navigate = useNavigate();
   const [revealed, setRevealed] = useState(false);
   const [index, setIndex] = useState(0);
-  const [posts, setPosts] = useState<Post[]>(fixturePosts);
-  const [realMakers, setRealMakers] = useState<Map<string, Maker & { avatarUrl?: string }>>(new Map());
+  const [posts, setPosts] = useState<PostRow[]>([]);
+  const [makers, setMakers] = useState<Map<string, Maker>>(new Map());
+  const [counts, setCounts] = useState<Map<string, number>>(new Map());
+
   useEffect(() => {
     (async () => {
-      // Pull real published work first, then fall back to fixtures so the feed
-      // is never empty for new accounts.
-      const real = await listExploreWork(30);
-      const realAsPosts: Post[] = [];
-      for (const p of real) {
-        const img = postCoverUrl(p);
-        if (!img) continue;
-        realAsPosts.push({
-          id: p.id,
-          maker: p.author_id,
-          img,
-          title: p.title,
-          cat: p.category ?? "",
-          year: p.year ?? new Date(p.created_at).getFullYear(),
-          place: p.place ?? "",
-          likes: 0,
-          comments: 0,
-          saves: 0,
-          usedIn: p.caption ?? "",
-          promoted: p.promoted ?? false,
-        });
-      }
-
-      // Resolve real author profiles so the overlay shows the actual maker
-      // name + avatar (G14 — no fixture stand-ins for real posts).
-      const profiles = await getProfilesByIds(realAsPosts.map((p) => p.maker));
-      const m = new Map<string, Maker & { avatarUrl?: string }>();
-      profiles.forEach((row, id) => {
-        const mk = makerFromProfile(row);
-        m.set(id, { ...mk, skills: row.disciplines ?? [], city: row.location ?? "" });
-      });
-      setRealMakers(m);
-
-      const merged = [...realAsPosts, ...fixturePosts];
+      const real = await listExploreWork(40);
       const ranked = await rankItems(
         "posts",
-        merged.map((p) => ({
+        real.map((p) => ({
           id: p.id,
-          category: p.cat,
-          promoted: p.promoted,
-          base_score: p.likes + p.saves * 2,
+          category: p.category,
+          promoted: p.promoted ?? false,
+          base_score: 0,
         })),
       );
-      const byId = new Map(merged.map((p) => [p.id, p]));
-      const ordered = ranked.map((r) => byId.get(r.id)!).filter(Boolean);
-      // Real comment counts (fixture posts will simply get 0 — they don't exist in DB).
-      const counts = await countCommentsForPosts(ordered.map((p) => p.id));
-      setPosts(ordered.map((p) => ({ ...p, comments: counts.get(p.id) ?? p.comments ?? 0 })));
+      const byId = new Map(real.map((p) => [p.id, p]));
+      const ordered = ranked.map((r) => byId.get(r.id)).filter(Boolean) as PostRow[];
+      setPosts(ordered);
+
+      const profiles = await getProfilesByIds(ordered.map((p) => p.author_id));
+      const m = new Map<string, Maker>();
+      profiles.forEach((row, id) => m.set(id, makerFromProfile(row) as Maker));
+      setMakers(m);
+
+      const c = await countCommentsForPosts(ordered.map((p) => p.id));
+      setCounts(c);
     })();
   }, []);
-  const post = posts[index] ?? fixturePosts[0];
-  const maker = realMakers.get(post.maker) ?? makerById(post.maker);
+
+  const post = posts[index];
+  const maker = post ? makers.get(post.author_id) : undefined;
+  const cover = post ? postCoverUrl(post) : null;
+
   useEffect(() => {
-    logInteraction({ target_kind: "post", target_id: post.id, kind: "view", category: post.cat });
-  }, [post.id, post.cat]);
+    if (post) logInteraction({ target_kind: "post", target_id: post.id, kind: "view", category: post.category ?? undefined });
+  }, [post]);
+
+  if (!post) {
+    return (
+      <MobileShell footer={<AppTabBar />} className="bg-tg-feed-bg">
+        <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
+            <Compass size={22} />
+          </span>
+          <h2 className="mt-4 font-serif text-[20px] font-medium tracking-[-0.01em] text-tg-ink">Nothing in Explore yet</h2>
+          <Meta className="mt-1.5 block max-w-[260px]">When designers publish work to Explore, it appears here ranked for you.</Meta>
+        </div>
+      </MobileShell>
+    );
+  }
 
   return (
     <MobileShell footer={<AppTabBar />} className="bg-tg-feed-bg">
       <div className="relative min-h-0 flex-1">
-        {/* The work, full bleed */}
         <button
           type="button"
           onClick={() => setRevealed((v) => !v)}
           className="absolute inset-0 h-full w-full"
           style={{
-            backgroundImage: `url(${feed(post.img)})`,
+            backgroundImage: cover ? `url(${cover})` : undefined,
+            backgroundColor: cover ? undefined : "var(--tg-ink)",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
           aria-label="Reveal controls"
         />
 
-        {/* Overlay controls */}
         <div
           className={cn(
             "pointer-events-none absolute inset-0 flex flex-col justify-between transition-opacity duration-base",
@@ -107,14 +98,14 @@ export default function Explore() {
         >
           <div className="bg-gradient-to-b from-black/45 to-transparent p-4 pt-6">
             <div className="pointer-events-auto flex items-center gap-2.5">
-              <Avatar maker={maker} size={36} ring />
+              {maker && <Avatar maker={maker} size={36} ring />}
               <div className="flex-1">
                 <span className="flex items-center gap-1.5">
-                  <span className="font-display text-[14px] font-semibold text-white">{maker.name}</span>
-                  {maker.verified && <VerifiedBadge size={15} />}
+                  <span className="font-display text-[14px] font-semibold text-white">{maker?.name ?? "Member"}</span>
+                  {maker?.verified && <VerifiedBadge size={15} />}
                 </span>
                 <span className="font-mono text-[11px] text-white/70">
-                  {post.cat} · {post.place} · {post.year}
+                  {[post.category, post.place, post.year].filter(Boolean).join(" · ")}
                 </span>
               </div>
               {post.promoted && <PromotedTag />}
@@ -133,9 +124,9 @@ export default function Explore() {
               {post.title}
             </button>
             <div className="pointer-events-auto mt-3 flex items-center gap-5 text-white">
-              <Action icon={<Heart size={22} />} count={post.likes} />
-              <Action icon={<MessageCircle size={22} />} count={post.comments} onClick={() => navigate("/project/" + post.id)} />
-              <Action icon={<Bookmark size={22} />} count={post.saves} onClick={() => navigate("/pin")} />
+              <Action icon={<Heart size={22} />} count={0} />
+              <Action icon={<MessageCircle size={22} />} count={counts.get(post.id) ?? 0} onClick={() => navigate("/project/" + post.id)} />
+              <Action icon={<Bookmark size={22} />} count={0} onClick={() => navigate("/pin")} />
               <span className="flex-1" />
               <button
                 type="button"
@@ -148,7 +139,6 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* Next/prev affordance — tap the side rails (kept subtle) */}
         <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
           {posts.map((_, i) => (
             <span

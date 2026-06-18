@@ -4,7 +4,7 @@ import { Chip } from "@/components/brand/chip";
 import { Meta } from "@/components/brand/atoms";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { Button } from "@/components/ui/button";
-import { designerPlans } from "@/lib/fixtures";
+import { designerPlans } from "@/lib/plans";
 import { routes } from "@/lib/routes";
 import { startCheckout } from "@/lib/checkout-intent";
 import { useSession } from "@/hooks/use-session";

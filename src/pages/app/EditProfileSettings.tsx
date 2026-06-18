@@ -6,7 +6,7 @@ import { TextField, LocationField } from "@/components/app/fields";
 import { Pill } from "@/components/brand/atoms";
 import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
-import { disciplines as allDisciplines } from "@/lib/fixtures";
+import { disciplines as allDisciplines } from "@/lib/disciplines";
 import { routes } from "@/lib/routes";
 import { getMyProfile, updateMyProfile, workPublicUrl } from "@/services/profile";
 import { uploadService } from "@/services/uploads";

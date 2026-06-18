@@ -1,21 +1,27 @@
 import { useState } from "react";
 import { Link2, Mail, Check } from "lucide-react";
 import { BottomSheet } from "@/components/app/bottom-sheet";
-import { Avatar } from "@/components/brand/avatar";
-import { NameRow, Meta } from "@/components/brand/atoms";
+import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { makers } from "@/lib/fixtures";
 
 /**
- * 50 · Invite — a bottom sheet to invite someone to connect or to a
- * collaboration / competition. Share a link, invite by email, or invite recents.
+ * 50 · Invite — bottom sheet to invite someone to connect or to a
+ * collaboration / competition. Share a link, or invite by email.
  */
-
 export default function InviteSheet() {
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
-  const [invited, setInvited] = useState<Record<string, boolean>>({});
-  const recents = makers.slice(0, 4);
+  const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/invite` : "/invite";
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(true);
+    }
+  };
 
   return (
     <BottomSheet title="Invite">
@@ -23,7 +29,7 @@ export default function InviteSheet() {
         {/* Share link */}
         <button
           type="button"
-          onClick={() => setCopied(true)}
+          onClick={copy}
           className="flex w-full items-center gap-3 rounded-lg border border-tg-line bg-tg-card px-4 py-3.5 text-left"
         >
           <span className="flex h-9 w-9 flex-none items-center justify-center rounded-pill bg-tg-stone2 text-tg-blue-accent">
@@ -33,7 +39,7 @@ export default function InviteSheet() {
             <span className="block font-display text-[14.5px] font-semibold text-tg-ink">
               Share an invite link
             </span>
-            <Meta className="mt-0.5 block truncate">gotangle.app/invite/muna</Meta>
+            <Meta className="mt-0.5 block truncate">{inviteUrl}</Meta>
           </div>
           <span className="flex-none font-display text-[12.5px] font-semibold text-tg-blue-accent">
             {copied ? (
@@ -61,44 +67,12 @@ export default function InviteSheet() {
               className="min-w-0 flex-1 bg-transparent text-[14px] text-tg-ink outline-none placeholder:text-tg-brown-soft"
             />
           </div>
-          <Button size="sm" disabled={!email.trim()}>
-            Send
-          </Button>
+          <Button size="sm" disabled={!email.trim()}>Send</Button>
         </div>
 
-        {/* Invite recent people */}
-        <div className="mt-6 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
-          Recent people
-        </div>
-        <div className="mt-2 flex flex-col">
-          {recents.map((m) => {
-            const on = invited[m.id];
-            return (
-              <div key={m.id} className="flex items-center gap-3 py-2.5">
-                <Avatar maker={m} size={40} />
-                <div className="min-w-0 flex-1">
-                  <NameRow maker={m} size={14} />
-                  <Meta className="mt-0.5 block">
-                    {m.role} · {m.city}
-                  </Meta>
-                </div>
-                <Button
-                  variant={on ? "outline" : "outlineAccent"}
-                  size="sm"
-                  onClick={() => setInvited((s) => ({ ...s, [m.id]: !s[m.id] }))}
-                >
-                  {on ? (
-                    <span className="inline-flex items-center gap-1">
-                      <Check size={14} /> Invited
-                    </span>
-                  ) : (
-                    "Invite"
-                  )}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+        <Meta className="mt-6 block">
+          When friends join from your invite, they appear in your network.
+        </Meta>
       </div>
     </BottomSheet>
   );

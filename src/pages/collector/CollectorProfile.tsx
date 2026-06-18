@@ -1,29 +1,35 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { Bookmark, Settings, UserPlus } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { AppTabBar } from "@/components/app/app-tab-bar";
 import { Logo } from "@/components/brand/logo";
 import { Avatar } from "@/components/brand/avatar";
-import { Meta, PhotoTile } from "@/components/brand/atoms";
-import { feed, makers, me, works } from "@/lib/fixtures";
+import { Meta } from "@/components/brand/atoms";
 import { routes } from "@/lib/routes";
+import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/profile";
+import type { Maker } from "@/lib/profile-shape";
 
 /** 17 · Collector profile — own profile and collection (no published work). */
-const STATS = [
-  ["85", "Saved"],
-  ["12", "Collections"],
-  ["47", "Following"],
-];
-const HEIGHTS = [140, 180, 150, 200];
 
 export default function CollectorProfile() {
   const navigate = useNavigate();
-  const following = makers.slice(0, 5);
+  const [me, setMe] = useState<Maker | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    getMyProfile().then((p) => {
+      if (!alive) return;
+      setProfile(p);
+      setMe(p ? (makerFromProfile(p) as Maker) : null);
+    });
+    return () => { alive = false; };
+  }, []);
 
   return (
     <MobileShell footer={<AppTabBar />}>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* Simple header — no banner; collectors don't publish work */}
         <div className="flex items-center justify-between px-[22px] pt-3.5">
           <Logo size={20} />
           <button type="button" onClick={() => navigate(routes.settingsCollector)} aria-label="Settings">
@@ -32,44 +38,47 @@ export default function CollectorProfile() {
         </div>
 
         <div className="flex items-center gap-4 px-[22px] pt-[18px]">
-          <Avatar maker={me} size={68} ring />
+          {me ? (
+            <Avatar maker={me} size={68} ring />
+          ) : (
+            <span className="inline-block h-[68px] w-[68px] rounded-pill bg-tg-stone2" aria-hidden />
+          )}
           <div className="flex-1">
-            <div className="font-display text-[19px] font-semibold">{me.name}</div>
-            <Meta className="mt-0.5 block">Collector · Dubai</Meta>
+            <div className="font-display text-[19px] font-semibold">{profile?.display_name ?? "Collector"}</div>
+            <Meta className="mt-0.5 block">Collector{profile?.location ? ` · ${profile.location}` : ""}</Meta>
           </div>
         </div>
 
         <div className="flex gap-6 px-[22px] pb-1 pt-4">
-          {STATS.map(([n, l]) => (
-            <div key={l}>
-              <span className="font-display text-[18px] font-semibold text-tg-ink">{n}</span> <Meta>{l}</Meta>
-            </div>
-          ))}
+          <Stat n="0" l="Saved" />
+          <Stat n="0" l="Collections" />
+          <Stat n="0" l="Following" />
         </div>
 
-        {/* Following rail */}
-        <div className="pt-3.5">
-          <div className="mx-[22px] mb-2.5 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">Following</div>
-          <div className="flex gap-4 overflow-x-auto px-[22px]">
-            {following.map((m) => (
-              <button key={m.id} type="button" onClick={() => navigate(`/u/${m.id}`)} className="flex w-[58px] flex-none flex-col items-center gap-1.5">
-                <Avatar maker={m} size={50} ring />
-                <span className="text-center font-display text-[11px] font-semibold">{m.name.split(" ")[0]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Recently saved */}
-        <div className="mx-[22px] mb-2.5 mt-[18px] font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">Recently saved</div>
-        <div className="px-4 pb-4 [column-gap:10px]" style={{ columnCount: 2 }}>
-          {works.slice(0, 4).map((w, i) => (
-            <div key={w.id} className="mb-2.5 break-inside-avoid overflow-hidden rounded-lg">
-              <PhotoTile width="100%" height={HEIGHTS[i % HEIGHTS.length]} img={w.img ? feed(w.img) : undefined} swatch={w.swatch ?? "#E7DDCB"} label={w.title} radius={12} />
-            </div>
-          ))}
+        <div className="mt-8 flex flex-col items-center px-8 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
+            <Bookmark size={22} />
+          </span>
+          <h2 className="mt-4 font-serif text-[20px] font-medium tracking-[-0.01em]">Your collection is empty</h2>
+          <Meta className="mt-1.5 block max-w-[260px]">Save work from Explore and follow makers — your collection appears here.</Meta>
+          <button
+            type="button"
+            onClick={() => navigate(routes.collectorExplore)}
+            className="mt-4 inline-flex items-center gap-2 rounded-pill bg-tg-blue px-4 py-2.5 font-display text-[13px] font-semibold text-white"
+          >
+            <UserPlus size={15} />
+            Discover work
+          </button>
         </div>
       </div>
     </MobileShell>
+  );
+}
+
+function Stat({ n, l }: { n: string; l: string }) {
+  return (
+    <div>
+      <span className="font-display text-[18px] font-semibold text-tg-ink">{n}</span> <Meta>{l}</Meta>
+    </div>
   );
 }

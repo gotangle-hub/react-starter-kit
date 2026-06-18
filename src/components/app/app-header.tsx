@@ -1,16 +1,28 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Avatar } from "@/components/brand/avatar";
-import { me } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 import { useUnreadCount } from "@/hooks/use-notifications";
+import { getMyProfile, makerFromProfile } from "@/services/profile";
+import type { Maker } from "@/lib/profile-shape";
 
 /** Shared top header for tab-root screens: wordmark, notifications, your avatar. */
 export function AppHeader({ unread: unreadOverride }: { unread?: number } = {}) {
   const navigate = useNavigate();
   const liveUnread = useUnreadCount();
   const unread = unreadOverride ?? liveUnread;
+  const [me, setMe] = useState<Maker | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getMyProfile().then((p) => {
+      if (alive) setMe(p ? (makerFromProfile(p) as Maker) : null);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   return (
     <div className="flex flex-none items-center justify-between px-[22px] pt-2">
       <Logo size={24} />
@@ -24,7 +36,15 @@ export function AppHeader({ unread: unreadOverride }: { unread?: number } = {}) 
           )}
         </button>
         <button type="button" onClick={() => navigate(routes.profile)} aria-label="Your profile">
-          <Avatar maker={me} size={30} />
+          {me ? (
+            <Avatar maker={me} size={30} />
+          ) : (
+            <span
+              className="inline-block h-[30px] w-[30px] rounded-pill"
+              style={{ background: "var(--tg-line)" }}
+              aria-hidden
+            />
+          )}
         </button>
       </div>
     </div>
