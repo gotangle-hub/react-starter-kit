@@ -87,6 +87,16 @@ export async function listExploreWork(limit = 30): Promise<PostRow[]> {
   return data ?? [];
 }
 
+export async function listWorkByUser(userId: string): Promise<PostRow[]> {
+  if (!userId) return [];
+  const { data } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("author_id", userId)
+    .order("created_at", { ascending: false });
+  return data ?? [];
+}
+
 /** Resolve the cover image URL for a post (first media item). */
 export function postCoverUrl(post: Pick<PostRow, "image_path" | "media_paths">): string | null {
   const first = post.image_path ?? post.media_paths?.[0] ?? null;
