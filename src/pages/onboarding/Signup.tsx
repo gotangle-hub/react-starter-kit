@@ -6,7 +6,7 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { LocationField, TextField } from "@/components/app/fields";
 import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
-import { disciplines } from "@/lib/fixtures";
+import { disciplines } from "@/lib/disciplines";
 import { routes } from "@/lib/routes";
 import { useAccountType } from "@/hooks/use-account-type";
 import { supabase } from "@/integrations/supabase/client";

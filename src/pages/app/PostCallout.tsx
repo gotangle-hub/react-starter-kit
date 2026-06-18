@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { Pill } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { disciplines } from "@/lib/fixtures";
+import { disciplines } from "@/lib/disciplines";
 import { routes } from "@/lib/routes";
 
 const TYPES = [

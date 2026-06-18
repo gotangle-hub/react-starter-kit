@@ -5,7 +5,7 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { promoProducts } from "@/lib/fixtures";
+import { promoProducts } from "@/lib/promo";
 import { startCheckout } from "@/lib/checkout-intent";
 import { cn } from "@/lib/utils";
 

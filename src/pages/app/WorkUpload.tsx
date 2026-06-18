@@ -5,7 +5,7 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { feed } from "@/lib/fixtures";
+import { feedAsset as feed } from "@/lib/feed-asset";
 import { routes } from "@/lib/routes";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
 

@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
-import { schools } from "@/lib/fixtures";
+import { schools } from "@/lib/schools";
 import { routes } from "@/lib/routes";
 
 /** 43 · Student settings — student-worded, consistent with the rest of the app. */

@@ -4,7 +4,7 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { AppTabBar } from "@/components/app/app-tab-bar";
 import { RefreshHint } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
-import { feed } from "@/lib/fixtures";
+import { feedAsset as feed } from "@/lib/feed-asset";
 
 /** 16 · Saved (collector) — saved work organised into collections (G7). */
 const COLLECTIONS = [
