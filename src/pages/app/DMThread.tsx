@@ -5,6 +5,8 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
+import { MentionInput, type MentionInputHandle } from "@/components/app/mention-input";
+import { renderWithMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import {
