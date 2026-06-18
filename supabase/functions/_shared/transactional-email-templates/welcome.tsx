@@ -23,7 +23,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
           <div style="height:26px;"></div>
           <div style="font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.05;font-weight:500;letter-spacing:-.025em;color:#FAF1E0;">You&rsquo;re in.<br>Welcome to the network.</div>
           <div style="height:14px;"></div>
-          <div style="font-family:'Trebuchet MS',Arial,sans-serif;font-size:15px;line-height:1.6;color:rgba(250,241,224,.66);">A home for designers who care more about the work than the noise. Here&rsquo;s what you just joined &mdash; take a scroll.</div>
+          <div style="font-family:'Trebuchet MS',Arial,sans-serif;font-size:15px;line-height:1.6;color:rgba(250,241,224,.66);">A home for designers who care more about the work than the noise. Here&rsquo;s what you just joined, take a scroll.</div>
         </td></tr>
 
         <!-- manifesto -->
