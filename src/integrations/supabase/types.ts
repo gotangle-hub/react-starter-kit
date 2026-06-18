@@ -460,39 +460,51 @@ export type Database = {
       posts: {
         Row: {
           author_id: string
+          caption: string | null
           category: string | null
           created_at: string
           id: string
           image_path: string | null
+          media_paths: string[]
+          on_explore: boolean
           place: string | null
           promoted: boolean
           reach_tier: number
+          tags: string[]
           title: string
           updated_at: string
           year: number | null
         }
         Insert: {
           author_id: string
+          caption?: string | null
           category?: string | null
           created_at?: string
           id?: string
           image_path?: string | null
+          media_paths?: string[]
+          on_explore?: boolean
           place?: string | null
           promoted?: boolean
           reach_tier?: number
+          tags?: string[]
           title: string
           updated_at?: string
           year?: number | null
         }
         Update: {
           author_id?: string
+          caption?: string | null
           category?: string | null
           created_at?: string
           id?: string
           image_path?: string | null
+          media_paths?: string[]
+          on_explore?: boolean
           place?: string | null
           promoted?: boolean
           reach_tier?: number
+          tags?: string[]
           title?: string
           updated_at?: string
           year?: number | null
@@ -502,28 +514,43 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
+          avatar_path: string | null
+          banner_path: string | null
+          bio: string | null
           created_at: string
           disciplines: string[]
           display_name: string | null
           id: string
+          links: Json
+          location: string | null
           marketing_opt_in: boolean
           updated_at: string
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          avatar_path?: string | null
+          banner_path?: string | null
+          bio?: string | null
           created_at?: string
           disciplines?: string[]
           display_name?: string | null
           id: string
+          links?: Json
+          location?: string | null
           marketing_opt_in?: boolean
           updated_at?: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          avatar_path?: string | null
+          banner_path?: string | null
+          bio?: string | null
           created_at?: string
           disciplines?: string[]
           display_name?: string | null
           id?: string
+          links?: Json
+          location?: string | null
           marketing_opt_in?: boolean
           updated_at?: string
         }
