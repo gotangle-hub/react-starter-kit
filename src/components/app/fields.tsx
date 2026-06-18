@@ -104,6 +104,7 @@ export function LocationField({
                   setVal(c);
                   setQ("");
                   setOpen(false);
+                  onChange?.(c);
                 }}
                 className={cn(
                   "flex w-full items-center gap-2.5 px-3.5 py-3 text-left hover:bg-tg-stone2",
