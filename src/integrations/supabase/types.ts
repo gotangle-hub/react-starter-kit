@@ -790,6 +790,7 @@ export type Database = {
           created_at: string
           id: string
           id_doc_path: string
+          inquiry_id: string | null
           reason: string | null
           selfie_path: string
           status: string
@@ -803,6 +804,7 @@ export type Database = {
           created_at?: string
           id?: string
           id_doc_path: string
+          inquiry_id?: string | null
           reason?: string | null
           selfie_path: string
           status?: string
@@ -816,6 +818,7 @@ export type Database = {
           created_at?: string
           id?: string
           id_doc_path?: string
+          inquiry_id?: string | null
           reason?: string | null
           selfie_path?: string
           status?: string
