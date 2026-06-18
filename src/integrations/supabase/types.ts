@@ -672,6 +672,7 @@ export type Database = {
           location: string | null
           marketing_opt_in: boolean
           updated_at: string
+          username: string
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
@@ -686,6 +687,7 @@ export type Database = {
           location?: string | null
           marketing_opt_in?: boolean
           updated_at?: string
+          username: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
@@ -700,6 +702,7 @@ export type Database = {
           location?: string | null
           marketing_opt_in?: boolean
           updated_at?: string
+          username?: string
         }
         Relationships: []
       }
@@ -837,6 +840,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_username_available: { Args: { _name: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -900,6 +904,7 @@ export type Database = {
         Returns: number
       }
       pass_on_maker: { Args: { _target: string }; Returns: undefined }
+      profile_id_by_username: { Args: { _name: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -911,6 +916,10 @@ export type Database = {
       refresh_post_metrics: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      suggest_usernames: {
+        Args: { _base: string; _count?: number }
+        Returns: string[]
+      }
     }
     Enums: {
       account_type:
