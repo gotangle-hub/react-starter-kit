@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MessageCircle, MoreHorizontal, Plus } from "lucide-react";
+import { ArrowLeft, MessageCircle, MoreHorizontal, Plus, Users } from "lucide-react";
+import { useState as useState2 } from "react";
+import { CreateCollabSheet } from "@/components/app/create-collab-sheet";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { RefreshHint } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
