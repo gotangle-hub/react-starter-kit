@@ -56,23 +56,22 @@ export default function Match() {
       const { data: posts } = ids.length
         ? await supabase
             .from("posts")
-            .select("author_id, title, media")
+            .select("author_id, title, media_paths, image_path")
             .in("author_id", ids)
             .order("created_at", { ascending: false })
-        : { data: [] as Array<{ author_id: string; title: string | null; media: unknown }> };
-      const firstByAuthor = new Map<string, { title: string | null; media: unknown }>();
+        : { data: [] as Array<{ author_id: string; title: string | null; media_paths: string[] | null; image_path: string | null }> };
+      const firstByAuthor = new Map<string, { title: string | null; media_paths: string[] | null; image_path: string | null }>();
       for (const p of posts ?? []) {
         if (!firstByAuthor.has(p.author_id)) firstByAuthor.set(p.author_id, p);
       }
       const deckRows: DeckCandidate[] = filtered.map((profile) => {
         const post = firstByAuthor.get(profile.id);
-        let workImage: string | null = null;
-        if (post?.media && Array.isArray(post.media) && post.media.length > 0) {
-          const first = post.media[0];
-          const path = typeof first === "string" ? first : (first as { path?: string })?.path;
-          workImage = workPublicUrl(path) ?? null;
-        }
-        return { profile, workImage, workTitle: post?.title ?? null };
+        const firstPath = post?.media_paths?.[0] ?? post?.image_path ?? null;
+        return {
+          profile,
+          workImage: workPublicUrl(firstPath),
+          workTitle: post?.title ?? null,
+        };
       });
       setDeck(deckRows);
       setLoading(false);
