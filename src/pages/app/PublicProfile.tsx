@@ -30,6 +30,7 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [works, setWorks] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creatingCollab, setCreatingCollab] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
