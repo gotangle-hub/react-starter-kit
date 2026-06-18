@@ -44,6 +44,7 @@ export default function Checkout() {
       lineItems: [{ label: intent.label, amount: intent.total }],
       total: intent.total,
       test: intent.test,
+      boost: intent.boost,
     });
     if (res.ok) {
       clearPendingCheckout();
