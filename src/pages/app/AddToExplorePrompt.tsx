@@ -1,9 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Compass } from "lucide-react";
 import { BottomSheet } from "@/components/app/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { feed } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
+import { setPostOnExplore } from "@/services/work";
 
 /**
  * 49 · Also add to Explore? A sheet shown after a piece is added to your work,
@@ -12,9 +13,33 @@ import { routes } from "@/lib/routes";
  */
 export default function AddToExplorePrompt() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const postId = params.get("postId");
+
+  async function publish() {
+    if (postId) {
+      try {
+        await setPostOnExplore(postId, true);
+      } catch {
+        /* non-blocking */
+      }
+    }
+    navigate(routes.explore);
+  }
+
+  async function skip() {
+    if (postId) {
+      try {
+        await setPostOnExplore(postId, false);
+      } catch {
+        /* non-blocking */
+      }
+    }
+    navigate(routes.profile);
+  }
 
   return (
-    <BottomSheet onClose={() => navigate(routes.profile)}>
+    <BottomSheet onClose={skip}>
       <div className="px-6 pb-8 pt-2">
         <div className="flex items-center gap-3.5">
           <span
@@ -36,11 +61,11 @@ export default function AddToExplorePrompt() {
         </p>
 
         <div className="mt-5 flex flex-col gap-2.5">
-          <Button variant="primary" full size="lg" onClick={() => navigate(routes.explore)}>
+          <Button variant="primary" full size="lg" onClick={publish}>
             <Compass size={16} />
             Publish to Explore
           </Button>
-          <Button variant="ghost" full size="lg" onClick={() => navigate(routes.profile)}>
+          <Button variant="ghost" full size="lg" onClick={skip}>
             Not now
           </Button>
         </div>
