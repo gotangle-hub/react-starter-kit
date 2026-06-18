@@ -6,9 +6,10 @@ import { AppTabBar } from "@/components/app/app-tab-bar";
 import { PromotedTag } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
-import { feed, makerById, posts as fixturePosts, type Post } from "@/lib/fixtures";
+import { feed, makerById, posts as fixturePosts, type Maker, type Post } from "@/lib/fixtures";
 import { rankItems, logInteraction } from "@/services/feed";
 import { listExploreWork, postCoverUrl } from "@/services/work";
+import { getProfilesByIds, makerFromProfile } from "@/services/profile";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,6 +22,7 @@ export default function Explore() {
   const [revealed, setRevealed] = useState(false);
   const [index, setIndex] = useState(0);
   const [posts, setPosts] = useState<Post[]>(fixturePosts);
+  const [realMakers, setRealMakers] = useState<Map<string, Maker & { avatarUrl?: string }>>(new Map());
   useEffect(() => {
     (async () => {
       // Pull real published work first, then fall back to fixtures so the feed
@@ -46,6 +48,16 @@ export default function Explore() {
         });
       }
 
+      // Resolve real author profiles so the overlay shows the actual maker
+      // name + avatar (G14 — no fixture stand-ins for real posts).
+      const profiles = await getProfilesByIds(realAsPosts.map((p) => p.maker));
+      const m = new Map<string, Maker & { avatarUrl?: string }>();
+      profiles.forEach((row, id) => {
+        const mk = makerFromProfile(row);
+        m.set(id, { ...mk, skills: row.disciplines ?? [], city: row.location ?? "" });
+      });
+      setRealMakers(m);
+
       const merged = [...realAsPosts, ...fixturePosts];
       const ranked = await rankItems(
         "posts",
@@ -61,7 +73,7 @@ export default function Explore() {
     })();
   }, []);
   const post = posts[index] ?? fixturePosts[0];
-  const maker = makerById(post.maker);
+  const maker = realMakers.get(post.maker) ?? makerById(post.maker);
   useEffect(() => {
     logInteraction({ target_kind: "post", target_id: post.id, kind: "view", category: post.cat });
   }, [post.id, post.cat]);
