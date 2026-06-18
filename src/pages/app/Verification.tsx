@@ -176,7 +176,7 @@ export default function Verification() {
             <Meta className="block text-center">
               Submitted. You can leave this screen — your tick appears the moment checks pass.
             </Meta>
-            <Button variant="secondary" full size="lg" onClick={refresh}>
+            <Button variant="outline" full size="lg" onClick={refresh}>
               <RefreshCw size={16} className="mr-1.5" /> Refresh status
             </Button>
           </div>
