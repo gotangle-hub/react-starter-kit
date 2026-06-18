@@ -12,17 +12,18 @@ import {
   UserPlus,
 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
-import { schools } from "@/lib/schools";
+import { recallInstitution } from "@/services/institutions";
 import { routes } from "@/lib/routes";
 
 /** 45 · Faculty settings — faculty-worded, consistent with the rest of the app. */
 export default function SettingsFaculty() {
+  const inst = recallInstitution();
   return (
     <SettingsScaffold title="Faculty settings">
       <SettingsGroup
         title="Teaching"
         rows={[
-          { icon: Building2, label: "Institution", value: schools[0].name },
+          { icon: Building2, label: "Institution", value: inst?.name ?? "Not linked" },
           { icon: BookOpen, label: "My classes", to: routes.classList },
           { icon: UserPlus, label: "Invite a TA", to: routes.professorCreateClass },
         ]}
