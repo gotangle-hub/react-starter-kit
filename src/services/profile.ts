@@ -6,7 +6,7 @@ export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 /** Columns any signed-in user is allowed to read (RLS + column grants). */
 const PUBLIC_PROFILE_COLUMNS =
-  "id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at";
+  "id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, verified_at, created_at, updated_at";
 
 /** Public URL helper for any path stored under the `work` bucket. */
 export function workPublicUrl(path: string | null | undefined): string | null {
@@ -73,6 +73,7 @@ export async function updateMyProfile(patch: ProfileUpdate): Promise<ProfileRow 
   // Do not allow account_type changes (DB trigger also blocks it).
   const safe = { ...patch };
   delete (safe as { account_type?: unknown }).account_type;
+  delete (safe as { verified_at?: unknown }).verified_at;
   const { data, error } = await supabase
     .from("profiles")
     .update(safe)
@@ -104,7 +105,7 @@ export function initialsFor(name: string | null | undefined, fallback = "·"): s
 }
 
 /** Build the shape Avatar/UI components expect from a profile row. */
-export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_name" | "avatar_path" | "account_type" | "username">> | null | undefined) {
+export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_name" | "avatar_path" | "account_type" | "username" | "verified_at">> | null | undefined) {
   const name = p?.display_name || (p?.username ? `@${p.username}` : "Member");
   return {
     id: p?.id ?? "unknown",
@@ -113,7 +114,7 @@ export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_nam
     role: (p?.account_type as string | undefined) ?? "Designer",
     initials: initialsFor(name),
     tint: tintForId(p?.id),
-    verified: false,
+    verified: Boolean(p?.verified_at),
     avatarUrl: workPublicUrl(p?.avatar_path) ?? undefined,
   };
 }

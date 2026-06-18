@@ -784,6 +784,48 @@ export type Database = {
         }
         Relationships: []
       }
+      identity_verifications: {
+        Row: {
+          auto_score: number | null
+          created_at: string
+          id: string
+          id_doc_path: string
+          reason: string | null
+          selfie_path: string
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          auto_score?: number | null
+          created_at?: string
+          id?: string
+          id_doc_path: string
+          reason?: string | null
+          selfie_path: string
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          auto_score?: number | null
+          created_at?: string
+          id?: string
+          id_doc_path?: string
+          reason?: string | null
+          selfie_path?: string
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       institution_registration_requests: {
         Row: {
           approx_students: number | null
@@ -1094,6 +1136,7 @@ export type Database = {
           marketing_opt_in: boolean
           updated_at: string
           username: string
+          verified_at: string | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
@@ -1113,6 +1156,7 @@ export type Database = {
           marketing_opt_in?: boolean
           updated_at?: string
           username: string
+          verified_at?: string | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
@@ -1132,6 +1176,7 @@ export type Database = {
           marketing_opt_in?: boolean
           updated_at?: string
           username?: string
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -1508,6 +1553,10 @@ export type Database = {
       set_institution_role: { Args: { _role: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      submit_identity_verification: {
+        Args: { _id_doc_path: string; _selfie_path: string }
+        Returns: Json
+      }
       suggest_usernames: {
         Args: { _base: string; _count?: number }
         Returns: string[]
