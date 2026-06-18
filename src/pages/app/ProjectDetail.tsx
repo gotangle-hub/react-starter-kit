@@ -6,17 +6,35 @@ import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta, PhotoTile } from "@/components/brand/atoms";
 import { Chip } from "@/components/brand/chip";
 import { Button } from "@/components/ui/button";
-import { feed, makerById, posts } from "@/lib/fixtures";
 import { countCommentsForPost } from "@/services/comments";
 import { supabase } from "@/integrations/supabase/client";
+import { getProfileById, makerFromProfile } from "@/services/profile";
+import { postCoverUrl, type PostRow } from "@/services/work";
+import type { Maker } from "@/lib/profile-shape";
 
-/** 24 · Project detail (G3). Full project — images, title, maker, credits, caption. */
+/** 24 · Project detail (G3). Full project from real data — images, title, maker, credits, caption. */
 export default function ProjectDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const post = posts.find((p) => p.id === id) ?? posts[0];
-  const maker = makerById(post.maker);
-  const [commentCount, setCommentCount] = useState<number>(post.comments ?? 0);
+  const [post, setPost] = useState<PostRow | null>(null);
+  const [maker, setMaker] = useState<Maker | null>(null);
+  const [commentCount, setCommentCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    (async () => {
+      const { data } = await supabase.from("posts").select("*").eq("id", id).maybeSingle();
+      if (!alive) return;
+      const row = (data as PostRow | null) ?? null;
+      setPost(row);
+      if (row?.author_id) {
+        const profile = await getProfileById(row.author_id);
+        if (alive && profile) setMaker(makerFromProfile(profile) as Maker);
+      }
+    })();
+    return () => { alive = false; };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -33,13 +51,24 @@ export default function ProjectDetail() {
     return () => { alive = false; supabase.removeChannel(channel); };
   }, [id]);
 
+  if (!post) {
+    return (
+      <MobileShell>
+        <div className="flex flex-1 items-center justify-center px-6 text-center">
+          <Meta>This project is no longer available.</Meta>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  const cover = postCoverUrl(post);
+
   return (
     <MobileShell
       footer={
         <div className="flex flex-none items-center gap-4 border-t border-tg-line px-[18px] py-3">
           <button type="button" className="flex items-center gap-1.5 text-tg-ink">
             <Heart size={22} />
-            <span className="font-display text-[13px] font-semibold">{post.likes}</span>
           </button>
           <button type="button" className="flex items-center gap-1.5 text-tg-ink" onClick={() => navigate("/project/" + post.id + "/comments")}>
             <MessageCircle size={22} />
@@ -54,7 +83,7 @@ export default function ProjectDetail() {
       }
     >
       <div className="relative">
-        <PhotoTile width="100%" height={420} img={feed(post.img)} swatch="#161514" />
+        <PhotoTile width="100%" height={420} img={cover ?? undefined} swatch="#161514" />
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
           <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="flex h-9 w-9 items-center justify-center rounded-pill bg-black/35 text-white backdrop-blur">
             <ArrowLeft size={20} />
@@ -71,49 +100,25 @@ export default function ProjectDetail() {
       </div>
 
       <div className="px-[22px] py-5">
-        <Chip>{post.cat}</Chip>
+        {post.category && <Chip>{post.category}</Chip>}
         <h1 className="mt-3 font-serif text-[34px] font-medium leading-none tracking-[-0.025em]">{post.title}</h1>
-        <Meta className="mt-2 block">
-          {post.place} · {post.year}
-        </Meta>
+        <Meta className="mt-2 block">{[post.place, post.year].filter(Boolean).join(" · ")}</Meta>
 
-        <button type="button" onClick={() => navigate("/u/" + maker.id)} className="mt-4 flex w-full items-center gap-3 rounded-lg border border-tg-line bg-tg-card p-3 text-left">
-          <Avatar maker={maker} size={42} />
-          <div className="flex-1">
-            <NameRow maker={maker} size={14.5} />
-            <Meta className="mt-0.5 block">
-              {maker.role} · {maker.city}
-            </Meta>
-          </div>
-          <Button variant="outline" size="sm">Follow</Button>
-        </button>
+        {maker && (
+          <button type="button" onClick={() => navigate("/u/" + (maker.handle ?? maker.id))} className="mt-4 flex w-full items-center gap-3 rounded-lg border border-tg-line bg-tg-card p-3 text-left">
+            <Avatar maker={maker} size={42} />
+            <div className="flex-1">
+              <NameRow maker={maker} size={14.5} />
+              <Meta className="mt-0.5 block">{maker.role}{maker.city ? ` · ${maker.city}` : ""}</Meta>
+            </div>
+            <Button variant="outline" size="sm">Follow</Button>
+          </button>
+        )}
 
-        <p className="mt-5 font-body text-[15.5px] leading-relaxed text-tg-ink">
-          A house arranged around a single shaft of morning light. Warm materials,
-          restraint, and a section that does most of the talking — drawn before
-          anything was rendered.
-        </p>
-
-        <div className="mt-5">
-          <div className="mb-2 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
-            Credits
-          </div>
-          <div className="flex flex-col gap-2">
-            <CreditRow role="Lead" maker={maker.name} />
-            <CreditRow role="Photography" maker="Sami Okonkwo" />
-            <CreditRow role="Used in" maker={post.usedIn} />
-          </div>
-        </div>
+        {post.caption && (
+          <p className="mt-5 font-body text-[15.5px] leading-relaxed text-tg-ink">{post.caption}</p>
+        )}
       </div>
     </MobileShell>
-  );
-}
-
-function CreditRow({ role, maker }: { role: string; maker: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-tg-line-soft pb-2">
-      <Meta>{role}</Meta>
-      <span className="font-display text-[13.5px] font-medium text-tg-ink">{maker}</span>
-    </div>
   );
 }

@@ -1,24 +1,43 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Send } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta, PhotoTile } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { callOuts, feed, works } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { listMyWork, postCoverUrl, type PostRow } from "@/services/work";
 
 /**
- * 38 · Apply to a call out / competition.
- * A pitch plus a row of selectable work to attach. Sending returns home (the
- * confirmation screen lives elsewhere).
+ * 38 · Apply to a call out / competition. Real own-work attachment list (G14).
+ * The call-out context is passed in via ?title=&kind=&type=&budget=&by= for now;
+ * once a call_outs table exists this will load by ?id=.
  */
 export default function ApplyFlow() {
   const navigate = useNavigate();
-  const c = callOuts[0];
+  const [params] = useSearchParams();
   const [pitch, setPitch] = useState("");
-  const [attached, setAttached] = useState<string[]>([works[0].id]);
+  const [works, setWorks] = useState<PostRow[]>([]);
+  const [attached, setAttached] = useState<string[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    listMyWork().then((w) => {
+      if (!alive) return;
+      setWorks(w);
+      if (w[0]) setAttached([w[0].id]);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  const context = {
+    title: params.get("title") ?? "Open call",
+    kind: params.get("kind") ?? "Brief",
+    type: params.get("type") ?? "",
+    by: params.get("by") ?? "",
+    budget: params.get("budget") ?? "",
+  };
 
   const toggle = (id: string) =>
     setAttached((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
@@ -29,14 +48,16 @@ export default function ApplyFlow() {
         {/* Context */}
         <div className="mt-4 rounded-lg bg-tg-stone2 p-4">
           <span className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-tg-brown">
-            {c.kind} · {c.type}
+            {context.kind}{context.type ? ` · ${context.type}` : ""}
           </span>
           <div className="mt-1.5 font-display text-[15.5px] font-semibold text-tg-ink">
-            {c.title}
+            {context.title}
           </div>
-          <Meta className="mt-1 block">
-            {c.by} · {c.budget}
-          </Meta>
+          {(context.by || context.budget) && (
+            <Meta className="mt-1 block">
+              {[context.by, context.budget].filter(Boolean).join(" · ")}
+            </Meta>
+          )}
         </div>
 
         <h1 className="mt-6 font-serif text-[20px] font-medium tracking-[-0.01em] text-tg-ink">
@@ -55,36 +76,44 @@ export default function ApplyFlow() {
         <div className="mt-4 mb-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
           Attach work
         </div>
-        <div className="flex flex-wrap gap-2.5">
-          {works.slice(0, 5).map((w) => {
-            const on = attached.includes(w.id);
-            return (
-              <button
-                key={w.id}
-                type="button"
-                onClick={() => toggle(w.id)}
-                aria-pressed={on}
-                className={cn(
-                  "relative h-[84px] w-[84px] overflow-hidden rounded-[12px] border-2 transition-colors",
-                  on ? "border-tg-blue-accent" : "border-transparent",
-                )}
-              >
-                <PhotoTile
-                  width="100%"
-                  height="100%"
-                  radius={10}
-                  img={w.img ? feed(w.img) : undefined}
-                  swatch={w.swatch ?? "#EEE6D6"}
-                />
-                {on && (
-                  <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-pill bg-tg-blue text-white">
-                    <Check size={13} strokeWidth={2.5} />
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {works.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-tg-line bg-tg-card px-4 py-8 text-center">
+            <Meta className="block">Upload work to your profile first, then attach it here.</Meta>
+            <Button size="sm" className="mt-3" onClick={() => navigate(routes.workUpload)}>Add work</Button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2.5">
+            {works.slice(0, 8).map((w) => {
+              const on = attached.includes(w.id);
+              const cover = postCoverUrl(w);
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => toggle(w.id)}
+                  aria-pressed={on}
+                  className={cn(
+                    "relative h-[84px] w-[84px] overflow-hidden rounded-[12px] border-2 transition-colors",
+                    on ? "border-tg-blue-accent" : "border-transparent",
+                  )}
+                >
+                  <PhotoTile
+                    width="100%"
+                    height="100%"
+                    radius={10}
+                    img={cover ?? undefined}
+                    swatch="#EEE6D6"
+                  />
+                  {on && (
+                    <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-pill bg-tg-blue text-white">
+                      <Check size={13} strokeWidth={2.5} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="flex-none border-t border-tg-line px-[22px] py-3.5">

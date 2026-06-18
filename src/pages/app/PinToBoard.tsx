@@ -1,19 +1,14 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Plus } from "lucide-react";
+import { Plus, Bookmark } from "lucide-react";
 import { BottomSheet } from "@/components/app/bottom-sheet";
-import { Meta, PhotoTile } from "@/components/brand/atoms";
-import { feed, pinBoards } from "@/lib/fixtures";
-import { cn } from "@/lib/utils";
+import { Meta } from "@/components/brand/atoms";
 
 /**
- * 26 · Pin to a board. A bottom sheet to pin the current work into one of the
- * user's pin ups, or create a new one.
+ * 26 · Pin to a board. Until the pin-boards backend is wired, this sheet lets
+ * the user start their first board (G14: no fixture boards).
  */
 export default function PinToBoard() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<string | null>(null);
-
   return (
     <BottomSheet title="Pin to a board">
       <div className="px-5 pb-6 pt-1">
@@ -35,55 +30,12 @@ export default function PinToBoard() {
           Your pin ups
         </div>
 
-        <div className="flex flex-col gap-2">
-          {pinBoards.map((b) => {
-            const on = selected === b.id;
-            return (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setSelected(b.id)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg border bg-tg-card p-2.5 text-left transition-colors duration-fast",
-                  on ? "border-tg-blue-accent" : "border-tg-line",
-                )}
-              >
-                <PhotoTile
-                  width={48}
-                  height={48}
-                  radius={10}
-                  img={feed(b.cover)}
-                  swatch="#E7DDCB"
-                  className="flex-none"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-display text-[14.5px] font-semibold text-tg-ink">{b.name}</div>
-                  <Meta className="mt-0.5 block">{b.count} pins</Meta>
-                </div>
-                <span
-                  className={cn(
-                    "flex h-6 w-6 flex-none items-center justify-center rounded-pill border",
-                    on ? "border-tg-blue-accent bg-tg-blue" : "border-tg-line",
-                  )}
-                >
-                  {on && <Check size={15} className="text-white" />}
-                </span>
-              </button>
-            );
-          })}
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-tg-line bg-tg-card px-4 py-8 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
+            <Bookmark size={20} />
+          </span>
+          <Meta className="block max-w-[240px]">You don&rsquo;t have any pin ups yet. Create one above to pin this reference.</Meta>
         </div>
-
-        <button
-          type="button"
-          disabled={!selected}
-          onClick={() => navigate(-1)}
-          className={cn(
-            "mt-5 w-full rounded-pill py-3.5 font-display text-[14.5px] font-semibold transition-opacity duration-fast",
-            selected ? "bg-tg-blue text-white" : "bg-tg-stone2 text-tg-brown-soft",
-          )}
-        >
-          Pin here
-        </button>
       </div>
     </BottomSheet>
   );
