@@ -109,6 +109,9 @@ export default function PublicProfile() {
             </span>
             {maker.verified && <VerifiedBadge size={18} />}
           </div>
+          {profile?.username && (
+            <div className="mt-1 font-mono text-[12px] text-tg-brown-soft">@{profile.username}</div>
+          )}
           <Meta className="mt-1.5 block">
             {(disciplines[0] ?? maker.role)}
             {profile?.location ? ` · ${profile.location}` : ""}
