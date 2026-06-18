@@ -14,6 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
+      collaboration_members: {
+        Row: {
+          collab_id: string
+          created_at: string
+          invited_by: string | null
+          role: string
+          status: Database["public"]["Enums"]["collab_member_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          collab_id: string
+          created_at?: string
+          invited_by?: string | null
+          role?: string
+          status?: Database["public"]["Enums"]["collab_member_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          collab_id?: string
+          created_at?: string
+          invited_by?: string | null
+          role?: string
+          status?: Database["public"]["Enums"]["collab_member_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_members_collab_id_fkey"
+            columns: ["collab_id"]
+            isOneToOne: false
+            referencedRelation: "collaborations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_milestones: {
+        Row: {
+          collab_id: string
+          created_at: string
+          done: boolean
+          due_date: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          collab_id: string
+          created_at?: string
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          collab_id?: string
+          created_at?: string
+          done?: boolean
+          due_date?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_milestones_collab_id_fkey"
+            columns: ["collab_id"]
+            isOneToOne: false
+            referencedRelation: "collaborations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_tasks: {
+        Row: {
+          assignee_id: string | null
+          collab_id: string
+          created_at: string
+          created_by: string | null
+          done: boolean
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          collab_id: string
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          collab_id?: string
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_tasks_collab_id_fkey"
+            columns: ["collab_id"]
+            isOneToOne: false
+            referencedRelation: "collaborations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaborations: {
+        Row: {
+          brief: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brief?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brief?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
@@ -841,6 +996,10 @@ export type Database = {
     }
     Functions: {
       check_username_available: { Args: { _name: string }; Returns: boolean }
+      create_collaboration: {
+        Args: { _brief: string; _member_ids: string[]; _title: string }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -859,6 +1018,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      invite_to_collaboration: {
+        Args: { _collab: string; _member_ids: string[] }
+        Returns: undefined
+      }
+      is_active_collab_member: {
+        Args: { _collab: string; _user: string }
+        Returns: boolean
+      }
+      is_collab_member: {
+        Args: { _collab: string; _user: string }
+        Returns: boolean
+      }
       is_conversation_participant: {
         Args: { _conv: string; _user: string }
         Returns: boolean
@@ -868,6 +1039,22 @@ export type Database = {
         Returns: {
           mutual: boolean
           status: string
+        }[]
+      }
+      list_my_collaborations: {
+        Args: never
+        Returns: {
+          brief: string
+          conversation_id: string
+          created_at: string
+          id: string
+          member_count: number
+          my_status: Database["public"]["Enums"]["collab_member_status"]
+          owner_id: string
+          task_count: number
+          task_done: number
+          title: string
+          updated_at: string
         }[]
       }
       list_my_conversations: {
@@ -914,6 +1101,10 @@ export type Database = {
         }[]
       }
       refresh_post_metrics: { Args: never; Returns: undefined }
+      respond_collab_invite: {
+        Args: { _accept: boolean; _collab: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       suggest_usernames: {
@@ -930,6 +1121,7 @@ export type Database = {
         | "student"
         | "collector"
       app_role: "admin" | "moderator" | "user"
+      collab_member_status: "invited" | "active" | "declined" | "left"
       connection_status: "pending" | "accepted" | "declined" | "dismissed"
     }
     CompositeTypes: {
@@ -1067,6 +1259,7 @@ export const Constants = {
         "collector",
       ],
       app_role: ["admin", "moderator", "user"],
+      collab_member_status: ["invited", "active", "declined", "left"],
       connection_status: ["pending", "accepted", "declined", "dismissed"],
     },
   },
