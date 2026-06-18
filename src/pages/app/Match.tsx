@@ -47,7 +47,7 @@ export default function Match() {
       // Pull a batch of other users (signed-in users can see public profile fields).
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, account_type, display_name, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at")
+        .select("id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at")
         .neq("id", user.id)
         .limit(60);
       const filtered = (profiles ?? []).filter((p) => !seen.has(p.id));
