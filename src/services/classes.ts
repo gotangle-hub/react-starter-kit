@@ -135,8 +135,7 @@ export async function listClassMembers(classId: string): Promise<ClassMember[]> 
   const ids = Array.from(new Set(rows.map((r) => r.user_id)));
   if (ids.length) {
     const profs = await getProfilesByIds(ids);
-    const byId = new Map(profs.map((p) => [p.id, p]));
-    rows.forEach((r) => (r.profile = byId.get(r.user_id) ?? null));
+    rows.forEach((r) => (r.profile = profs.get(r.user_id) ?? null));
   }
   return rows;
 }
