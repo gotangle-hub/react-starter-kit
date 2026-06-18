@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Loader2, ShieldCheck, UploadCloud } from "lucide-react";
+import { Check, Loader2, ShieldCheck, ExternalLink, RefreshCw } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getMyVerificationStatus, submitIdentityVerification } from "@/services/verification";
+import {
+  getMyVerificationStatus,
+  getMyLatestInquiryId,
+  startPersonaVerification,
+  checkPersonaInquiry,
+} from "@/services/verification";
 
 type State = "idle" | "checking" | "verified" | "rejected";
 
 const STEPS: { key: State; label: string; detail: string }[] = [
-  { key: "idle", label: "Submit proof", detail: "Add a government ID and a quick selfie." },
+  { key: "idle", label: "Submit proof", detail: "Open the secure verification flow to add your ID and a selfie." },
   { key: "checking", label: "Checking", detail: "We verify your identity automatically — no manual review." },
   { key: "verified", label: "Verified", detail: "The yellow tick is awarded to your profile." },
 ];
@@ -19,44 +24,78 @@ const STEPS: { key: State; label: string; detail: string }[] = [
 const ORDER: State[] = ["idle", "checking", "verified"];
 
 /**
- * 52 · Get verified (G11). Automatic identity verification — the user submits the
- * required proof and the system verifies them without manual review.
+ * 52 · Get verified (G11). Automatic identity verification powered by a
+ * regulated KYC provider — the user submits proof and the system flips them
+ * to verified the moment checks pass.
  */
 export default function Verification() {
   const [state, setState] = useState<State>("idle");
-  const [idDoc, setIdDoc] = useState<File | null>(null);
-  const [selfie, setSelfie] = useState<File | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const idInput = useRef<HTMLInputElement>(null);
-  const selfieInput = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const inquiryRef = useRef<string | null>(null);
+  const pollRef = useRef<number | null>(null);
   const current = ORDER.indexOf(state === "rejected" ? "idle" : state);
 
+  // On mount: read current status + any inquiry to resume polling
   useEffect(() => {
     (async () => {
       const s = await getMyVerificationStatus();
       if (s === "verified") setState("verified");
       else if (s === "submitted") setState("checking");
       else if (s === "rejected") setState("rejected");
+
+      // Pick up inquiry id (from session, query param, or DB)
+      const url = new URL(window.location.href);
+      const paramInq = url.searchParams.get("inquiry-id") || url.searchParams.get("inquiryId");
+      const stored = (() => {
+        try { return sessionStorage.getItem("tg.persona.inquiryId"); } catch { return null; }
+      })();
+      let inq = paramInq || stored;
+      if (!inq) inq = await getMyLatestInquiryId();
+      inquiryRef.current = inq;
+
+      if (paramInq) {
+        // Returned from Persona — kick a fresh check
+        await refresh();
+      }
     })();
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
   }, []);
 
-  async function onSubmit() {
-    setErr(null);
-    if (!idDoc || !selfie) {
-      setErr("Please add both an ID document and a selfie.");
-      return;
-    }
-    setState("checking");
+  // Poll while we're in "checking"
+  useEffect(() => {
+    if (state !== "checking" || !inquiryRef.current) return;
+    pollRef.current = window.setInterval(() => { refresh(); }, 4000);
+    return () => { if (pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null; } };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
+  async function refresh() {
+    if (!inquiryRef.current) return;
     try {
-      const res = await submitIdentityVerification(idDoc, selfie);
-      if (res.verified) setState("verified");
-      else {
-        setState("rejected");
-        setErr(res.reason || "We couldn't verify those documents. Try clearer photos.");
-      }
+      const r = await checkPersonaInquiry(inquiryRef.current);
+      if (r.status === "verified") setState("verified");
+      else if (r.status === "rejected") { setState("rejected"); setErr("We couldn't verify your identity. Please try again."); }
+      else setState("checking");
     } catch (e) {
+      setErr(e instanceof Error ? e.message : "Couldn't refresh status");
+    }
+  }
+
+  async function onStart() {
+    setErr(null);
+    setBusy(true);
+    try {
+      const redirectUri = `${window.location.origin}${window.location.pathname}`;
+      const { inquiryId, url } = await startPersonaVerification(redirectUri);
+      inquiryRef.current = inquiryId;
+      setState("checking");
+      window.location.href = url;
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not start verification");
       setState("rejected");
-      setErr(e instanceof Error ? e.message : "Submission failed");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -70,8 +109,9 @@ export default function Verification() {
           </h1>
         </div>
         <p className="mt-3 font-body text-[14.5px] leading-relaxed text-tg-brown">
-          Verification confirms you are who you say you are. It is fully automatic — submit the
-          required proof and the system awards the tick once it is satisfied.
+          Verification confirms you are who you say you are. It runs through a regulated identity
+          partner and is fully automatic — submit the required proof and the system awards the
+          tick once it is satisfied.
         </p>
 
         {/* Stepper */}
@@ -93,7 +133,7 @@ export default function Verification() {
                     {done ? <Check size={17} strokeWidth={2.5} /> :
                      active && state === "checking" ? <Loader2 size={17} className="animate-spin" /> :
                      step.key === "verified" ? <ShieldCheck size={17} /> :
-                     <UploadCloud size={17} />}
+                     <ExternalLink size={17} />}
                   </span>
                   {i < STEPS.length - 1 && (
                     <span className={cn("my-1 w-px flex-1", done ? "bg-tg-blue-accent" : "bg-tg-line")} style={{ minHeight: 28 }} />
@@ -119,41 +159,27 @@ export default function Verification() {
           })}
         </div>
 
-        {/* Upload + actions */}
         {(state === "idle" || state === "rejected") && (
           <div className="flex flex-col gap-3">
-            <input ref={idInput} type="file" accept="image/*,application/pdf" hidden
-              onChange={(e) => setIdDoc(e.target.files?.[0] ?? null)} />
-            <input ref={selfieInput} type="file" accept="image/*" capture="user" hidden
-              onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} />
-
-            <button type="button" onClick={() => idInput.current?.click()}
-              className="flex items-center justify-between rounded-lg border border-dashed border-tg-line bg-tg-card px-4 py-3 text-left">
-              <span className="font-display text-[13.5px] font-medium text-tg-ink">
-                {idDoc ? idDoc.name : "Upload government ID"}
-              </span>
-              <UploadCloud size={16} className="text-tg-brown" />
-            </button>
-            <button type="button" onClick={() => selfieInput.current?.click()}
-              className="flex items-center justify-between rounded-lg border border-dashed border-tg-line bg-tg-card px-4 py-3 text-left">
-              <span className="font-display text-[13.5px] font-medium text-tg-ink">
-                {selfie ? selfie.name : "Take a selfie"}
-              </span>
-              <UploadCloud size={16} className="text-tg-brown" />
-            </button>
-
             {err && <Meta className="block text-[#c0392b]">{err}</Meta>}
-
-            <Button variant="primary" full size="lg" onClick={onSubmit} disabled={!idDoc || !selfie}>
-              {state === "rejected" ? "Try again" : "Submit for verification"}
+            <Button variant="primary" full size="lg" onClick={onStart} disabled={busy}>
+              {busy ? "Opening…" : state === "rejected" ? "Try again" : "Start verification"}
             </Button>
+            <Meta className="block text-center">
+              You'll be taken to our secure verification partner and returned here when you're done.
+            </Meta>
           </div>
         )}
 
         {state === "checking" && (
-          <Meta className="mt-3 block text-center">
-            Submitted. You can leave this screen — your tick appears the moment checks pass.
-          </Meta>
+          <div className="flex flex-col gap-3">
+            <Meta className="block text-center">
+              Submitted. You can leave this screen — your tick appears the moment checks pass.
+            </Meta>
+            <Button variant="outline" full size="lg" onClick={refresh}>
+              <RefreshCw size={16} className="mr-1.5" /> Refresh status
+            </Button>
+          </div>
         )}
 
         {state === "verified" && (
