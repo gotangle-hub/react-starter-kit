@@ -24,6 +24,16 @@ export interface CheckoutRequest {
   total: number;
   /** Pass true while testing against Ziina sandbox. */
   test?: boolean;
+  /** Boost-specific metadata persisted with the order + boost row. */
+  boost?: {
+    boost_kind: "profile" | "post" | "callout" | "community" | "creator";
+    target_id?: string | null;
+    product_id: string;
+    product_name: string;
+    audience: string;
+    duration_days: number;
+    daily_budget_minor: number;
+  };
 }
 
 export type CheckoutStatus = "idle" | "processing" | "success" | "error";
