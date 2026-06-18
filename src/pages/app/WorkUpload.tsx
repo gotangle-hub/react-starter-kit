@@ -7,7 +7,7 @@ import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { feed } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
-import { uploadService } from "@/services/uploads";
+import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
 
 /**
  * 48 · Add to your work (G9). Upload photos/video with size limits and automatic
@@ -24,9 +24,11 @@ export default function WorkUpload() {
     if (!file) return;
     setBusy(true);
     try {
-      const name = `${Date.now()}-${file.name.replace(/[^\w.-]+/g, "_")}`;
-      await uploadService.upload("work", `raw/${name}`, file);
-      navigate(routes.addToExplore);
+      const { post } = await uploadAndCreatePost(file, {
+        title: deriveTitleFromFile(file),
+        onExplore: true,
+      });
+      navigate(`${routes.addToExplore}?postId=${post.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Upload failed";
       // eslint-disable-next-line no-alert
