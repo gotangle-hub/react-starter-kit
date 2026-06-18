@@ -14,6 +14,7 @@ export interface Competition {
   eligibility: string;
   audience: string;
   source_url: string | null;
+  source: string | null;
   is_official: boolean;
   interested_count: number;
 }
@@ -25,6 +26,7 @@ export interface CompetitionFilters {
   prize?: string;
   eligibility?: string;
   audience?: "all" | "students";
+  source?: string;      // e.g. "tangle"
 }
 
 function deadlineCutoff(label?: string): Date | null {
