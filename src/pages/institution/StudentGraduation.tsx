@@ -5,7 +5,7 @@ import { InstLogo } from "@/components/app/inst-logo";
 import { Chip } from "@/components/brand/chip";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { schools } from "@/lib/schools";
+import { recallInstitution } from "@/services/institutions";
 import { cn } from "@/lib/utils";
 
 const TIMELINE: { label: string; detail: string; state: "done" | "active" | "next" }[] = [
