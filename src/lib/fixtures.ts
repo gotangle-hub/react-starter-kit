@@ -202,10 +202,6 @@ export const competitions: Competition[] = [
   { id: "k3", name: "Adaptive Reuse Prize", org: "RIBA", place: "Global", deadline: "Oct 02", prize: "£8,000", cat: "Architecture", pinned: false, interestedPeople: 41, link: "riba.org" },
 ];
 
-export const tangleComps = [
-  { id: "t1", title: "Weekly render challenge", deadline: "4 days left", prize: "Featured + badge", participants: 212, brief: "One room, one light source, one material. Render it warm." },
-  { id: "t2", title: "Furniture in 100 hours", deadline: "12 days left", prize: "5,000 AED", participants: 88, brief: "Design and document a single piece of furniture, start to finish, in 100 logged hours." },
-];
 
 export interface Notification {
   id: string;
