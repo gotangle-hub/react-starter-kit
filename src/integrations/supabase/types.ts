@@ -669,6 +669,7 @@ export type Database = {
         Returns: number
       }
       get_auth_methods: { Args: { p_email: string }; Returns: Json }
+      get_my_marketing_opt_in: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

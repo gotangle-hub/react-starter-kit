@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MessageCircle, MoreHorizontal, Plus } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -6,21 +7,46 @@ import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Pill, Meta, PhotoTile } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { feed, makerById, works } from "@/lib/fixtures";
 import { path, routes } from "@/lib/routes";
+import {
+  getProfileById,
+  makerFromProfile,
+  workPublicUrl,
+  type ProfileRow,
+} from "@/services/profile";
+import { listWorkByUser, postCoverUrl, type PostRow } from "@/services/work";
 
 /**
- * 68 · Someone's public profile (G7). Their work grid, verified tick, Connect +
- * Message, and the ⋯ menu (report / block). Same banner/avatar rule as your own
- * profile: avatar overlaps but never drops below the banner edge; with no banner
- * the area takes the page background for the current mode (G15).
+ * 68 · Someone's public profile (G7). Real profile + posts queried by user id.
+ * Same banner/avatar rule as your own profile: avatar overlaps but never drops
+ * below the banner edge; with no banner the area takes the page background for
+ * the current mode (G15).
  */
 export default function PublicProfile() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const maker = makerById(id ?? "");
-  const theirWork = works.filter((w) => w.maker === maker.id);
-  const grid = theirWork.length ? theirWork : works.slice(0, 4);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [works, setWorks] = useState<PostRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!id) return;
+      const [p, w] = await Promise.all([getProfileById(id), listWorkByUser(id)]);
+      if (cancelled) return;
+      setProfile(p);
+      setWorks(w);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const maker = makerFromProfile(profile);
+  const bannerUrl = workPublicUrl(profile?.banner_path);
+  const disciplines = profile?.disciplines ?? [];
 
   return (
     <MobileShell>
@@ -28,7 +54,18 @@ export default function PublicProfile() {
         <RefreshHint />
 
         {/* Banner — none set, takes page background (G15). Back arrow sits over it. */}
-        <div className="relative h-[148px] bg-tg-bg border-b border-tg-line">
+        <div
+          className="relative h-[148px] border-b border-tg-line bg-tg-bg"
+          style={
+            bannerUrl
+              ? {
+                  backgroundImage: `url(${bannerUrl})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+              : undefined
+          }
+        >
           <div className="absolute inset-x-[18px] top-3 flex items-center justify-between">
             <button
               type="button"
@@ -64,12 +101,19 @@ export default function PublicProfile() {
             {maker.verified && <VerifiedBadge size={18} />}
           </div>
           <Meta className="mt-1.5 block">
-            {maker.role} · {maker.city}
+            {(disciplines[0] ?? maker.role)}
+            {profile?.location ? ` · ${profile.location}` : ""}
           </Meta>
 
-          {maker.skills && (
+          {profile?.bio && (
+            <p className="mb-1 mt-3 font-body text-[14.5px] leading-relaxed text-tg-ink">
+              {profile.bio}
+            </p>
+          )}
+
+          {disciplines.length > 0 && (
             <div className="mt-3.5 flex flex-wrap gap-2">
-              {maker.skills.map((s) => (
+              {disciplines.map((s) => (
                 <Pill key={s} small>
                   {s}
                 </Pill>
@@ -97,24 +141,29 @@ export default function PublicProfile() {
           <div className="mb-3 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
             Work
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            {grid.map((w) => (
-              <button
-                key={w.id}
-                type="button"
-                onClick={() => navigate(path(routes.projectDetail, { id: w.id }))}
-                className="overflow-hidden rounded-lg border border-tg-line"
-              >
-                <PhotoTile
-                  width="100%"
-                  height={120}
-                  img={w.img ? feed(w.img) : undefined}
-                  swatch={w.swatch}
-                  label={w.title}
-                />
-              </button>
-            ))}
-          </div>
+          {!loading && works.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-tg-line bg-tg-card px-4 py-8 text-center">
+              <Meta>No work published yet.</Meta>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              {works.map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => navigate(path(routes.projectDetail, { id: w.id }))}
+                  className="overflow-hidden rounded-lg border border-tg-line"
+                >
+                  <PhotoTile
+                    width="100%"
+                    height={120}
+                    img={postCoverUrl(w) ?? undefined}
+                    label={w.title}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </MobileShell>
