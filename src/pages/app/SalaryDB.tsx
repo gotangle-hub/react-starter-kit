@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, LineChart, Plus } from "lucide-react";
+import { LineChart, Plus, X } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader, RefreshHint } from "@/components/app/bits";
 import { Chip } from "@/components/brand/chip";
@@ -8,16 +8,25 @@ import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { routes } from "@/lib/routes";
+import { salaryService } from "@/services/salary";
+import type { SalaryEntry } from "@/lib/types";
 
-/** Lightweight filter control rendered as a tappable, labelled box. */
-function FilterBox({ label, value }: { label: string; value: string }) {
-  const set = value !== "Any";
+/** Inline filter — styled like the editorial field but powered by a native select. */
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  const set = value !== "";
   return (
-    <button
-      type="button"
-      className="flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-DEFAULT border border-tg-line bg-tg-card px-3 py-2.5 text-left"
-    >
-      <span className="min-w-0">
+    <label className="relative flex min-w-0 flex-1 items-center rounded-DEFAULT border border-tg-line bg-tg-card px-3 py-2.5 text-left">
+      <span className="min-w-0 flex-1">
         <span className="block font-display text-[9.5px] font-semibold uppercase tracking-[0.08em] text-tg-brown-soft">
           {label}
         </span>
@@ -27,11 +36,21 @@ function FilterBox({ label, value }: { label: string; value: string }) {
             set ? "text-tg-ink" : "text-tg-brown-soft",
           )}
         >
-          {value}
+          {set ? value : "Any"}
         </span>
       </span>
-      <ChevronDown size={15} className="flex-none text-tg-brown-soft" />
-    </button>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 cursor-pointer opacity-0"
+        aria-label={label}
+      >
+        <option value="">Any</option>
+        {options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -42,8 +61,45 @@ function FilterBox({ label, value }: { label: string; value: string }) {
  */
 export default function SalaryDB() {
   const navigate = useNavigate();
-  // No seeded data — the database starts empty and grows from the community (G14).
-  const [entries] = useState<never[]>([]);
+  const [entries, setEntries] = useState<SalaryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [location, setLocation] = useState("");
+  const [title, setTitle] = useState("");
+  const [field, setField] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    salaryService
+      .list({ location: location || undefined, title: title || undefined, field: field || undefined })
+      .then((rows) => {
+        if (active) {
+          setEntries(rows);
+          setError(null);
+        }
+      })
+      .catch((e) => {
+        if (active) setError(e instanceof Error ? e.message : "Could not load salaries.");
+      })
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [location, title, field]);
+
+  // Build filter option lists from the loaded data so users can only pick
+  // values that actually exist in the community database (G14).
+  const { locationOptions, titleOptions, fieldOptions } = useMemo(() => {
+    const uniq = (arr: string[]) => Array.from(new Set(arr.filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    return {
+      locationOptions: uniq(entries.map((e) => e.location)),
+      titleOptions: uniq(entries.map((e) => e.title)),
+      fieldOptions: uniq(entries.map((e) => e.field)),
+    };
+  }, [entries]);
+
+  const hasFilters = !!(location || title || field);
 
   return (
     <MobileShell header={<BackHeader title="Salary database" />}>
@@ -61,10 +117,19 @@ export default function SalaryDB() {
 
         {/* Filters — Location · Title · Field */}
         <div className="mt-5 flex gap-2">
-          <FilterBox label="Location" value="Any" />
-          <FilterBox label="Title" value="Any" />
-          <FilterBox label="Field" value="Any" />
+          <FilterSelect label="Location" value={location} options={locationOptions} onChange={setLocation} />
+          <FilterSelect label="Title" value={title} options={titleOptions} onChange={setTitle} />
+          <FilterSelect label="Field" value={field} options={fieldOptions} onChange={setField} />
         </div>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => { setLocation(""); setTitle(""); setField(""); }}
+            className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium text-tg-brown-soft"
+          >
+            <X size={12} /> Clear filters
+          </button>
+        )}
 
         {/* Primary action — add a salary anonymously */}
         <div className="mt-4">
@@ -77,18 +142,45 @@ export default function SalaryDB() {
           </Meta>
         </div>
 
+        {/* Results */}
+        {!loading && entries.length > 0 && (
+          <ul className="mt-6 divide-y divide-tg-line-soft overflow-hidden rounded-lg border border-tg-line bg-tg-card">
+            {entries.map((e) => (
+              <li key={e.id} className="flex items-start justify-between gap-3 px-3.5 py-3">
+                <div className="min-w-0">
+                  <div className="truncate text-[14px] font-medium text-tg-ink">{e.title}</div>
+                  <div className="mt-0.5 truncate text-[12px] text-tg-brown-soft">
+                    {e.field} · {e.location}
+                  </div>
+                </div>
+                <div className="flex-none text-right">
+                  <div className="font-mono text-[14px] font-semibold text-tg-ink">
+                    {Number(e.payPerMonth).toLocaleString()} {e.currency}
+                  </div>
+                  <div className="text-[10.5px] uppercase tracking-[0.08em] text-tg-brown-soft">per month</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {error && (
+          <p className="mt-6 text-center text-[12.5px] text-red-500">{error}</p>
+        )}
+
         {/* Empty state — real, no placeholder salaries (G14) */}
-        {entries.length === 0 && (
+        {!loading && entries.length === 0 && !error && (
           <div className="mt-9 flex flex-col items-center rounded-lg border border-dashed border-tg-line bg-tg-stone2 px-6 py-12 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-card">
               <LineChart size={24} className="text-tg-blue-accent" />
             </span>
             <h2 className="mt-4 font-serif text-[19px] font-medium leading-[1.15] tracking-[-0.01em]">
-              The picture is still being drawn.
+              {hasFilters ? "Nothing matches those filters yet." : "The picture is still being drawn."}
             </h2>
             <p className="mt-2 max-w-[16rem] text-[13px] leading-[1.5] text-tg-brown">
-              No salaries have been shared yet. The database grows entirely from
-              anonymous submissions — be one of the first to add yours.
+              {hasFilters
+                ? "Try clearing a filter, or be the first to contribute a number for this slice."
+                : "No salaries have been shared yet. The database grows entirely from anonymous submissions — be one of the first to add yours."}
             </p>
             <Button
               variant="outlineAccent"
