@@ -73,6 +73,7 @@ export async function updateMyProfile(patch: ProfileUpdate): Promise<ProfileRow 
   // Do not allow account_type changes (DB trigger also blocks it).
   const safe = { ...patch };
   delete (safe as { account_type?: unknown }).account_type;
+  delete (safe as { verified_at?: unknown }).verified_at;
   const { data, error } = await supabase
     .from("profiles")
     .update(safe)
