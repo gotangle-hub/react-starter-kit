@@ -14,6 +14,7 @@ import {
   workPublicUrl,
   type ProfileRow,
 } from "@/services/profile";
+import { lookupProfileIdByUsername, USERNAME_REGEX } from "@/services/usernames";
 import { listWorkByUser, postCoverUrl, type PostRow } from "@/services/work";
 
 /**
@@ -33,7 +34,15 @@ export default function PublicProfile() {
     let cancelled = false;
     (async () => {
       if (!id) return;
-      const [p, w] = await Promise.all([getProfileById(id), listWorkByUser(id)]);
+      // The `:id` slot accepts either a UUID OR an @username (per spec — profile
+      // URLs are /u/:username, with the id kept as the internal key).
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const resolvedId = isUuid ? id : USERNAME_REGEX.test(id) ? await lookupProfileIdByUsername(id) : null;
+      if (!resolvedId) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      const [p, w] = await Promise.all([getProfileById(resolvedId), listWorkByUser(resolvedId)]);
       if (cancelled) return;
       setProfile(p);
       setWorks(w);
