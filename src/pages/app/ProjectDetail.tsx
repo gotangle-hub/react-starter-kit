@@ -10,6 +10,8 @@ import { countCommentsForPost } from "@/services/comments";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileById, makerFromProfile } from "@/services/profile";
 import { postCoverUrl, type PostRow } from "@/services/work";
+import { logInteraction } from "@/services/feed";
+import { TrendingBadge } from "@/components/brand/trending-badge";
 import type { Maker } from "@/lib/profile-shape";
 
 /** 24 · Project detail (G3). Full project from real data — images, title, maker, credits, caption. */
