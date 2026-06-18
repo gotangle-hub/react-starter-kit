@@ -21,7 +21,7 @@ import { routes } from "@/lib/routes";
 const DAILY_CAP = 15;
 
 interface DeckCandidate {
-  profile: ProfileRow;
+  profile: Pick<ProfileRow, "id" | "account_type" | "display_name" | "disciplines" | "bio" | "location" | "avatar_path">;
   workImage: string | null;
   workTitle: string | null;
 }
