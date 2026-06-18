@@ -1,4 +1,4 @@
-import type { Maker } from "@/lib/fixtures";
+import type { Maker } from "@/lib/profile-shape";
 import { cn } from "@/lib/utils";
 
 /**

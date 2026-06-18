@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
-import type { Maker } from "@/lib/fixtures";
+import type { Maker } from "@/lib/profile-shape";
 
 /** Progress dots (carousels, tour). The active dot stretches and takes the accent. */
 export function Dots({ count, index }: { count: number; index: number }) {
