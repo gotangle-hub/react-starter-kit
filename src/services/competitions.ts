@@ -40,6 +40,7 @@ function deadlineCutoff(label?: string): Date | null {
 export async function listCompetitions(f: CompetitionFilters = {}): Promise<Competition[]> {
   let q = supabase.from("competitions").select("*").order("deadline", { ascending: true, nullsFirst: false });
   if (f.audience === "students") q = q.eq("audience", "students");
+  if (f.source) q = q.eq("source", f.source);
   const { data, error } = await q;
   if (error) {
     console.error("[competitions] list failed", error);
