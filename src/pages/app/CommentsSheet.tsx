@@ -4,6 +4,8 @@ import { Send } from "lucide-react";
 import { BottomSheet } from "@/components/app/bottom-sheet";
 import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta } from "@/components/brand/atoms";
+import { MentionInput, type MentionInputHandle } from "@/components/app/mention-input";
+import { renderWithMentions } from "@/lib/mentions";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addComment,
@@ -30,7 +32,7 @@ export default function CommentsSheet() {
   const [list, setList] = useState<CommentWithAuthor[]>([]);
   const [text, setText] = useState("");
   const [meProfile, setMeProfile] = useState<ProfileRow | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<MentionInputHandle>(null);
 
   useEffect(() => {
     if (!postId) return;
@@ -95,10 +97,10 @@ export default function CommentsSheet() {
                   <Avatar maker={m} size={34} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <NameRow maker={m} size={13.5} />
+                      <NameRow maker={m} size={13.5} showHandle />
                       <Meta>{timeAgo(c.created_at)}</Meta>
                     </div>
-                    <p className="mt-0.5 font-body text-[14px] leading-snug text-tg-ink">{c.body}</p>
+                    <p className="mt-0.5 font-body text-[14px] leading-snug text-tg-ink">{renderWithMentions(c.body)}</p>
                   </div>
                 </div>
               );
@@ -108,17 +110,19 @@ export default function CommentsSheet() {
 
         <div className="flex flex-none items-center gap-2.5 border-t border-tg-line px-4 py-3 pb-6">
           {meMaker && <Avatar maker={meMaker} size={32} />}
-          <input
+          <MentionInput
             ref={inputRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
+            onChange={setText}
+            onSubmit={send}
             placeholder="Add a comment…"
-            className="min-w-0 flex-1 rounded-pill border border-tg-line bg-tg-card px-4 py-2.5 text-[14px] text-tg-ink outline-none placeholder:text-tg-brown-soft focus:border-tg-blue-accent"
+            ariaLabel="Add a comment"
+            className="w-full min-w-0 rounded-pill border border-tg-line bg-tg-card px-4 py-2.5 text-[14px] text-tg-ink outline-none placeholder:text-tg-brown-soft focus:border-tg-blue-accent"
           />
           <button
             type="button"
             onClick={send}
+            onMouseDown={(e) => e.preventDefault()}
             disabled={!text.trim()}
             className="flex h-10 w-10 flex-none items-center justify-center rounded-pill bg-tg-blue text-white disabled:opacity-40"
             aria-label="Send"
