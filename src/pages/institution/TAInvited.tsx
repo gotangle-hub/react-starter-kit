@@ -1,27 +1,34 @@
+import { useEffect, useState } from "react";
 import { Clock, Info, MailCheck, RotateCw } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { routes } from "@/lib/routes";
-import { useNavigate } from "react-router-dom";
+import { routes, path } from "@/lib/routes";
+import { useNavigate, useParams } from "react-router-dom";
+import { listPendingInvites, cancelInvite, type ClassInvite } from "@/services/classes";
 
-/**
- * 26 · Professor's confirmation after inviting a TA. "Invite sent", a pending
- * badge, the TA email, Resend / Cancel, and a note that the TA gets an email to
- * accept. "Done" → classList.
- */
+/** 26 · Professor's confirmation after inviting a TA. */
 export default function TAInvited() {
   const navigate = useNavigate();
-  const email = "mona@rca.ac.uk";
+  const { id } = useParams();
+  const [invite, setInvite] = useState<ClassInvite | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    listPendingInvites(id).then((rows) => setInvite(rows[0] ?? null));
+  }, [id]);
+
+  const onCancel = async () => {
+    if (invite) await cancelInvite(invite.id);
+    navigate(routes.classList);
+  };
 
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(routes.classList)}>
-            Done
-          </Button>
+          <Button full size="lg" onClick={() => navigate(routes.classList)}>Done</Button>
         </div>
       }
     >
@@ -32,43 +39,32 @@ export default function TAInvited() {
           <span className="mb-3.5 flex h-[58px] w-[58px] items-center justify-center rounded-pill bg-tg-stone2">
             <MailCheck size={28} className="text-tg-blue-accent" />
           </span>
-          <div className="font-serif text-[25px] font-medium leading-[1.1] tracking-[-0.02em]">
-            Invite sent.
-          </div>
+          <div className="font-serif text-[25px] font-medium leading-[1.1] tracking-[-0.02em]">Invite sent.</div>
           <p className="mt-2 max-w-[280px] font-body text-[13.5px] leading-relaxed text-tg-brown">
-            We emailed a link for your TA to join the class. They&apos;ll get an
-            email to accept.
+            We emailed a link for your TA to join the class. They&apos;ll get an email to accept.
           </p>
         </div>
 
-        {/* Pending TA card */}
         <div className="flex items-center gap-3 rounded-[14px] border border-dashed border-tg-line bg-tg-card p-3.5">
           <span className="flex h-11 w-11 flex-none items-center justify-center rounded-pill bg-tg-stone2">
             <Clock size={20} className="text-tg-brown-soft" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="truncate font-mono text-[14px] font-medium text-tg-ink">{email}</div>
+            <div className="truncate font-mono text-[14px] font-medium text-tg-ink">{invite?.email ?? "—"}</div>
             <span className="mt-1 inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-pill bg-tg-terra" />
               <Meta>Invited · awaiting reply</Meta>
             </span>
           </div>
-          <span className="flex-none rounded-md border border-tg-line px-[7px] py-[5px] font-display text-[9px] font-bold uppercase tracking-[0.1em] text-tg-brown">
-            TA
-          </span>
+          <span className="flex-none rounded-md border border-tg-line px-[7px] py-[5px] font-display text-[9px] font-bold uppercase tracking-[0.1em] text-tg-brown">TA</span>
         </div>
 
         <div className="mt-3 flex gap-2">
-          <Button
-            variant="outline"
-            full
-            size="md"
-            onClick={() => navigate(routes.taInviteEmail)}
-          >
+          <Button variant="outline" full size="md" onClick={() => id && navigate(path(routes.taInviteEmail, { id }))}>
             <RotateCw size={15} />
-            Resend
+            Preview email
           </Button>
-          <Button variant="ghost" full size="md" onClick={() => navigate(routes.classList)}>
+          <Button variant="ghost" full size="md" onClick={onCancel}>
             Cancel invite
           </Button>
         </div>
@@ -76,8 +72,7 @@ export default function TAInvited() {
         <div className="mt-[18px] flex gap-3 rounded-[12px] bg-tg-stone2 p-3.5">
           <Info size={16} className="mt-0.5 flex-none text-tg-blue-accent" />
           <span className="font-body text-[12.5px] leading-relaxed text-tg-brown">
-            Once accepted, your TA can post documents, help run the chat and share
-            references — but can&apos;t delete the class or change the roster.
+            Once accepted, your TA can post documents, help run the chat and share references — but can&apos;t delete the class or change the roster.
           </span>
         </div>
       </div>
