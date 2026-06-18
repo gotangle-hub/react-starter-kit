@@ -104,7 +104,7 @@ export function initialsFor(name: string | null | undefined, fallback = "·"): s
 }
 
 /** Build the shape Avatar/UI components expect from a profile row. */
-export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_name" | "avatar_path" | "account_type" | "username">> | null | undefined) {
+export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_name" | "avatar_path" | "account_type" | "username" | "verified_at">> | null | undefined) {
   const name = p?.display_name || (p?.username ? `@${p.username}` : "Member");
   return {
     id: p?.id ?? "unknown",
@@ -113,7 +113,7 @@ export function makerFromProfile(p: Partial<Pick<ProfileRow, "id" | "display_nam
     role: (p?.account_type as string | undefined) ?? "Designer",
     initials: initialsFor(name),
     tint: tintForId(p?.id),
-    verified: false,
+    verified: Boolean(p?.verified_at),
     avatarUrl: workPublicUrl(p?.avatar_path) ?? undefined,
   };
 }
