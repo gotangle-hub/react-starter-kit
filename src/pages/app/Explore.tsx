@@ -26,26 +26,25 @@ export default function Explore() {
       // Pull real published work first, then fall back to fixtures so the feed
       // is never empty for new accounts.
       const real = await listExploreWork(30);
-      const realAsPosts: Post[] = real
-        .map((p) => {
-          const img = postCoverUrl(p);
-          if (!img) return null;
-          return {
-            id: p.id,
-            maker: p.author_id,
-            img,
-            title: p.title,
-            cat: p.category ?? "",
-            year: p.year ?? new Date(p.created_at).getFullYear(),
-            place: p.place ?? "",
-            likes: 0,
-            comments: 0,
-            saves: 0,
-            usedIn: p.caption ?? "",
-            promoted: p.promoted,
-          } satisfies Post;
-        })
-        .filter((x): x is Post => x !== null);
+      const realAsPosts: Post[] = [];
+      for (const p of real) {
+        const img = postCoverUrl(p);
+        if (!img) continue;
+        realAsPosts.push({
+          id: p.id,
+          maker: p.author_id,
+          img,
+          title: p.title,
+          cat: p.category ?? "",
+          year: p.year ?? new Date(p.created_at).getFullYear(),
+          place: p.place ?? "",
+          likes: 0,
+          comments: 0,
+          saves: 0,
+          usedIn: p.caption ?? "",
+          promoted: p.promoted ?? false,
+        });
+      }
 
       const merged = [...realAsPosts, ...fixturePosts];
       const ranked = await rankItems(
