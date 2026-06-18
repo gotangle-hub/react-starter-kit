@@ -79,3 +79,22 @@ export async function submitRegistrationRequest(payload: {
 }) {
   return supabase.functions.invoke("register-institution", { body: payload });
 }
+
+export type LinkMembershipResult =
+  | { ok: true; institution_id: string; institution_name: string; email: string; role: "faculty" | "student" | null; ambiguous: boolean }
+  | { ok: false; reason: "domain_mismatch"; expected_domain: string; email: string };
+
+/** Server-verified G13 link: matches the caller's auth email to the chosen
+ * institution's domain and persists the link + detected role. */
+export async function linkMembership(institutionId: string): Promise<LinkMembershipResult | { ok: false; reason: "error"; message: string }> {
+  // @ts-expect-error — RPC name not yet in generated types until next codegen.
+  const { data, error } = await supabase.rpc("link_institution_membership", { _institution_id: institutionId });
+  if (error) return { ok: false, reason: "error", message: error.message };
+  return data as LinkMembershipResult;
+}
+
+export async function setInstitutionRole(role: "faculty" | "student"): Promise<{ error: string | null }> {
+  // @ts-expect-error — RPC name not yet in generated types until next codegen.
+  const { error } = await supabase.rpc("set_institution_role", { _role: role });
+  return { error: error?.message ?? null };
+}
