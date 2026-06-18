@@ -107,7 +107,7 @@ export default function DesignerProfile() {
           {/* Avatar overlaps the banner edge but never drops below it */}
           <div className="-mt-[42px] flex items-end justify-between">
             <span className="rounded-pill" style={{ boxShadow: "0 0 0 4px var(--tg-bg)" }}>
-              <Avatar maker={avatarMaker} size={84} avatarUrl={workPublicUrl(profile?.avatar_path) ?? undefined} />
+              <Avatar maker={avatarMaker} size={84} />
             </span>
             <Button variant="outline" size="sm" onClick={() => navigate(routes.editProfile)}>
               <Pencil size={14} />
