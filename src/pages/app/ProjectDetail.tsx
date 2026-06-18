@@ -34,6 +34,8 @@ export default function ProjectDetail() {
         const profile = await getProfileById(row.author_id);
         if (alive && profile) setMaker(makerFromProfile(profile) as Maker);
       }
+      // G3 · log the view so velocity has signal.
+      if (row) logInteraction({ target_kind: "post", target_id: row.id, kind: "view", category: row.category ?? undefined });
     })();
     return () => { alive = false; };
   }, [id]);
