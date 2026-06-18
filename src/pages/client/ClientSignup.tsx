@@ -117,6 +117,13 @@ export default function ClientSignup() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          <UsernamePicker
+            value={username}
+            onChange={setUsername}
+            onValidityChange={(s) => setUsernameOk(s.valid && s.available)}
+            label="Account username"
+            baseSuggestion={name}
+          />
           <TextField
             label="Work email"
             mono
