@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { SettingsScaffold } from "@/components/app/settings-kit";
 import { TextField, LocationField } from "@/components/app/fields";
 import { Pill } from "@/components/brand/atoms";
+import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
 import { disciplines as allDisciplines } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 import { getMyProfile, updateMyProfile, workPublicUrl } from "@/services/profile";
 import { uploadService } from "@/services/uploads";
+import { checkUsernameAvailable, normalizeUsername } from "@/services/usernames";
 
 export default function EditProfileSettings() {
   const navigate = useNavigate();
@@ -18,6 +20,9 @@ export default function EditProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameOk, setUsernameOk] = useState(true);
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [website, setWebsite] = useState("");
@@ -31,6 +36,8 @@ export default function EditProfileSettings() {
       const p = await getMyProfile();
       if (p) {
         setName(p.display_name ?? "");
+        setUsername(p.username ?? "");
+        setOriginalUsername(p.username ?? "");
         setBio(p.bio ?? "");
         setLocation(p.location ?? "");
         setPicked(p.disciplines ?? []);
