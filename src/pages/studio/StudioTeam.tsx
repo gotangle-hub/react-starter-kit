@@ -1,24 +1,19 @@
-import { useState } from "react";
-import { ChevronDown, Clock, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Mail } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta } from "@/components/brand/atoms";
-import { makers, studio } from "@/lib/fixtures";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/profile";
+import type { Maker } from "@/lib/profile-shape";
 
-/** 15 · Manage team. Invite + manage members; seats scale with the plan tier. */
-const MEMBERS = [
-  { id: "studio", role: "Owner" },
-  { id: "lina", role: "Admin" },
-  { id: "mona", role: "Editor" },
-  { id: "noor", role: "Member" },
-  { id: "yuki", role: "Member" },
-];
-const PENDING = [
-  { email: "rana@oblique.studio", role: "Editor" },
-  { email: "theo@oblique.studio", role: "Member" },
-];
+/**
+ * 15 · Manage team. Invite + manage members; seats scale with the plan tier.
+ * Backend not wired yet — render the real owner (you) and the invite form;
+ * pending invites + extra members appear once a studio_members backend exists.
+ */
 const ROLE_TINT: Record<string, string> = {
   Owner: "var(--tg-blue)",
   Admin: "var(--tg-purple)",
@@ -29,18 +24,26 @@ const INVITE_ROLES = ["Admin", "Editor", "Member"];
 
 export default function StudioTeam() {
   const [role, setRole] = useState("Member");
+  const [me, setMe] = useState<ProfileRow | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    getMyProfile().then((p) => { if (alive) setMe(p); });
+    return () => { alive = false; };
+  }, []);
+
+  const studioName = me?.display_name ?? "Your studio";
+  const owner: Maker | null = me ? (makerFromProfile(me) as Maker) : null;
+
   return (
     <MobileShell>
-      <BackHeader
-        title="Manage team"
-        right={<span className="font-mono text-[11px] font-semibold text-tg-brown">{studio.seatsUsed} / {studio.seatsTotal} seats</span>}
-      />
+      <BackHeader title="Manage team" />
       <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-3 pb-10">
         {/* Invite card */}
         <div className="rounded-lg bg-tg-emph p-4 text-white">
           <div className="font-serif text-[19px] font-medium tracking-[-0.01em]">Invite someone to the studio.</div>
           <p className="my-2 font-body text-[12.5px] leading-snug text-white/70">
-            They get a link to join {studio.name} with the role you choose.
+            They get a link to join {studioName} with the role you choose.
           </p>
           <div className="flex items-center gap-2.5 rounded-DEFAULT bg-white/12 px-3.5 py-3">
             <Mail size={16} className="text-white" />
@@ -58,49 +61,32 @@ export default function StudioTeam() {
               </button>
             ))}
           </div>
-          <button type="button" className="mt-3 w-full rounded-DEFAULT bg-tg-yellow py-3 text-center font-display text-[14px] font-semibold text-tg-ink dark:text-white">
-            Send invite
-          </button>
-        </div>
-
-        {/* Pending */}
-        <GroupLabel>Pending invites</GroupLabel>
-        <div className="flex flex-col gap-2.5">
-          {PENDING.map((p) => (
-            <div key={p.email} className="flex items-center gap-3 rounded-DEFAULT border border-dashed border-tg-line bg-tg-card px-3.5 py-3">
-              <span className="flex h-9 w-9 flex-none items-center justify-center rounded-pill bg-tg-stone2">
-                <Clock size={17} className="text-tg-brown-soft" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-mono text-[13.5px] font-medium text-tg-ink">{p.email}</div>
-                <Meta className="mt-0.5 block">Invited · {p.role}</Meta>
-              </div>
-              <button type="button" className="font-display text-[12px] font-semibold text-tg-terra">Cancel</button>
-            </div>
-          ))}
+          <Button full className="mt-3">Send invite</Button>
         </div>
 
         {/* Members */}
-        <GroupLabel>Members · {studio.seatsUsed}</GroupLabel>
-        <div className="flex flex-col">
-          {MEMBERS.map(({ id, role: r }) => {
-            const m = makers.find((x) => x.id === id) ?? makers[0];
-            return (
-              <div key={id} className="flex items-center gap-3 py-2.5">
-                <Avatar maker={m} size={42} />
-                <div className="min-w-0 flex-1">
-                  <NameRow maker={m} size={14} />
-                  <Meta className="mt-0.5 block">{m.role}</Meta>
-                </div>
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-tg-stone2 px-2.5 py-1.5 font-display text-[12px] font-semibold text-tg-ink">
-                  <span className="h-[7px] w-[7px] rounded-pill" style={{ background: ROLE_TINT[r] }} />
-                  {r}
-                  {r !== "Owner" && <ChevronDown size={13} className="text-tg-brown-soft" />}
-                </span>
+        <GroupLabel>Members</GroupLabel>
+        {owner ? (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3 py-2.5">
+              <Avatar maker={owner} size={42} />
+              <div className="min-w-0 flex-1">
+                <NameRow maker={owner} size={14} />
+                <Meta className="mt-0.5 block">{owner.role}</Meta>
               </div>
-            );
-          })}
-        </div>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-tg-stone2 px-2.5 py-1.5 font-display text-[12px] font-semibold text-tg-ink">
+                <span className="h-[7px] w-[7px] rounded-pill" style={{ background: ROLE_TINT.Owner }} />
+                Owner
+              </span>
+            </div>
+          </div>
+        ) : (
+          <Meta className="block">Sign in to manage your team.</Meta>
+        )}
+
+        <Meta className="mt-6 block">
+          Invitations and additional roles appear here once teammates accept.
+        </Meta>
       </div>
     </MobileShell>
   );

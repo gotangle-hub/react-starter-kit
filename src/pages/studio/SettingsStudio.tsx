@@ -15,7 +15,6 @@ import {
   Zap,
 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
-import { studio } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 
 /** 33 · Studio settings — studio-worded, consistent with the rest of the app. */
@@ -26,7 +25,7 @@ export default function SettingsStudio() {
         title="Studio"
         rows={[
           { icon: Building2, label: "Studio page", to: routes.studioPage },
-          { icon: Users, label: "Team & seats", value: `${studio.seatsUsed} / ${studio.seatsTotal}`, to: routes.studioTeam },
+          { icon: Users, label: "Team & seats", to: routes.studioTeam },
           { icon: Shield, label: "Roles & permissions", to: routes.studioTeam },
           { icon: Globe, label: "Public studio profile", value: "On", to: routes.editProfile },
         ]}

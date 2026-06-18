@@ -4,11 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Chip } from "@/components/brand/chip";
 import { Dots } from "@/components/brand/atoms";
-import { Avatar } from "@/components/brand/avatar";
-import { NameRow, PhotoTile } from "@/components/brand/atoms";
+import { PhotoTile } from "@/components/brand/atoms";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { Button } from "@/components/ui/button";
-import { makers } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 
 export function CarouselSlide({
@@ -69,7 +67,7 @@ export function CarouselSlide({
   );
 }
 
-/** Slide 1 visual — a thread connecting a project to its makers. */
+/** Slide 1 visual — a thread connecting a project to its makers (decorative). */
 export function ThreadVisual() {
   return (
     <div className="relative mx-[-4px] mt-1 h-[230px]">
@@ -81,10 +79,10 @@ export function ThreadVisual() {
         <PhotoTile width={108} height={108} radius={14} swatch="#E7DDCB" label="project" />
       </div>
       <div className="absolute right-2 top-1.5">
-        <FloatChip id={0} />
+        <DecoChip tint="#A85C3A" />
       </div>
       <div className="absolute bottom-1 right-[30px]">
-        <FloatChip id={2} />
+        <DecoChip tint="#0107FF" />
       </div>
       <div className="absolute bottom-[22px] left-[30px]">
         <PhotoTile width={72} height={72} radius={12} swatch="#161514" />
@@ -93,12 +91,16 @@ export function ThreadVisual() {
   );
 }
 
-function FloatChip({ id }: { id: number }) {
-  const m = makers[id];
+function DecoChip({ tint }: { tint: string }) {
+  // Abstract, non-personal chip used purely for visual rhythm in onboarding.
   return (
     <div className="flex items-center gap-2 rounded-pill border border-tg-line bg-tg-card py-1.5 pl-1.5 pr-3 shadow-card">
-      <Avatar maker={m} size={30} />
-      <NameRow maker={m} size={13} />
+      <span
+        className="inline-block h-[30px] w-[30px] rounded-pill"
+        style={{ background: tint }}
+        aria-hidden
+      />
+      <span className="block h-1.5 w-16 rounded-pill bg-tg-line" aria-hidden />
     </div>
   );
 }

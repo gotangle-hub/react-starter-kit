@@ -8,7 +8,7 @@ import { Pill, Meta, PhotoTile } from "@/components/brand/atoms";
 import { Chip } from "@/components/brand/chip";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { feed } from "@/lib/fixtures";
+
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import {
@@ -33,11 +33,11 @@ const FILTERS = {
   Prize: ["Any prize", "Exhibition", "Mentorship", "Build"],
 };
 
-const BANNERS = ["spec-full.jpg", "spec-negative.jpg", "spec-blades.jpg"];
-const bannerFor = (id: string) => {
+const SWATCHES = ["#A85C3A", "#161514", "#0107FF", "#3A6E5C", "#6B4EFF"];
+const swatchFor = (id: string) => {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return BANNERS[h % BANNERS.length];
+  return SWATCHES[h % SWATCHES.length];
 };
 
 export default function StudentCompetitions() {
@@ -177,7 +177,7 @@ function CompCard({
   return (
     <Card className="overflow-hidden p-0">
       <div className="relative h-24">
-        <PhotoTile width="100%" height={96} radius={0} img={feed(bannerFor(c.id))} swatch="#E7DDCB" />
+        <PhotoTile width="100%" height={96} radius={0} swatch={swatchFor(c.id)} />
         <span className="absolute left-3 top-2.5">
           <Chip>{c.field}</Chip>
         </span>
