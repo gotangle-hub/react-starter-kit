@@ -13,17 +13,18 @@ import {
   User,
 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
-import { schools } from "@/lib/schools";
+import { recallInstitution } from "@/services/institutions";
 import { routes } from "@/lib/routes";
 
 /** 43 · Student settings — student-worded, consistent with the rest of the app. */
 export default function SettingsStudent() {
+  const inst = recallInstitution();
   return (
     <SettingsScaffold title="Student settings">
       <SettingsGroup
         title="Campus"
         rows={[
-          { icon: Building2, label: "Institution", value: schools[0].name },
+          { icon: Building2, label: "Institution", value: inst?.name ?? "Not linked" },
           { icon: GraduationCap, label: "Graduation status", to: routes.studentGraduation },
           { icon: BookOpen, label: "My classes", to: routes.studentClasses },
         ]}

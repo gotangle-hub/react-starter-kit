@@ -1,6 +1,14 @@
-/** Starter list for the predictive institution finder (G13).
- * `provider` drives login routing (Google Workspace, Microsoft, etc.).
- * Real institutions are merged in from the `institutions` table at runtime. */
+/** Predictive institution finder (G13).
+ *
+ * The Tangle institutions directory starts EMPTY. Real schools are added
+ * manually to the `institutions` table (via the registration flow) and read
+ * from there at runtime — we intentionally ship no fixture schools so the
+ * predictive search is empty until real campuses are onboarded.
+ *
+ * The `School` type is still exported because a few UI bits (logos, settings
+ * rows) accept a small school-shaped object from the user's selected
+ * institution.
+ */
 export interface School {
   name: string;
   city: string;
@@ -10,9 +18,4 @@ export interface School {
   initials: string;
 }
 
-export const schools: School[] = [
-  { name: "Royal College of Art", city: "London, UK", domain: "rca.ac.uk", provider: "Google", tint: "#0107FF", initials: "RC" },
-  { name: "Royal Academy of Art", city: "The Hague, NL", domain: "kabk.nl", provider: "Google", tint: "#161514", initials: "RA" },
-  { name: "Rhode Island School of Design", city: "Providence, US", domain: "risd.edu", provider: "Microsoft", tint: "#A85C3A", initials: "RI" },
-  { name: "Dubai Institute of Design", city: "Dubai, UAE", domain: "didi.ac.ae", provider: "Microsoft", tint: "#6B4EFF", initials: "DI" },
-];
+export const schools: School[] = [];
