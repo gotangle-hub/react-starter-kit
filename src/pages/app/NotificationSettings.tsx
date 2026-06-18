@@ -14,13 +14,9 @@ export default function NotificationSettings() {
         if (!cancelled) setLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from("profiles")
-        .select("marketing_opt_in")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("get_my_marketing_opt_in");
       if (!cancelled) {
-        setMarketing(Boolean(data?.marketing_opt_in));
+        if (!error) setMarketing(Boolean(data));
         setLoading(false);
       }
     })();
