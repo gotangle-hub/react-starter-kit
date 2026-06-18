@@ -209,7 +209,14 @@ function CompCard({
           >
             {state.interested ? "Interested" : "I'm interested"}
           </Button>
-          <Button variant="outlineAccent" size="sm">
+          <Button
+            variant="outlineAccent"
+            size="sm"
+            onClick={() => {
+              const params = new URLSearchParams({ comp: k.title, meta: `${k.organiser} · Closes ${k.deadline_label ?? k.deadline ?? ""}` });
+              window.location.assign(`/partner?${params.toString()}`);
+            }}
+          >
             <Users size={14} className="mr-1.5" />
             Create collaboration
           </Button>
