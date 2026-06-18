@@ -1,58 +1,113 @@
-import { useRef, useState } from "react";
-import { Heart, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Send } from "lucide-react";
 import { BottomSheet } from "@/components/app/bottom-sheet";
 import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta } from "@/components/brand/atoms";
-import { comments as seed, makerById, me, type Comment } from "@/lib/fixtures";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  addComment,
+  listComments,
+  type CommentWithAuthor,
+} from "@/services/comments";
+import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/profile";
+import { logInteraction } from "@/services/feed";
+
+function timeAgo(iso: string): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return "now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
 
 /**
- * 25 · Comments (G8). Composing a comment keeps the keyboard open after sending —
- * we keep the input focused and only clear its value, never blur it.
+ * 25 · Comments (G8). Real comments via Supabase + realtime; keyboard stays
+ * focused after send so users can keep typing (G8).
  */
 export default function CommentsSheet() {
-  const [list, setList] = useState<Comment[]>(seed);
+  const { id: postId } = useParams<{ id: string }>();
+  const [list, setList] = useState<CommentWithAuthor[]>([]);
   const [text, setText] = useState("");
+  const [meProfile, setMeProfile] = useState<ProfileRow | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const send = () => {
+  useEffect(() => {
+    if (!postId) return;
+    let alive = true;
+    (async () => {
+      const [rows, mine] = await Promise.all([listComments(postId), getMyProfile()]);
+      if (!alive) return;
+      setList(rows);
+      setMeProfile(mine);
+    })();
+    const channel = supabase
+      .channel(`comments:${postId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "comments", filter: `post_id=eq.${postId}` },
+        async () => {
+          const fresh = await listComments(postId);
+          if (alive) setList(fresh);
+        },
+      )
+      .subscribe();
+    return () => {
+      alive = false;
+      supabase.removeChannel(channel);
+    };
+  }, [postId]);
+
+  const send = async () => {
     const t = text.trim();
-    if (!t) return;
-    setList((prev) => [
-      ...prev,
-      { id: "c" + (prev.length + 1), maker: me.id, text: t, time: "now", likes: 0 },
-    ]);
+    if (!t || !postId) return;
     setText("");
-    // G8 — do NOT dismiss the keyboard: keep the input focused after send.
-    inputRef.current?.focus();
+    inputRef.current?.focus(); // G8 — keep keyboard open after send.
+    try {
+      await addComment(postId, t);
+      logInteraction({ target_kind: "post", target_id: postId, kind: "comment" });
+      // Realtime will refresh; also optimistically refetch in case channel is slow.
+      const fresh = await listComments(postId);
+      setList(fresh);
+    } catch {
+      setText(t);
+    }
   };
 
+  const meMaker = meProfile ? makerFromProfile(meProfile) : null;
+
   return (
-    <BottomSheet title={`${list.length} comments`} full>
+    <BottomSheet title={list.length === 1 ? "1 comment" : `${list.length} comments`} full>
       <div className="flex h-full flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-2">
-          {list.map((c) => {
-            const m = makerById(c.maker);
-            return (
-              <div key={c.id} className="flex gap-3 py-3">
-                <Avatar maker={m} size={34} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <NameRow maker={m} size={13.5} />
-                    <Meta>{c.time}</Meta>
+          {list.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
+              <p className="font-display text-[15px] font-semibold text-tg-ink">No comments yet</p>
+              <p className="mt-1 font-body text-[13px] text-tg-brown-soft">
+                Be the first to leave one.
+              </p>
+            </div>
+          ) : (
+            list.map((c) => {
+              const m = makerFromProfile(c.author);
+              return (
+                <div key={c.id} className="flex gap-3 py-3">
+                  <Avatar maker={m} size={34} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <NameRow maker={m} size={13.5} />
+                      <Meta>{timeAgo(c.created_at)}</Meta>
+                    </div>
+                    <p className="mt-0.5 font-body text-[14px] leading-snug text-tg-ink">{c.body}</p>
                   </div>
-                  <p className="mt-0.5 font-body text-[14px] leading-snug text-tg-ink">{c.text}</p>
                 </div>
-                <button type="button" className="flex flex-col items-center gap-0.5 text-tg-brown-soft">
-                  <Heart size={15} />
-                  <span className="font-mono text-[10px]">{c.likes}</span>
-                </button>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         <div className="flex flex-none items-center gap-2.5 border-t border-tg-line px-4 py-3 pb-6">
-          <Avatar maker={me} size={32} />
+          {meMaker && <Avatar maker={meMaker} size={32} />}
           <input
             ref={inputRef}
             value={text}

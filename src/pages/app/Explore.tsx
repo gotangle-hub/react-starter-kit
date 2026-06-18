@@ -10,6 +10,7 @@ import { feed, makerById, posts as fixturePosts, type Maker, type Post } from "@
 import { rankItems, logInteraction } from "@/services/feed";
 import { listExploreWork, postCoverUrl } from "@/services/work";
 import { getProfilesByIds, makerFromProfile } from "@/services/profile";
+import { countCommentsForPosts } from "@/services/comments";
 import { cn } from "@/lib/utils";
 
 /**
@@ -69,7 +70,10 @@ export default function Explore() {
         })),
       );
       const byId = new Map(merged.map((p) => [p.id, p]));
-      setPosts(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
+      const ordered = ranked.map((r) => byId.get(r.id)!).filter(Boolean);
+      // Real comment counts (fixture posts will simply get 0 — they don't exist in DB).
+      const counts = await countCommentsForPosts(ordered.map((p) => p.id));
+      setPosts(ordered.map((p) => ({ ...p, comments: counts.get(p.id) ?? p.comments ?? 0 })));
     })();
   }, []);
   const post = posts[index] ?? fixturePosts[0];
