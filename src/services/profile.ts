@@ -48,6 +48,25 @@ export async function getProfilesByIds(ids: string[]): Promise<Map<string, Profi
   return map;
 }
 
+/** List recently-active profiles (used by talent/feed surfaces that want
+ * real people, not fixtures). */
+export async function listProfiles(opts: { limit?: number; excludeSelf?: boolean } = {}): Promise<ProfileRow[]> {
+  const limit = opts.limit ?? 20;
+  let me: string | null = null;
+  if (opts.excludeSelf) {
+    const { data: { user } } = await supabase.auth.getUser();
+    me = user?.id ?? null;
+  }
+  let q = supabase
+    .from("profiles")
+    .select(PUBLIC_PROFILE_COLUMNS)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (me) q = q.neq("id", me);
+  const { data } = await q;
+  return (data ?? []) as ProfileRow[];
+}
+
 export async function updateMyProfile(patch: ProfileUpdate): Promise<ProfileRow | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
