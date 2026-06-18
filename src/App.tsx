@@ -364,7 +364,8 @@ export default function App() {
             <Route path={routes.professorUploadDoc} element={<ProtectedRoute><ProfessorUploadDoc /></ProtectedRoute>} />
             <Route path={routes.taInvited} element={<ProtectedRoute><TAInvited /></ProtectedRoute>} />
             <Route path={routes.taInviteEmail} element={<TAInviteEmail />} />
-            <Route path={routes.taInviteAccept} element={<TAInviteAccept />} />
+            <Route path={routes.taInviteAccept} element={<ProtectedRoute><TAInviteAccept /></ProtectedRoute>} />
+            <Route path={routes.classChat} element={<ProtectedRoute><ClassChat /></ProtectedRoute>} />
             <Route path={routes.settingsStudent} element={<ProtectedRoute><SettingsStudent /></ProtectedRoute>} />
             <Route path={routes.studentGraduation} element={<ProtectedRoute><StudentGraduation /></ProtectedRoute>} />
             <Route path={routes.settingsFaculty} element={<ProtectedRoute><SettingsFaculty /></ProtectedRoute>} />
