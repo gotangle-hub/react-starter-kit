@@ -27,11 +27,17 @@ export default function TalentPool() {
     (async () => {
       const [profile, rows] = await Promise.all([
         getMyProfile(),
-        listProfiles({ limit: 12, excludeSelf: true }),
+        listProfiles({ limit: 24, excludeSelf: true }),
       ]);
       if (!alive) return;
       setMe(profile);
-      setPeople(rows.map((r) => makerFromProfile(r) as Maker));
+      const ranked = await rankItems(
+        "makers",
+        rows.map((r) => ({ id: r.id, category: r.account_type, base_score: 0 })),
+      );
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      const ordered = ranked.map((r) => byId.get(r.id)).filter(Boolean) as ProfileRow[];
+      setPeople(ordered.map((r) => makerFromProfile(r) as Maker));
     })();
     return () => { alive = false; };
   }, []);
