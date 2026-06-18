@@ -9,6 +9,7 @@ import { NameRow, Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { listProfiles, makerFromProfile, getMyProfile, type ProfileRow } from "@/services/profile";
+import { rankItems } from "@/services/feed";
 import type { Maker } from "@/lib/profile-shape";
 
 /**
