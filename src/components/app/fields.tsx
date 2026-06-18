@@ -38,15 +38,20 @@ export function LocationField({
   label = "Location",
   defaultValue = "",
   placeholder = "Search a city…",
+  onChange,
 }: {
   label?: string;
   defaultValue?: string;
   placeholder?: string;
+  onChange?: (value: string) => void;
 }) {
   const [val, setVal] = useState(defaultValue);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setVal(defaultValue);
+  }, [defaultValue]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
