@@ -28,7 +28,7 @@ export default function ProfessorCreateClass() {
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (!name.trim()) { toast.error("Give your class a name."); return; }
+    if (!name.trim()) { console.warn("Give your class a name."); alert("Give your class a name."); return; }
     setBusy(true);
     try {
       const inst = recallInstitution();
@@ -44,7 +44,7 @@ export default function ProfessorCreateClass() {
       else navigate(routes.classList);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not create class.";
-      toast.error(msg);
+      console.warn(msg); alert(msg);
     } finally {
       setBusy(false);
     }
