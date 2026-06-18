@@ -105,7 +105,10 @@ export default function ProjectDetail() {
 
       <div className="px-[22px] py-5">
         {post.category && <Chip>{post.category}</Chip>}
-        <h1 className="mt-3 font-serif text-[34px] font-medium leading-none tracking-[-0.025em]">{post.title}</h1>
+        <div className="mt-3 flex items-start justify-between gap-3">
+          <h1 className="font-serif text-[34px] font-medium leading-none tracking-[-0.025em]">{post.title}</h1>
+          <TrendingBadge tier={post.reach_tier} className="mt-1.5 flex-none" />
+        </div>
         <Meta className="mt-2 block">{[post.place, post.year].filter(Boolean).join(" · ")}</Meta>
 
         {maker && (
