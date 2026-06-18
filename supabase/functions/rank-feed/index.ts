@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // Pull signals in parallel.
     const candidateIds = body.candidates.map((c) => c.id);
-    const [interestsRes, followsRes, interactionsRes, metricsRes] = await Promise.all([
+    const [interestsRes, followsRes, interactionsRes, metricsRes, boostsRes, creatorBoostsRes] = await Promise.all([
       supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
       supabase.from("follows").select("followee_id").eq("follower_id", userId),
       supabase
@@ -81,10 +81,21 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(200),
       supabase.from("post_metrics").select("post_id, reach_tier, score").in("post_id", candidateIds),
+      // G6 · active boosts — mark candidates promoted + record impressions.
+      supabase.rpc("list_active_boosted_post_ids"),
+      supabase.rpc("list_active_boosted_creator_ids"),
     ]);
     const reachByPost = new Map<string, { tier: number; score: number }>();
     for (const m of metricsRes.data ?? []) {
       reachByPost.set(m.post_id, { tier: Number(m.reach_tier) || 0, score: Number(m.score) || 0 });
+    }
+    const boostedPosts = new Map<string, string>(); // post_id → boost_id
+    for (const b of (boostsRes.data ?? []) as Array<{ post_id: string; boost_id: string; owner_id: string }>) {
+      if (b.owner_id !== userId) boostedPosts.set(b.post_id, b.boost_id);
+    }
+    const boostedCreators = new Map<string, string>(); // owner_id → boost_id
+    for (const b of (creatorBoostsRes.data ?? []) as Array<{ owner_id: string; boost_id: string }>) {
+      if (b.owner_id !== userId) boostedCreators.set(b.owner_id, b.boost_id);
     }
 
     const interestWeight = new Map<string, number>();
@@ -114,8 +125,9 @@ Deno.serve(async (req) => {
       if (c.author_id && follows.has(c.author_id)) s += 2.0;
       s += 0.4 * recency(c.created_at);
       if (typeof c.base_score === "number") s += 0.05 * c.base_score;
-      if (c.promoted) s += 0.3;
-      // G3 · virality boost — accelerating posts get progressively wider reach.
+      // G6 · paid boost lifts the candidate above organic.
+      const boosted = boostedPosts.has(c.id) || (c.author_id ? boostedCreators.has(c.author_id) : false);
+      if (c.promoted || boosted) s += 2.4;
       const reach = reachByPost.get(c.id);
       if (reach) s += 0.9 * reach.tier;
       return s;
@@ -126,8 +138,36 @@ Deno.serve(async (req) => {
       .sort((a, b) => (b.s - a.s) || (a.i - b.i))
       .map(({ c }) => c.id);
 
+    // Interleave so boosted items are spaced ~1-in-5 instead of all stacked at top.
+    const boostedIds = new Set<string>();
+    for (const c of body.candidates) {
+      if (boostedPosts.has(c.id) || (c.author_id && boostedCreators.has(c.author_id))) boostedIds.add(c.id);
+    }
+    const boostedQ = ranked.filter((id) => boostedIds.has(id));
+    const organicQ = ranked.filter((id) => !boostedIds.has(id));
+    const woven: string[] = [];
+    while (boostedQ.length || organicQ.length) {
+      for (let i = 0; i < 4 && organicQ.length; i++) woven.push(organicQ.shift()!);
+      if (boostedQ.length) woven.push(boostedQ.shift()!);
+    }
+
+    // Record impressions for boosted items that appeared in the candidate set.
+    const impressionBoostIds: string[] = [];
+    for (const c of body.candidates) {
+      const bid = boostedPosts.get(c.id) ?? (c.author_id ? boostedCreators.get(c.author_id) : undefined);
+      if (bid) impressionBoostIds.push(bid);
+    }
+    if (impressionBoostIds.length) {
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: auth } } },
+      );
+      userClient.rpc("record_boost_impressions", { _boost_ids: impressionBoostIds }).then(() => {}, () => {});
+    }
+
     return new Response(
-      JSON.stringify({ ranked, personalised: true, signals: {
+      JSON.stringify({ ranked: woven, personalised: true, boosted: Array.from(boostedIds), signals: {
         interests: interestWeight.size, follows: follows.size, interactions: interactionsRes.data?.length ?? 0,
       } }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },

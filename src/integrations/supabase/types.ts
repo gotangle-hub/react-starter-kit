@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      boost_impressions: {
+        Row: {
+          boost_id: string
+          created_at: string
+          id: number
+          viewer_id: string | null
+        }
+        Insert: {
+          boost_id: string
+          created_at?: string
+          id?: number
+          viewer_id?: string | null
+        }
+        Update: {
+          boost_id?: string
+          created_at?: string
+          id?: number
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_impressions_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "boosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boosts: {
+        Row: {
+          audience: string
+          clicks: number
+          created_at: string
+          currency: string
+          daily_budget_minor: number
+          duration_days: number
+          ends_at: string | null
+          id: string
+          impressions: number
+          kind: Database["public"]["Enums"]["boost_kind"]
+          owner_id: string
+          product_id: string
+          product_name: string
+          starts_at: string | null
+          status: Database["public"]["Enums"]["boost_status"]
+          target_id: string | null
+          total_minor: number
+          updated_at: string
+          ziina_intent_id: string | null
+        }
+        Insert: {
+          audience?: string
+          clicks?: number
+          created_at?: string
+          currency?: string
+          daily_budget_minor?: number
+          duration_days?: number
+          ends_at?: string | null
+          id?: string
+          impressions?: number
+          kind: Database["public"]["Enums"]["boost_kind"]
+          owner_id: string
+          product_id: string
+          product_name: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["boost_status"]
+          target_id?: string | null
+          total_minor: number
+          updated_at?: string
+          ziina_intent_id?: string | null
+        }
+        Update: {
+          audience?: string
+          clicks?: number
+          created_at?: string
+          currency?: string
+          daily_budget_minor?: number
+          duration_days?: number
+          ends_at?: string | null
+          id?: string
+          impressions?: number
+          kind?: Database["public"]["Enums"]["boost_kind"]
+          owner_id?: string
+          product_id?: string
+          product_name?: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["boost_status"]
+          target_id?: string | null
+          total_minor?: number
+          updated_at?: string
+          ziina_intent_id?: string | null
+        }
+        Relationships: []
+      }
       class_documents: {
         Row: {
           body: string | null
@@ -1163,6 +1258,20 @@ export type Database = {
     }
     Functions: {
       accept_class_invite: { Args: { _token: string }; Returns: string }
+      activate_boost_by_intent: {
+        Args: { _intent_id: string }
+        Returns: string
+      }
+      boost_reach_stats: {
+        Args: { _boost_id: string }
+        Returns: {
+          ends_at: string
+          impressions: number
+          started_at: string
+          status: Database["public"]["Enums"]["boost_status"]
+          unique_viewers: number
+        }[]
+      }
       check_username_available: { Args: { _name: string }; Returns: boolean }
       create_class: {
         Args: {
@@ -1189,7 +1298,45 @@ export type Database = {
         Returns: number
       }
       ensure_dm_conversation: { Args: { _other: string }; Returns: string }
+      expire_finished_boosts: { Args: never; Returns: undefined }
+      fail_boost_by_intent: {
+        Args: {
+          _intent_id: string
+          _status: Database["public"]["Enums"]["boost_status"]
+        }
+        Returns: undefined
+      }
       get_auth_methods: { Args: { p_email: string }; Returns: Json }
+      get_my_latest_boost: {
+        Args: never
+        Returns: {
+          audience: string
+          clicks: number
+          created_at: string
+          currency: string
+          daily_budget_minor: number
+          duration_days: number
+          ends_at: string | null
+          id: string
+          impressions: number
+          kind: Database["public"]["Enums"]["boost_kind"]
+          owner_id: string
+          product_id: string
+          product_name: string
+          starts_at: string | null
+          status: Database["public"]["Enums"]["boost_status"]
+          target_id: string | null
+          total_minor: number
+          updated_at: string
+          ziina_intent_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "boosts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_my_marketing_opt_in: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -1231,6 +1378,21 @@ export type Database = {
         Returns: {
           mutual: boolean
           status: string
+        }[]
+      }
+      list_active_boosted_creator_ids: {
+        Args: never
+        Returns: {
+          boost_id: string
+          owner_id: string
+        }[]
+      }
+      list_active_boosted_post_ids: {
+        Args: never
+        Returns: {
+          boost_id: string
+          owner_id: string
+          post_id: string
         }[]
       }
       list_my_classes: {
@@ -1310,6 +1472,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_boost_impressions: {
+        Args: { _boost_ids: string[] }
+        Returns: undefined
+      }
       refresh_post_metrics: { Args: never; Returns: undefined }
       respond_collab_invite: {
         Args: { _accept: boolean; _collab: string }
@@ -1331,6 +1497,8 @@ export type Database = {
         | "student"
         | "collector"
       app_role: "admin" | "moderator" | "user"
+      boost_kind: "profile" | "post" | "callout" | "community" | "creator"
+      boost_status: "pending" | "active" | "ended" | "failed" | "canceled"
       class_doc_kind: "project" | "document" | "brief" | "reference"
       class_invite_status: "pending" | "accepted" | "cancelled" | "expired"
       class_kind: "studio" | "theoretical"
@@ -1474,6 +1642,8 @@ export const Constants = {
         "collector",
       ],
       app_role: ["admin", "moderator", "user"],
+      boost_kind: ["profile", "post", "callout", "community", "creator"],
+      boost_status: ["pending", "active", "ended", "failed", "canceled"],
       class_doc_kind: ["project", "document", "brief", "reference"],
       class_invite_status: ["pending", "accepted", "cancelled", "expired"],
       class_kind: ["studio", "theoretical"],

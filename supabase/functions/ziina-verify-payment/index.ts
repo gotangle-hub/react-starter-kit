@@ -45,6 +45,13 @@ Deno.serve(async (req) => {
       .update({ status, updated_at: new Date().toISOString() })
       .eq('ziina_intent_id', intentId);
 
+    // Activate or fail the linked boost (no-op if none).
+    if (status === 'paid') {
+      await admin.rpc('activate_boost_by_intent', { _intent_id: intentId });
+    } else if (status === 'failed' || status === 'canceled') {
+      await admin.rpc('fail_boost_by_intent', { _intent_id: intentId, _status: status });
+    }
+
     return new Response(JSON.stringify({ status, intent }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

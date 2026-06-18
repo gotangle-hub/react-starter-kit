@@ -1,25 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Megaphone, Rocket } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
-import { promoProducts } from "@/lib/promo";
+import { promoProducts, type PromoProduct } from "@/lib/promo";
 import { startCheckout } from "@/lib/checkout-intent";
+import type { BoostPayload } from "@/lib/checkout-intent";
+import { listMyWork, postCoverUrl, type PostRow } from "@/services/work";
+import { listMyBoosts, type BoostRow } from "@/services/boosts";
 import { cn } from "@/lib/utils";
+import { routes } from "@/lib/routes";
 
 const AUDIENCES = ["Designers near me", "My disciplines", "Everyone"];
 const DURATIONS = [
-  { label: "3 days", mult: 0.5 },
-  { label: "7 days", mult: 1 },
-  { label: "14 days", mult: 1.8 },
+  { label: "3 days", days: 3, mult: 0.5 },
+  { label: "7 days", days: 7, mult: 1 },
+  { label: "14 days", days: 14, mult: 1.8 },
 ];
+
+/** Map product → boost kind in DB. */
+function productKind(p: PromoProduct): BoostPayload["boost_kind"] {
+  switch (p.id) {
+    case "pr1":
+      return "profile";
+    case "pr2":
+      return "creator";
+    case "pr3":
+      return "post";
+    case "pr4":
+      return "callout";
+    case "pr6":
+      return "community";
+    default:
+      return "profile";
+  }
+}
 
 /**
  * 57 · Promote / boost (G6). Pick what to boost, audience, duration & budget,
- * see a price, confirm → Checkout. The profile-boost card is black in BOTH modes
- * (it does not swap), matching the light treatment.
+ * see a price, confirm → Checkout → live boost. The profile-boost card is black
+ * in BOTH modes (it does not swap), matching the light treatment.
  */
 export default function Promote() {
   const navigate = useNavigate();
@@ -27,33 +49,65 @@ export default function Promote() {
   const [audience, setAudience] = useState(AUDIENCES[0]);
   const [duration, setDuration] = useState(1);
   const [budget, setBudget] = useState(120);
+  const [myPosts, setMyPosts] = useState<PostRow[]>([]);
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const [myBoosts, setMyBoosts] = useState<BoostRow[]>([]);
+
+  useEffect(() => {
+    listMyWork().then((rows) => setMyPosts(rows));
+    listMyBoosts().then(setMyBoosts);
+  }, []);
+
+  const selectedProduct = promoProducts.find((p) => p.id === product) ?? promoProducts[0];
+  const kind = productKind(selectedProduct);
+  const needsTarget = kind === "post" || kind === "callout" || kind === "community";
+
+  // Auto-pick the most recent post when switching to a target-needing product.
+  useEffect(() => {
+    if (needsTarget && !targetId && myPosts.length) setTargetId(myPosts[0].id);
+    if (!needsTarget && targetId) setTargetId(null);
+  }, [needsTarget, myPosts, targetId]);
 
   const base = 40;
   const total = Math.round(base * DURATIONS[duration].mult + budget * 0.2);
+  const canPay = !needsTarget || !!targetId;
+
+  const live = myBoosts.find((b) => b.status === "active");
+
+  const startPay = () => {
+    const boost: BoostPayload = {
+      boost_kind: kind,
+      target_id: needsTarget ? targetId : null,
+      product_id: selectedProduct.id,
+      product_name: selectedProduct.name,
+      audience,
+      duration_days: DURATIONS[duration].days,
+      daily_budget_minor: budget * 100,
+    };
+    startCheckout(navigate, {
+      kind: "boost",
+      reference: `boost-${selectedProduct.id}-${DURATIONS[duration].days}d`,
+      label: selectedProduct.name,
+      sublabel: `${audience} · ${DURATIONS[duration].label}`,
+      currency: "AED",
+      total: total * 100,
+      boost,
+    });
+  };
 
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button
-            full
-            size="lg"
-            onClick={() => {
-              const selected = promoProducts.find((p) => p.id === product) ?? promoProducts[0];
-              startCheckout(navigate, {
-                kind: "boost",
-                reference: `boost-${selected.id}-${DURATIONS[duration].label.replace(" ", "")}`,
-                label: selected.name,
-                sublabel: `${audience} · ${DURATIONS[duration].label}`,
-                currency: "AED",
-                total: total * 100,
-              });
-            }}
-          >
+          <Button full size="lg" onClick={startPay} disabled={!canPay}>
             Review &amp; pay — {total} AED
           </Button>
           <p className="mt-2 text-center">
-            <Meta>Reach updates live once the boost is running.</Meta>
+            <Meta>
+              {needsTarget && !targetId
+                ? "Add at least one piece of work to boost it."
+                : "Reach updates live once the boost is running."}
+            </Meta>
           </p>
         </div>
       }
@@ -74,6 +128,25 @@ export default function Promote() {
           </p>
         </div>
 
+        {live && (
+          <button
+            type="button"
+            onClick={() => navigate(routes.boostConfirm ?? "/boost-confirm")}
+            className="mt-4 flex w-full items-center justify-between rounded-lg border border-tg-line bg-tg-card p-3.5 text-left"
+          >
+            <span>
+              <span className="block font-display text-[13px] font-semibold text-tg-ink">
+                {live.product_name} · running
+              </span>
+              <span className="mt-0.5 block font-mono text-[12px] text-tg-brown">
+                {live.impressions.toLocaleString()} impressions · ends{" "}
+                {live.ends_at ? new Date(live.ends_at).toLocaleDateString() : "soon"}
+              </span>
+            </span>
+            <span className="font-mono text-[11px] text-tg-blue-accent">View stats</span>
+          </button>
+        )}
+
         <SectionLabel>What to boost</SectionLabel>
         <div className="flex flex-col gap-2.5">
           {promoProducts.map((p) => {
@@ -89,12 +162,35 @@ export default function Promote() {
                 )}
               >
                 <span className="flex-1">
-                  <span className={cn("block font-display text-[15px] font-semibold", on ? "text-tg-emph-text" : "text-tg-ink")}>{p.name}</span>
-                  <span className={cn("mt-0.5 block font-body text-[12.5px]", on ? "text-tg-emph-text/65" : "text-tg-brown")}>{p.desc}</span>
+                  <span
+                    className={cn(
+                      "block font-display text-[15px] font-semibold",
+                      on ? "text-tg-emph-text" : "text-tg-ink",
+                    )}
+                  >
+                    {p.name}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 block font-body text-[12.5px]",
+                      on ? "text-tg-emph-text/65" : "text-tg-brown",
+                    )}
+                  >
+                    {p.desc}
+                  </span>
                 </span>
                 <span className="text-right">
-                  <span className={cn("block font-display text-[14px] font-semibold", on ? "text-tg-emph-text" : "text-tg-blue-accent")}>{p.price}</span>
-                  <span className={cn("font-mono text-[10px]", on ? "text-tg-emph-text/60" : "text-tg-brown")}>{p.unit}</span>
+                  <span
+                    className={cn(
+                      "block font-display text-[14px] font-semibold",
+                      on ? "text-tg-emph-text" : "text-tg-blue-accent",
+                    )}
+                  >
+                    {p.price}
+                  </span>
+                  <span className={cn("font-mono text-[10px]", on ? "text-tg-emph-text/60" : "text-tg-brown")}>
+                    {p.unit}
+                  </span>
                 </span>
                 {on && <Check size={18} className="text-tg-emph-text" />}
               </button>
@@ -102,17 +198,73 @@ export default function Promote() {
           })}
         </div>
 
+        {needsTarget && (
+          <>
+            <SectionLabel>Pick the work to boost</SectionLabel>
+            {myPosts.length === 0 ? (
+              <div className="rounded-lg border border-tg-line bg-tg-card p-4">
+                <Meta className="block">
+                  Add a piece of work first, then come back to boost it.
+                </Meta>
+                <Button
+                  size="sm"
+                  variant="outlineAccent"
+                  className="mt-3"
+                  onClick={() => navigate(routes.workUpload ?? "/work/new")}
+                >
+                  Add work
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {myPosts.slice(0, 9).map((p) => {
+                  const cover = postCoverUrl(p);
+                  const on = targetId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setTargetId(p.id)}
+                      className={cn(
+                        "relative aspect-square overflow-hidden rounded-md border-[1.5px]",
+                        on ? "border-tg-blue-accent" : "border-tg-line",
+                      )}
+                    >
+                      {cover ? (
+                        <img src={cover} alt={p.title ?? ""} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center bg-tg-stone2 font-mono text-[10px] text-tg-brown">
+                          No image
+                        </span>
+                      )}
+                      {on && (
+                        <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-blue-accent">
+                          <Check size={12} className="text-white" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
         <SectionLabel>Audience</SectionLabel>
         <div className="flex flex-wrap gap-2">
           {AUDIENCES.map((a) => (
-            <Toggle key={a} on={audience === a} onClick={() => setAudience(a)}>{a}</Toggle>
+            <Toggle key={a} on={audience === a} onClick={() => setAudience(a)}>
+              {a}
+            </Toggle>
           ))}
         </div>
 
         <SectionLabel>Duration</SectionLabel>
         <div className="flex gap-2">
           {DURATIONS.map((d, i) => (
-            <Toggle key={d.label} on={duration === i} onClick={() => setDuration(i)}>{d.label}</Toggle>
+            <Toggle key={d.label} on={duration === i} onClick={() => setDuration(i)}>
+              {d.label}
+            </Toggle>
           ))}
         </div>
 
@@ -133,7 +285,7 @@ export default function Promote() {
           />
           <div className="mt-3 flex items-center gap-2 border-t border-tg-line-soft pt-3">
             <Megaphone size={15} className="text-tg-blue-accent" />
-            <Meta>Estimated reach 2,400–3,800 designers</Meta>
+            <Meta>Estimated reach scales with budget and audience.</Meta>
           </div>
         </div>
       </div>
@@ -142,10 +294,22 @@ export default function Promote() {
 }
 
 function SectionLabel({ children }: { children: string }) {
-  return <div className="mb-2.5 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">{children}</div>;
+  return (
+    <div className="mb-2.5 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
+      {children}
+    </div>
+  );
 }
 
-function Toggle({ children, on, onClick }: { children: string; on: boolean; onClick: () => void }) {
+function Toggle({
+  children,
+  on,
+  onClick,
+}: {
+  children: string;
+  on: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"

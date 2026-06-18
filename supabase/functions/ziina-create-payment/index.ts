@@ -28,12 +28,22 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { kind, reference, currency, amount, message, success_url, cancel_url, failure_url, test } = body;
+    const { kind, reference, currency, amount, message, success_url, cancel_url, failure_url, test, boost } = body;
 
     if (!kind || !reference || !currency || !Number.isInteger(amount) || amount <= 0) {
       return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+    if (kind === 'boost') {
+      if (!boost || typeof boost !== 'object' ||
+          !['profile','post','callout','community','creator'].includes(boost.boost_kind) ||
+          !boost.product_id || !boost.product_name ||
+          !Number.isInteger(boost.duration_days) || boost.duration_days <= 0) {
+        return new Response(JSON.stringify({ error: 'Invalid boost payload' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const ziinaRes = await fetch(ZIINA_API, {
@@ -72,8 +82,27 @@ Deno.serve(async (req) => {
       status: 'pending',
       ziina_intent_id: intent.id,
       ziina_redirect_url: intent.redirect_url,
-      metadata: { embedded_url: intent.embedded_url },
+      metadata: { embedded_url: intent.embedded_url, boost: boost ?? null },
     });
+
+    // For boost payments, create a pending boost row linked to this intent.
+    if (kind === 'boost' && boost) {
+      const { error: boostErr } = await admin.from('boosts').insert({
+        owner_id: user.id,
+        kind: boost.boost_kind,
+        target_id: boost.target_id ?? null,
+        product_id: boost.product_id,
+        product_name: boost.product_name,
+        audience: boost.audience ?? 'Everyone',
+        duration_days: boost.duration_days,
+        daily_budget_minor: boost.daily_budget_minor ?? 0,
+        total_minor: amount,
+        currency,
+        status: 'pending',
+        ziina_intent_id: intent.id,
+      });
+      if (boostErr) console.error('boost insert error', boostErr);
+    }
 
     return new Response(JSON.stringify({
       id: intent.id,
