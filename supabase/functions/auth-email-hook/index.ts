@@ -37,7 +37,7 @@ const EMAIL_TEMPLATES: Record<string, (data: TemplateData) => { html: string; te
 }
 
 // Configuration
-const SITE_NAME = "Tangle"
+const SITE_NAME = "Tangle Team"
 const SENDER_DOMAIN = "notify.gotangle.app"
 const ROOT_DOMAIN = "gotangle.app"
 const FROM_DOMAIN = "notify.gotangle.app"
