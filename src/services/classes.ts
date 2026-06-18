@@ -74,13 +74,13 @@ export async function createClass(input: {
 }): Promise<string> {
   const { data, error } = await supabase.rpc("create_class", {
     _name: input.name,
-    _year: input.year ?? null,
-    _institution_id: input.institutionId ?? null,
+    _year: input.year ?? "",
+    _institution_id: (input.institutionId ?? "") as string,
     _class_type: input.classType,
     _allow_student_pins: input.allowStudentPins ?? false,
-    _brief: input.brief ?? null,
-    _ta_email: input.taEmail ?? null,
-  });
+    _brief: input.brief ?? "",
+    _ta_email: input.taEmail ?? "",
+  } as never);
   if (error) throw error;
   return data as string;
 }
