@@ -89,7 +89,7 @@ export async function getCollaboration(id: string): Promise<Collaboration | null
 }
 
 export async function updateBrief(id: string, brief: string, title?: string): Promise<void> {
-  const patch: Record<string, unknown> = { brief };
+  const patch: { brief: string; title?: string } = { brief };
   if (title !== undefined) patch.title = title;
   const { error } = await supabase.from("collaborations").update(patch).eq("id", id);
   if (error) throw error;
