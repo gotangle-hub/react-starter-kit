@@ -58,7 +58,7 @@ export async function listAcceptedConnections(): Promise<{ otherId: string; prof
     console.error("[connections] list accepted failed", error);
     return [];
   }
-  const others = (data ?? []).map((r: ConnectionRequestRow) =>
+  const others = (data ?? []).map((r) =>
     r.requester_id === user.id ? r.recipient_id : r.requester_id,
   );
   // De-dupe (mutual produces two rows).
