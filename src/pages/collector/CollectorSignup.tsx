@@ -19,6 +19,8 @@ export default function CollectorSignup() {
   const navigate = useNavigate();
   const [tags, setTags] = useState<Set<string>>(new Set(["Architecture", "Product", "Ceramics"]));
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameOk, setUsernameOk] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,15 @@ export default function CollectorSignup() {
       setError("Password must be at least 6 characters.");
       return;
     }
+    if (!usernameOk) {
+      setError("Pick an available username to continue.");
+      return;
+    }
+    const stillFree = await checkUsernameAvailable(username);
+    if (!stillFree) {
+      setError("That username was just taken — try another.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase.auth.signUp({
       email: email.trim(),
@@ -50,6 +61,7 @@ export default function CollectorSignup() {
         data: {
           account_type: "collector",
           display_name: name || undefined,
+          username,
           disciplines: Array.from(tags),
         },
       },
