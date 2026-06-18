@@ -74,8 +74,25 @@ export default function EditProfileSettings() {
   async function save() {
     setBusy(true);
     try {
+      const targetUsername = normalizeUsername(username);
+      // Only re-check uniqueness if the handle changed.
+      if (targetUsername !== normalizeUsername(originalUsername)) {
+        if (!usernameOk) {
+          // eslint-disable-next-line no-alert
+          alert("Pick an available username to save.");
+          setBusy(false);
+          return;
+        }
+        if (!(await checkUsernameAvailable(targetUsername))) {
+          // eslint-disable-next-line no-alert
+          alert("That username was just taken — try another.");
+          setBusy(false);
+          return;
+        }
+      }
       await updateMyProfile({
         display_name: name || null,
+        username: targetUsername,
         bio: bio || null,
         location: location || null,
         disciplines: picked,
