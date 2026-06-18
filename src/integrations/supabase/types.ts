@@ -174,6 +174,94 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          is_group: boolean
+          last_message_at: string
+          last_message_preview: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          last_message_preview?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          last_message_preview?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      dm_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -757,6 +845,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_dm_conversation: { Args: { _other: string }; Returns: string }
       get_auth_methods: { Args: { p_email: string }; Returns: Json }
       get_my_marketing_opt_in: { Args: never; Returns: boolean }
       has_role: {
@@ -766,11 +855,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_conversation_participant: {
+        Args: { _conv: string; _user: string }
+        Returns: boolean
+      }
       like_to_connect: {
         Args: { _target: string }
         Returns: {
           mutual: boolean
           status: string
+        }[]
+      }
+      list_my_conversations: {
+        Args: never
+        Returns: {
+          conversation_id: string
+          is_group: boolean
+          last_message_at: string
+          last_message_preview: string
+          last_read_at: string
+          other_user_id: string
         }[]
       }
       match_search_documents: {
