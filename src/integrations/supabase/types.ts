@@ -14,6 +14,173 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_documents: {
+        Row: {
+          body: string | null
+          class_id: string
+          created_at: string
+          file_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["class_doc_kind"]
+          link_url: string | null
+          title: string
+          uploader_id: string
+        }
+        Insert: {
+          body?: string | null
+          class_id: string
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["class_doc_kind"]
+          link_url?: string | null
+          title: string
+          uploader_id: string
+        }
+        Update: {
+          body?: string | null
+          class_id?: string
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["class_doc_kind"]
+          link_url?: string | null
+          title?: string
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_documents_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_invites: {
+        Row: {
+          class_id: string
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["class_role"]
+          status: Database["public"]["Enums"]["class_invite_status"]
+          token: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["class_role"]
+          status?: Database["public"]["Enums"]["class_invite_status"]
+          token?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["class_role"]
+          status?: Database["public"]["Enums"]["class_invite_status"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_invites_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_members: {
+        Row: {
+          class_id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["class_role"]
+          status: Database["public"]["Enums"]["class_member_status"]
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["class_role"]
+          status?: Database["public"]["Enums"]["class_member_status"]
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["class_role"]
+          status?: Database["public"]["Enums"]["class_member_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_members_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          allow_student_pins: boolean
+          brief: string | null
+          class_type: Database["public"]["Enums"]["class_kind"]
+          conversation_id: string | null
+          created_at: string
+          id: string
+          institution_id: string | null
+          name: string
+          professor_id: string
+          updated_at: string
+          year: string | null
+        }
+        Insert: {
+          allow_student_pins?: boolean
+          brief?: string | null
+          class_type?: Database["public"]["Enums"]["class_kind"]
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          name: string
+          professor_id: string
+          updated_at?: string
+          year?: string | null
+        }
+        Update: {
+          allow_student_pins?: boolean
+          brief?: string | null
+          class_type?: Database["public"]["Enums"]["class_kind"]
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          name?: string
+          professor_id?: string
+          updated_at?: string
+          year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaboration_members: {
         Row: {
           collab_id: string
@@ -995,7 +1162,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_class_invite: { Args: { _token: string }; Returns: string }
       check_username_available: { Args: { _name: string }; Returns: boolean }
+      create_class: {
+        Args: {
+          _allow_student_pins: boolean
+          _brief: string
+          _class_type: Database["public"]["Enums"]["class_kind"]
+          _institution_id: string
+          _name: string
+          _ta_email: string
+          _year: string
+        }
+        Returns: string
+      }
       create_collaboration: {
         Args: { _brief: string; _member_ids: string[]; _title: string }
         Returns: string
@@ -1026,6 +1206,18 @@ export type Database = {
         Args: { _collab: string; _user: string }
         Returns: boolean
       }
+      is_class_member: {
+        Args: { _class: string; _user: string }
+        Returns: boolean
+      }
+      is_class_professor: {
+        Args: { _class: string; _user: string }
+        Returns: boolean
+      }
+      is_class_staff: {
+        Args: { _class: string; _user: string }
+        Returns: boolean
+      }
       is_collab_member: {
         Args: { _collab: string; _user: string }
         Returns: boolean
@@ -1039,6 +1231,24 @@ export type Database = {
         Returns: {
           mutual: boolean
           status: string
+        }[]
+      }
+      list_my_classes: {
+        Args: never
+        Returns: {
+          allow_student_pins: boolean
+          brief: string
+          class_type: Database["public"]["Enums"]["class_kind"]
+          conversation_id: string
+          created_at: string
+          doc_count: number
+          id: string
+          member_count: number
+          my_role: Database["public"]["Enums"]["class_role"]
+          name: string
+          professor_id: string
+          updated_at: string
+          year: string
         }[]
       }
       list_my_collaborations: {
@@ -1121,6 +1331,11 @@ export type Database = {
         | "student"
         | "collector"
       app_role: "admin" | "moderator" | "user"
+      class_doc_kind: "project" | "document" | "brief" | "reference"
+      class_invite_status: "pending" | "accepted" | "cancelled" | "expired"
+      class_kind: "studio" | "theoretical"
+      class_member_status: "active" | "invited" | "left"
+      class_role: "professor" | "ta" | "student"
       collab_member_status: "invited" | "active" | "declined" | "left"
       connection_status: "pending" | "accepted" | "declined" | "dismissed"
     }
@@ -1259,6 +1474,11 @@ export const Constants = {
         "collector",
       ],
       app_role: ["admin", "moderator", "user"],
+      class_doc_kind: ["project", "document", "brief", "reference"],
+      class_invite_status: ["pending", "accepted", "cancelled", "expired"],
+      class_kind: ["studio", "theoretical"],
+      class_member_status: ["active", "invited", "left"],
+      class_role: ["professor", "ta", "student"],
       collab_member_status: ["invited", "active", "declined", "left"],
       connection_status: ["pending", "accepted", "declined", "dismissed"],
     },
