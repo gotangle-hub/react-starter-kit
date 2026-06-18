@@ -10,6 +10,8 @@ import { countCommentsForPost } from "@/services/comments";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileById, makerFromProfile } from "@/services/profile";
 import { postCoverUrl, type PostRow } from "@/services/work";
+import { logInteraction } from "@/services/feed";
+import { TrendingBadge } from "@/components/brand/trending-badge";
 import type { Maker } from "@/lib/profile-shape";
 
 /** 24 · Project detail (G3). Full project from real data — images, title, maker, credits, caption. */
@@ -32,6 +34,8 @@ export default function ProjectDetail() {
         const profile = await getProfileById(row.author_id);
         if (alive && profile) setMaker(makerFromProfile(profile) as Maker);
       }
+      // G3 · log the view so velocity has signal.
+      if (row) logInteraction({ target_kind: "post", target_id: row.id, kind: "view", category: row.category ?? undefined });
     })();
     return () => { alive = false; };
   }, [id]);
@@ -101,7 +105,10 @@ export default function ProjectDetail() {
 
       <div className="px-[22px] py-5">
         {post.category && <Chip>{post.category}</Chip>}
-        <h1 className="mt-3 font-serif text-[34px] font-medium leading-none tracking-[-0.025em]">{post.title}</h1>
+        <div className="mt-3 flex items-start justify-between gap-3">
+          <h1 className="font-serif text-[34px] font-medium leading-none tracking-[-0.025em]">{post.title}</h1>
+          <TrendingBadge tier={post.reach_tier} className="mt-1.5 flex-none" />
+        </div>
         <Meta className="mt-2 block">{[post.place, post.year].filter(Boolean).join(" · ")}</Meta>
 
         {maker && (
