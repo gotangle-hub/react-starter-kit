@@ -43,7 +43,7 @@ export default function ProjectDetail() {
           </button>
           <button type="button" className="flex items-center gap-1.5 text-tg-ink" onClick={() => navigate("/project/" + post.id + "/comments")}>
             <MessageCircle size={22} />
-            <span className="font-display text-[13px] font-semibold">{post.comments}</span>
+            <span className="font-display text-[13px] font-semibold">{commentCount}</span>
           </button>
           <button type="button" className="flex items-center gap-1.5 text-tg-ink" onClick={() => navigate("/pin")}>
             <Bookmark size={22} />
