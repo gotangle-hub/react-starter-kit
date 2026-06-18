@@ -4,11 +4,13 @@ import { ArrowLeft, Camera } from "lucide-react";
 import { Meta, Pill } from "@/components/brand/atoms";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { LocationField, TextField } from "@/components/app/fields";
+import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
 import { disciplines } from "@/lib/fixtures";
 import { routes } from "@/lib/routes";
 import { useAccountType } from "@/hooks/use-account-type";
 import { supabase } from "@/integrations/supabase/client";
+import { checkUsernameAvailable } from "@/services/usernames";
 
 /** 07 · Create your designer profile. All design fields + Other (free text). */
 export default function Signup() {
@@ -21,6 +23,8 @@ export default function Signup() {
   const [selected, setSelected] = useState<Set<string>>(new Set(["Architecture", "Graphic"]));
   const [other, setOther] = useState(false);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameOk, setUsernameOk] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +47,16 @@ export default function Signup() {
       setError("Password must be at least 6 characters.");
       return;
     }
+    if (!usernameOk) {
+      setError("Pick an available username to continue.");
+      return;
+    }
+    // Re-verify availability right before submit (race-safe).
+    const stillFree = await checkUsernameAvailable(username);
+    if (!stillFree) {
+      setError("That username was just taken — try another.");
+      return;
+    }
     setBusy(true);
     const resolvedType = isStudio ? "studio" : accountType;
     const { error: err } = await supabase.auth.signUp({
@@ -53,6 +67,7 @@ export default function Signup() {
         data: {
           account_type: resolvedType,
           display_name: name || undefined,
+          username,
           disciplines: Array.from(selected),
         },
       },
@@ -62,7 +77,6 @@ export default function Signup() {
       setError(err.message);
       return;
     }
-    // Email confirmation is required — route to OTP verify, then continue to `next`.
     navigate(routes.verifyEmail, { state: { email: email.trim(), next } });
   };
 
@@ -105,6 +119,13 @@ export default function Signup() {
             placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+          <UsernamePicker
+            value={username}
+            onChange={setUsername}
+            onValidityChange={(s) => setUsernameOk(s.valid && s.available)}
+            label={isStudio ? "Studio username" : "Username"}
+            baseSuggestion={name}
           />
           <TextField
             label="Email"
