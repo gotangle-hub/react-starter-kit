@@ -38,6 +38,7 @@ export default function DesignerProfile() {
 
   const name = profile?.display_name ?? meFallback.name;
   const bannerUrl = workPublicUrl(profile?.banner_path);
+  const avatarUrl = workPublicUrl(profile?.avatar_path);
   const disciplines = profile?.disciplines?.length ? profile.disciplines : [];
   const verified = false; // G11 — automatic verification, not implemented yet
   const avatarMaker = {
@@ -51,6 +52,7 @@ export default function DesignerProfile() {
       .toUpperCase(),
     tint: "#161514",
     verified,
+    avatarUrl: avatarUrl ?? undefined,
   };
 
   return (
