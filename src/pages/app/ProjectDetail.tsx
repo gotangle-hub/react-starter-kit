@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Bookmark, Heart, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -6,6 +7,8 @@ import { NameRow, Meta, PhotoTile } from "@/components/brand/atoms";
 import { Chip } from "@/components/brand/chip";
 import { Button } from "@/components/ui/button";
 import { feed, makerById, posts } from "@/lib/fixtures";
+import { countCommentsForPost } from "@/services/comments";
+import { supabase } from "@/integrations/supabase/client";
 
 /** 24 · Project detail (G3). Full project — images, title, maker, credits, caption. */
 export default function ProjectDetail() {
@@ -13,6 +16,22 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const post = posts.find((p) => p.id === id) ?? posts[0];
   const maker = makerById(post.maker);
+  const [commentCount, setCommentCount] = useState<number>(post.comments ?? 0);
+
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    countCommentsForPost(id).then((n) => { if (alive) setCommentCount(n); });
+    const channel = supabase
+      .channel(`comments-count:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comments", filter: `post_id=eq.${id}` },
+        () => { countCommentsForPost(id).then((n) => { if (alive) setCommentCount(n); }); },
+      )
+      .subscribe();
+    return () => { alive = false; supabase.removeChannel(channel); };
+  }, [id]);
 
   return (
     <MobileShell
