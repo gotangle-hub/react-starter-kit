@@ -16,7 +16,10 @@ import { checkUsernameAvailable } from "@/services/usernames";
 /** 07 · Student profile setup — includes a unique @username. */
 export default function InstitutionProfile() {
   const navigate = useNavigate();
-  const s = schools[0];
+  const inst = recallInstitution();
+  const s = inst
+    ? { name: inst.name, tint: inst.tint ?? "#161514", initials: inst.initials ?? inst.name.slice(0, 2).toUpperCase() }
+    : { name: "Your institution", tint: "#161514", initials: "··" };
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [usernameOk, setUsernameOk] = useState(false);
