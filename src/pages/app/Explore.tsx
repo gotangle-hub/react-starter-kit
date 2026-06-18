@@ -10,6 +10,7 @@ import { feed, makerById, posts as fixturePosts, type Maker, type Post } from "@
 import { rankItems, logInteraction } from "@/services/feed";
 import { listExploreWork, postCoverUrl } from "@/services/work";
 import { getProfilesByIds, makerFromProfile } from "@/services/profile";
+import { countCommentsForPosts } from "@/services/comments";
 import { cn } from "@/lib/utils";
 
 /**
