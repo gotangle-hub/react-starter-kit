@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Hand } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
@@ -7,43 +7,71 @@ import { Avatar } from "@/components/brand/avatar";
 import { NameRow, Meta } from "@/components/brand/atoms";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { competitions, makers, type Maker } from "@/lib/fixtures";
-import { routes } from "@/lib/routes";
+import { routes, path } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { makerFromProfile, type ProfileRow } from "@/services/profile";
+import { createCollaboration } from "@/services/collaborations";
 
 /**
- * 36 · Find a partner (G2, G10).
- * Browse suggested partners for a competition/call out, invite them, and build
- * a group — the selected tray can hold more than two members.
+ * 36 · Find a partner (G2, G10) — pick collaborators, then create a real
+ * collaboration with the selected group and jump into its chat.
  */
 export default function PartnerMatch() {
   const navigate = useNavigate();
-  const comp = competitions[0];
-  const suggested = makers.slice(0, 5);
+  const [sp] = useSearchParams();
+  const compName = sp.get("comp") || "New collaboration";
+  const compMeta = sp.get("meta") || "";
+
+  const [suggested, setSuggested] = useState<ProfileRow[]>([]);
   const [looking, setLooking] = useState(true);
   const [team, setTeam] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      let q = supabase
+        .from("profiles")
+        .select("id, account_type, display_name, username, disciplines, bio, location, links, avatar_path, banner_path, created_at, updated_at")
+        .not("username", "is", null)
+        .limit(12);
+      if (user) q = q.neq("id", user.id);
+      const { data } = await q;
+      setSuggested(((data ?? []) as ProfileRow[]).filter((p) => p.display_name || p.username));
+    })();
+  }, []);
 
   const toggle = (id: string) =>
     setTeam((t) => (t.includes(id) ? t.filter((x) => x !== id) : [...t, id]));
 
   const selected = suggested.filter((m) => team.includes(m.id));
 
+  const invite = async () => {
+    if (selected.length === 0) return;
+    setSubmitting(true);
+    try {
+      const collabId = await createCollaboration(compName, compMeta, selected.map((s) => s.id));
+      navigate(path(routes.projectChat, { id: collabId }));
+    } catch (e) {
+      console.warn("create collab failed", e);
+      setSubmitting(false);
+    }
+  };
+
   return (
     <MobileShell header={<BackHeader title="Find a partner" />}>
       <div className="min-h-0 flex-1 overflow-y-auto px-[22px] pb-8">
         <div className="mt-3">
           <span className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-tg-brown">
-            {comp.cat} · competition
+            Collaboration
           </span>
           <h1 className="mt-1.5 font-serif text-[24px] font-medium leading-[1.1] tracking-[-0.02em] text-tg-ink">
-            {comp.name}
+            {compName}
           </h1>
-          <Meta className="mt-1.5 block">
-            Closes {comp.deadline} · {comp.prize}
-          </Meta>
+          {compMeta && <Meta className="mt-1.5 block">{compMeta}</Meta>}
         </div>
 
-        {/* Your looking-for-partner status */}
         <Card className="mt-4 flex items-center gap-3 bg-tg-emph p-3.5 text-tg-emph-text">
           <span className="flex h-10 w-10 flex-none items-center justify-center rounded-pill bg-white/15">
             <Hand size={18} />
@@ -53,7 +81,7 @@ export default function PartnerMatch() {
               You&apos;re looking for a partner
             </div>
             <div className="mt-0.5 font-mono text-[11px] opacity-70">
-              Others entering this competition can find you.
+              Others can find you for this collaboration.
             </div>
           </div>
           <button
@@ -83,24 +111,23 @@ export default function PartnerMatch() {
         </Meta>
 
         <div className="mt-3.5 flex flex-col gap-2.5">
-          {suggested.map((m) => (
+          {suggested.length === 0 && <Meta>No suggested partners yet.</Meta>}
+          {suggested.map((p) => (
             <PartnerRow
-              key={m.id}
-              m={m}
-              on={team.includes(m.id)}
-              onToggle={() => toggle(m.id)}
+              key={p.id}
+              profile={p}
+              on={team.includes(p.id)}
+              onToggle={() => toggle(p.id)}
             />
           ))}
         </div>
       </div>
 
-      {/* Selected-members tray (groups, G10) */}
       {selected.length > 0 && (
         <div className="flex-none border-t border-tg-line bg-tg-card px-[22px] py-3.5">
           <div className="flex items-center justify-between">
             <Meta>
-              {selected.length} {selected.length === 1 ? "partner" : "partners"}{" "}
-              selected
+              {selected.length} {selected.length === 1 ? "partner" : "partners"} selected
             </Meta>
             <button
               type="button"
@@ -112,16 +139,12 @@ export default function PartnerMatch() {
           </div>
           <div className="mt-2.5 flex items-center gap-3">
             <div className="flex -space-x-2">
-              {selected.map((m) => (
-                <Avatar key={m.id} maker={m} size={34} ring />
+              {selected.map((p) => (
+                <Avatar key={p.id} maker={makerFromProfile(p)} size={34} ring />
               ))}
             </div>
-            <Button
-              full
-              className="flex-1"
-              onClick={() => navigate(routes.request)}
-            >
-              Invite {selected.length > 1 ? "group" : selected[0].name.split(" ")[0]}
+            <Button full className="flex-1" onClick={invite} disabled={submitting}>
+              {submitting ? "Creating…" : `Invite ${selected.length > 1 ? "group" : (selected[0].display_name || selected[0].username || "")}`}
             </Button>
           </div>
         </div>
@@ -131,28 +154,26 @@ export default function PartnerMatch() {
 }
 
 function PartnerRow({
-  m,
+  profile,
   on,
   onToggle,
 }: {
-  m: Maker;
+  profile: ProfileRow;
   on: boolean;
   onToggle: () => void;
 }) {
+  const maker = makerFromProfile(profile);
   return (
     <Card className="flex items-center gap-3 p-3">
-      <Avatar maker={m} size={46} />
+      <Avatar maker={maker} size={46} />
       <div className="min-w-0 flex-1">
-        <NameRow maker={m} size={14.5} />
+        <NameRow maker={maker} size={14.5} />
         <Meta className="mt-0.5 block">
-          {m.skills?.[0] ?? m.role} · {m.match}% fit for this brief
+          {(profile.disciplines?.[0] as string | undefined) ?? "Designer"}
+          {profile.location && ` · ${profile.location}`}
         </Meta>
       </div>
-      <Button
-        variant={on ? "primary" : "outline"}
-        size="sm"
-        onClick={onToggle}
-      >
+      <Button variant={on ? "primary" : "outline"} size="sm" onClick={onToggle}>
         {on ? (
           <>
             <Check size={14} className="mr-1" />
