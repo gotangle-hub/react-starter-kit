@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
   CalendarClock,
@@ -9,13 +9,11 @@ import {
   Bookmark,
   Pin,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader, RefreshHint } from "@/components/app/bits";
 import { Button } from "@/components/ui/button";
 import { useNotifications, type NotificationRow } from "@/hooks/use-notifications";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 
 /**
  * 46 · Notifications (G7). Likes, follows, comments, connection and
@@ -35,38 +33,60 @@ const ICON: Record<string, typeof Bell> = {
   message: MessageSquare,
 };
 
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const s = Math.max(1, Math.floor(diff / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w}w ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
 function useActorNames(ids: string[]) {
+  const [map, setMap] = useState<Record<string, string>>({});
   const key = ids.slice().sort().join(",");
-  return useQuery({
-    queryKey: ["notif-actors", key],
-    enabled: ids.length > 0,
-    queryFn: async () => {
+  useEffect(() => {
+    if (ids.length === 0) return;
+    let cancelled = false;
+    (async () => {
       const { data } = await supabase
         .from("profiles")
         .select("id, display_name")
         .in("id", ids);
-      const map: Record<string, string> = {};
+      if (cancelled) return;
+      const next: Record<string, string> = {};
       (data ?? []).forEach((p: { id: string; display_name: string | null }) => {
-        map[p.id] = p.display_name ?? "Someone";
+        next[p.id] = p.display_name ?? "Someone";
       });
-      return map;
-    },
-  });
+      setMap(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return map;
 }
 
 function Row({
   n,
   actorName,
+  wasUnread,
   onResolve,
 }: {
   n: NotificationRow;
   actorName: string;
+  wasUnread: boolean;
   onResolve: (id: string) => void;
 }) {
   const Icon = ICON[n.type] ?? Bell;
   const actionable = n.type === "connect" || n.type === "collab";
-  const unread = !n.read_at;
-  const time = formatDistanceToNow(new Date(n.created_at), { addSuffix: true });
   return (
     <li className="flex items-start gap-3 px-[18px] py-3.5">
       <span className="flex h-9 w-9 flex-none items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
@@ -76,7 +96,9 @@ function Row({
         <p className="font-body text-[14px] leading-snug text-tg-ink">
           <span className="font-display font-semibold">{actorName}</span> {n.body ?? ""}
         </p>
-        <span className="mt-0.5 block font-mono text-[10.5px] text-tg-brown-soft">{time}</span>
+        <span className="mt-0.5 block font-mono text-[10.5px] text-tg-brown-soft">
+          {relativeTime(n.created_at)}
+        </span>
         {actionable && (
           <div className="mt-2.5 flex gap-2">
             <Button size="sm" onClick={() => onResolve(n.id)}>
@@ -88,18 +110,19 @@ function Row({
           </div>
         )}
       </div>
-      {unread && <span className="mt-1.5 h-2 w-2 flex-none rounded-pill bg-tg-blue" aria-label="Unread" />}
+      {wasUnread && (
+        <span className="mt-1.5 h-2 w-2 flex-none rounded-pill bg-tg-blue" aria-label="Unread" />
+      )}
     </li>
   );
 }
 
 export default function Notifications() {
   const { items, markAllRead, remove } = useNotifications();
+  const [openedAt] = useState(() => Date.now());
 
-  // Mark as read on mount
   useEffect(() => {
     markAllRead();
-    // run once on open
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -107,19 +130,13 @@ export default function Notifications() {
     () => Array.from(new Set(items.map((n) => n.actor_id).filter((x): x is string => !!x))),
     [items],
   );
-  const { data: actorMap = {} } = useActorNames(actorIds);
+  const actorMap = useActorNames(actorIds);
 
-  // Split by what was unread BEFORE we marked them read on open
-  const [unreadIds] = useMemo(() => {
-    const ids = new Set(items.filter((n) => !n.read_at).map((n) => n.id));
-    return [ids];
-    // capture on first render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const wasUnread = (n: NotificationRow) =>
+    !n.read_at || new Date(n.read_at).getTime() >= openedAt - 2000;
 
-  const isNew = (n: NotificationRow) => unreadIds.has(n.id) || !n.read_at;
-  const unread = items.filter(isNew);
-  const earlier = items.filter((n) => !isNew(n));
+  const unread = items.filter(wasUnread);
+  const earlier = items.filter((n) => !wasUnread(n));
 
   return (
     <MobileShell>
@@ -136,6 +153,7 @@ export default function Notifications() {
                   key={n.id}
                   n={n}
                   actorName={(n.actor_id && actorMap[n.actor_id]) || "Someone"}
+                  wasUnread
                   onResolve={remove}
                 />
               ))}
@@ -152,6 +170,7 @@ export default function Notifications() {
                   key={n.id}
                   n={n}
                   actorName={(n.actor_id && actorMap[n.actor_id]) || "Someone"}
+                  wasUnread={false}
                   onResolve={remove}
                 />
               ))}
