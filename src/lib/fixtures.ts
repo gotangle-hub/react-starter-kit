@@ -96,7 +96,8 @@ export const disciplines: string[] = [
 ];
 
 /** Asset path helper — feed imagery lives in /public/feed. */
-export const feed = (name: string) => `/feed/${name}`;
+export const feed = (name: string) =>
+  /^https?:\/\//i.test(name) ? name : `/feed/${name}`;
 
 /** Look up a maker by id; falls back to the first maker for safety in dev. */
 export const makerById = (id: string): Maker =>

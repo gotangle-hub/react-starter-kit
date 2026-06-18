@@ -38,15 +38,20 @@ export function LocationField({
   label = "Location",
   defaultValue = "",
   placeholder = "Search a city…",
+  onChange,
 }: {
   label?: string;
   defaultValue?: string;
   placeholder?: string;
+  onChange?: (value: string) => void;
 }) {
   const [val, setVal] = useState(defaultValue);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setVal(defaultValue);
+  }, [defaultValue]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -78,6 +83,7 @@ export function LocationField({
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);
+            onChange?.(e.target.value);
           }}
           onFocus={() => {
             setOpen(true);
@@ -98,6 +104,7 @@ export function LocationField({
                   setVal(c);
                   setQ("");
                   setOpen(false);
+                  onChange?.(c);
                 }}
                 className={cn(
                   "flex w-full items-center gap-2.5 px-3.5 py-3 text-left hover:bg-tg-stone2",

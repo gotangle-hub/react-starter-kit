@@ -8,6 +8,7 @@ import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { feed, makerById, posts as fixturePosts, type Post } from "@/lib/fixtures";
 import { rankItems, logInteraction } from "@/services/feed";
+import { listExploreWork, postCoverUrl } from "@/services/work";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,12 +22,43 @@ export default function Explore() {
   const [index, setIndex] = useState(0);
   const [posts, setPosts] = useState<Post[]>(fixturePosts);
   useEffect(() => {
-    rankItems("posts", fixturePosts.map((p) => ({
-      id: p.id, category: p.cat, promoted: p.promoted, base_score: p.likes + p.saves * 2,
-    }))).then((ranked) => {
-      const byId = new Map(fixturePosts.map((p) => [p.id, p]));
+    (async () => {
+      // Pull real published work first, then fall back to fixtures so the feed
+      // is never empty for new accounts.
+      const real = await listExploreWork(30);
+      const realAsPosts: Post[] = [];
+      for (const p of real) {
+        const img = postCoverUrl(p);
+        if (!img) continue;
+        realAsPosts.push({
+          id: p.id,
+          maker: p.author_id,
+          img,
+          title: p.title,
+          cat: p.category ?? "",
+          year: p.year ?? new Date(p.created_at).getFullYear(),
+          place: p.place ?? "",
+          likes: 0,
+          comments: 0,
+          saves: 0,
+          usedIn: p.caption ?? "",
+          promoted: p.promoted ?? false,
+        });
+      }
+
+      const merged = [...realAsPosts, ...fixturePosts];
+      const ranked = await rankItems(
+        "posts",
+        merged.map((p) => ({
+          id: p.id,
+          category: p.cat,
+          promoted: p.promoted,
+          base_score: p.likes + p.saves * 2,
+        })),
+      );
+      const byId = new Map(merged.map((p) => [p.id, p]));
       setPosts(ranked.map((r) => byId.get(r.id)!).filter(Boolean));
-    });
+    })();
   }, []);
   const post = posts[index] ?? fixturePosts[0];
   const maker = makerById(post.maker);
