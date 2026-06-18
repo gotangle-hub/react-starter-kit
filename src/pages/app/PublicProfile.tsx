@@ -150,6 +150,13 @@ export default function PublicProfile() {
               Message
             </Button>
           </div>
+          <button
+            type="button"
+            onClick={() => setCreatingCollab(true)}
+            className="mt-2.5 inline-flex items-center gap-1.5 font-display text-[12.5px] font-semibold text-tg-blue-accent"
+          >
+            <Users size={14} /> Start a collaboration
+          </button>
 
           {/* Work grid */}
           <div className="mb-3 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-tg-brown">
