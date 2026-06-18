@@ -10,19 +10,25 @@ import { TextField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import { recallInstitution, type Institution } from "@/services/institutions";
+import { recallInstitution, emailMatchesInstitution, type Institution } from "@/services/institutions";
 import { lovable } from "@/integrations/lovable";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * 05 · School email login (G13). The school selected on InstitutionFind drives
- * which SSO provider we route through (Google Workspace or Microsoft). On
- * successful OAuth the browser lands back on /institution/role for auto role
- * detection.
+ * 05 · School email login (G13). The selected institution drives the auth path.
+ * Google Workspace campuses use managed Google OAuth with the `hd` hint pinned
+ * to the institution domain so users physically cannot pick a personal Gmail.
+ * Other campuses (Microsoft, plain email) fall back to a verified email-OTP
+ * link sent to their @institution address. Either way the resulting session
+ * is then matched against the institution server-side on the next screen.
  */
 export default function InstitutionLogin() {
   const navigate = useNavigate();
   const [inst, setInst] = useState<Institution | null>(null);
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [linkSent, setLinkSent] = useState(false);
 
   useEffect(() => {
     const i = recallInstitution();
@@ -34,34 +40,58 @@ export default function InstitutionLogin() {
   }, [navigate]);
 
   if (!inst) return null;
+  const usesGoogle = inst.sso_provider === "google";
+  const providerLabel = usesGoogle ? "Google" : inst.sso_provider === "microsoft" ? "Microsoft" : "email";
 
-  const providerLabel = inst.sso_provider === "microsoft" ? "Microsoft" : "Google";
-
-  async function signIn() {
+  async function signInGoogle() {
     if (!inst || busy) return;
     setBusy(true);
-    const provider = inst.sso_provider === "microsoft" ? "microsoft" : "google";
+    setError(null);
     const redirect = `${window.location.origin}${routes.institutionRoleDetect}`;
-    // Hint the IdP toward the right hosted-domain (Google) or account picker.
-    const extraParams: Record<string, string> =
-      provider === "google" ? { hd: inst.domain, prompt: "select_account" } : { prompt: "select_account" };
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirect, extraParams });
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: redirect,
+      extraParams: { hd: inst.domain, prompt: "select_account" },
+    });
     if (result.error) {
-      console.error("[institution-login] OAuth failed", result.error);
+      setError(result.error.message ?? "Sign-in failed");
       setBusy(false);
       return;
     }
-    if (result.redirected) return; // browser will navigate to IdP
+    if (result.redirected) return;
     navigate(routes.institutionRoleDetect);
+  }
+
+  async function sendMagicLink() {
+    if (!inst || busy) return;
+    setError(null);
+    const e = email.trim().toLowerCase();
+    if (!e) { setError("Enter your campus email."); return; }
+    if (!emailMatchesInstitution(e, inst)) {
+      setError(`Use your @${inst.domain} address.`);
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.signInWithOtp({
+      email: e,
+      options: { emailRedirectTo: `${window.location.origin}${routes.institutionRoleDetect}` },
+    });
+    setBusy(false);
+    if (err) { setError(err.message); return; }
+    setLinkSent(true);
   }
 
   return (
     <MobileShell
       footer={
         <div className="flex-none px-[22px] pb-7">
-          <Button full size="lg" onClick={signIn} disabled={busy}>
-            {busy ? "Opening sign-in…" : `Continue with ${providerLabel}`}
+          <Button full size="lg" onClick={usesGoogle ? signInGoogle : sendMagicLink} disabled={busy}>
+            {busy ? "Working…" : usesGoogle ? `Continue with Google` : linkSent ? "Resend link" : `Email me a sign-in link`}
           </Button>
+          {linkSent && (
+            <p className="mt-3 text-center text-[12.5px] text-tg-blue-accent">
+              Link sent to {email}. Open it on this device to finish signing in.
+            </p>
+          )}
         </div>
       }
     >
@@ -82,34 +112,43 @@ export default function InstitutionLogin() {
           Sign in with your school email.
         </h1>
         <p className="my-2.5 mb-6 max-w-[300px] font-body text-[14.5px] leading-relaxed text-tg-brown">
-          {inst.name} uses {providerLabel} Workspace. Use your campus account to verify you&apos;re part of the school.
+          {inst.name} uses {providerLabel === "email" ? "campus email" : `${providerLabel} Workspace`}. We&apos;ll verify your @{inst.domain} address before linking your account.
         </p>
 
-        <button
-          type="button"
-          onClick={signIn}
-          disabled={busy}
-          className={cn(
-            "flex h-[52px] items-center justify-center gap-2.5 rounded-DEFAULT border-[1.5px] font-display text-[15px] font-semibold",
-            providerLabel === "Google"
-              ? "border-[#DADCE0] bg-white text-[#3C4043]"
-              : "border-[#0F0F0F] bg-[#0F0F0F] text-white",
-          )}
-        >
-          <Mail size={18} />
-          Continue with {providerLabel} · @{inst.domain}
-        </button>
+        {usesGoogle ? (
+          <button
+            type="button"
+            onClick={signInGoogle}
+            disabled={busy}
+            className={cn(
+              "flex h-[52px] items-center justify-center gap-2.5 rounded-DEFAULT border-[1.5px] font-display text-[15px] font-semibold",
+              "border-[#DADCE0] bg-white text-[#3C4043]",
+            )}
+          >
+            <Mail size={18} />
+            Continue with Google · @{inst.domain}
+          </button>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            <TextField
+              label={`Email — must end in @${inst.domain}`}
+              mono
+              icon={<Mail size={17} />}
+              type="email"
+              placeholder={`you@${inst.domain}`}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+        )}
 
-        <div className="my-[18px] flex items-center gap-3">
-          <span className="h-px flex-1 bg-tg-line" />
-          <Meta>or</Meta>
-          <span className="h-px flex-1 bg-tg-line" />
-        </div>
+        {error && (
+          <p className="mt-3 text-[12.5px] text-tg-terra" role="alert">{error}</p>
+        )}
 
-        <TextField label={`Email — must end in @${inst.domain}`} mono icon={<Mail size={17} />} placeholder={`you@${inst.domain}`} />
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2">
           <ShieldCheck size={15} className="text-tg-brown-soft" />
-          <Meta>Only @{inst.domain} addresses can join this campus.</Meta>
+          <Meta>Only @{inst.domain}{inst.alt_domains.length ? ` (or ${inst.alt_domains.map((d) => "@" + d).join(", ")})` : ""} addresses can join this campus.</Meta>
         </div>
       </div>
     </MobileShell>
