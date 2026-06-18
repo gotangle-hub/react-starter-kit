@@ -1,25 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bookmark, MoreHorizontal, Plus, UserPlus } from "lucide-react";
+import { Bookmark, Compass, MoreHorizontal, Plus, UserPlus } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { AppTabBar } from "@/components/app/app-tab-bar";
 import { Avatar } from "@/components/brand/avatar";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
-import { feed, makerById, posts } from "@/lib/fixtures";
+import { Meta } from "@/components/brand/atoms";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { listExploreWork, postCoverUrl, type PostRow } from "@/services/work";
+import { getProfilesByIds, makerFromProfile } from "@/services/profile";
+import type { Maker } from "@/lib/profile-shape";
 
 /**
- * 12/13 · Explore (collector). Edge-to-edge feed with NO chrome; tapping reveals
- * collector controls — save, follow the maker, open the piece, and the menu.
- * Tapping again hides them.
+ * 12/13 · Explore (collector). Edge-to-edge real feed; tapping reveals controls.
  */
 export default function CollectorExplore() {
   const navigate = useNavigate();
   const [revealed, setRevealed] = useState(false);
   const [index, setIndex] = useState(0);
+  const [posts, setPosts] = useState<PostRow[]>([]);
+  const [makers, setMakers] = useState<Map<string, Maker>>(new Map());
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const list = await listExploreWork(30);
+      if (!alive) return;
+      setPosts(list);
+      const profiles = await getProfilesByIds(list.map((p) => p.author_id));
+      if (!alive) return;
+      const m = new Map<string, Maker>();
+      profiles.forEach((row, id) => m.set(id, makerFromProfile(row) as Maker));
+      setMakers(m);
+    })();
+    return () => { alive = false; };
+  }, []);
+
   const post = posts[index];
-  const maker = makerById(post.maker);
+  const maker = post ? makers.get(post.author_id) : undefined;
+  const cover = post ? postCoverUrl(post) : null;
+
+  if (!post) {
+    return (
+      <MobileShell footer={<AppTabBar />} className="bg-tg-feed-bg">
+        <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2 text-tg-brown">
+            <Compass size={22} />
+          </span>
+          <h2 className="mt-4 font-serif text-[20px] font-medium tracking-[-0.01em] text-tg-ink">Nothing in Explore yet</h2>
+          <Meta className="mt-1.5 block max-w-[260px]">When designers publish work to Explore, you&rsquo;ll see it here.</Meta>
+        </div>
+      </MobileShell>
+    );
+  }
 
   return (
     <MobileShell footer={<AppTabBar />} className="bg-tg-feed-bg">
@@ -28,20 +62,20 @@ export default function CollectorExplore() {
           type="button"
           onClick={() => setRevealed((v) => !v)}
           className="absolute inset-0 h-full w-full"
-          style={{ backgroundImage: `url(${feed(post.img)})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{ backgroundImage: cover ? `url(${cover})` : undefined, backgroundColor: cover ? undefined : "var(--tg-ink)", backgroundSize: "cover", backgroundPosition: "center" }}
           aria-label="Reveal controls"
         />
 
         <div className={cn("pointer-events-none absolute inset-0 flex flex-col justify-between transition-opacity duration-base", revealed ? "opacity-100" : "opacity-0")}>
           <div className="bg-gradient-to-b from-black/45 to-transparent p-4 pt-6">
             <div className="pointer-events-auto flex items-center gap-2.5">
-              <Avatar maker={maker} size={36} ring />
+              {maker && <Avatar maker={maker} size={36} ring />}
               <div className="flex-1">
                 <span className="flex items-center gap-1.5">
-                  <span className="font-display text-[14px] font-semibold text-white">{maker.name}</span>
-                  {maker.verified && <VerifiedBadge size={15} />}
+                  <span className="font-display text-[14px] font-semibold text-white">{maker?.name ?? "Member"}</span>
+                  {maker?.verified && <VerifiedBadge size={15} />}
                 </span>
-                <span className="font-mono text-[11px] text-white/70">{post.cat} · {post.place}</span>
+                <span className="font-mono text-[11px] text-white/70">{[post.category, post.place].filter(Boolean).join(" · ")}</span>
               </div>
               <button type="button" className="text-white" aria-label="More" onClick={() => navigate(routes.postMenu)}>
                 <MoreHorizontal size={22} />
