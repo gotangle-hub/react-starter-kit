@@ -87,14 +87,14 @@ export type LinkMembershipResult =
 /** Server-verified G13 link: matches the caller's auth email to the chosen
  * institution's domain and persists the link + detected role. */
 export async function linkMembership(institutionId: string): Promise<LinkMembershipResult | { ok: false; reason: "error"; message: string }> {
-  // @ts-expect-error — RPC name not yet in generated types until next codegen.
-  const { data, error } = await supabase.rpc("link_institution_membership", { _institution_id: institutionId });
+  // RPC may not yet be in generated types
+  const { data, error } = await (supabase as any).rpc("link_institution_membership", { _institution_id: institutionId });
   if (error) return { ok: false, reason: "error", message: error.message };
   return data as LinkMembershipResult;
 }
 
 export async function setInstitutionRole(role: "faculty" | "student"): Promise<{ error: string | null }> {
-  // @ts-expect-error — RPC name not yet in generated types until next codegen.
-  const { error } = await supabase.rpc("set_institution_role", { _role: role });
+  // RPC may not yet be in generated types
+  const { error } = await (supabase as any).rpc("set_institution_role", { _role: role });
   return { error: error?.message ?? null };
 }
