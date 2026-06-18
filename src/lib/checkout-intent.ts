@@ -5,6 +5,18 @@
 import type { NavigateFunction } from "react-router-dom";
 import { routes } from "@/lib/routes";
 
+export interface BoostPayload {
+  /** Boost kind — what's being promoted. */
+  boost_kind: "profile" | "post" | "callout" | "community" | "creator";
+  /** Target id (post / callout / community post id). Null for profile/creator. */
+  target_id?: string | null;
+  product_id: string;
+  product_name: string;
+  audience: string;
+  duration_days: number;
+  daily_budget_minor: number;
+}
+
 export interface PendingCheckout {
   kind: "plan" | "boost";
   /** Stable identifier (e.g. designer-pro-monthly, boost-profile-7d). */
@@ -19,6 +31,8 @@ export interface PendingCheckout {
   total: number;
   /** Whether to charge in sandbox/test mode. */
   test?: boolean;
+  /** Boost-specific payload (when kind === "boost"). */
+  boost?: BoostPayload;
 }
 
 const KEY = "tangle:pendingCheckout";
