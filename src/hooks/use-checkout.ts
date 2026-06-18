@@ -58,6 +58,7 @@ async function processPayment(request: CheckoutRequest): Promise<CheckoutResult>
       cancel_url: `${origin}/checkout`,
       failure_url: `${origin}/checkout`,
       test: request.test ?? false,
+      boost: request.boost ?? null,
     },
   });
   if (error) return { ok: false, error: error.message };
