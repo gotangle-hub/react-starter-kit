@@ -83,6 +83,7 @@ export function LocationField({
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);
+            onChange?.(e.target.value);
           }}
           onFocus={() => {
             setOpen(true);
