@@ -1085,6 +1085,10 @@ export type Database = {
           disciplines: string[]
           display_name: string | null
           id: string
+          institution_email: string | null
+          institution_id: string | null
+          institution_role: string | null
+          institution_verified_at: string | null
           links: Json
           location: string | null
           marketing_opt_in: boolean
@@ -1100,6 +1104,10 @@ export type Database = {
           disciplines?: string[]
           display_name?: string | null
           id: string
+          institution_email?: string | null
+          institution_id?: string | null
+          institution_role?: string | null
+          institution_verified_at?: string | null
           links?: Json
           location?: string | null
           marketing_opt_in?: boolean
@@ -1115,13 +1123,25 @@ export type Database = {
           disciplines?: string[]
           display_name?: string | null
           id?: string
+          institution_email?: string | null
+          institution_id?: string | null
+          institution_role?: string | null
+          institution_verified_at?: string | null
           links?: Json
           location?: string | null
           marketing_opt_in?: boolean
           updated_at?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       salary_entries: {
         Row: {
@@ -1380,6 +1400,10 @@ export type Database = {
           status: string
         }[]
       }
+      link_institution_membership: {
+        Args: { _institution_id: string }
+        Returns: Json
+      }
       list_active_boosted_creator_ids: {
         Args: never
         Returns: {
@@ -1481,6 +1505,7 @@ export type Database = {
         Args: { _accept: boolean; _collab: string }
         Returns: undefined
       }
+      set_institution_role: { Args: { _role: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       suggest_usernames: {
