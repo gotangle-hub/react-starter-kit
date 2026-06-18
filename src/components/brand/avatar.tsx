@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * Initials avatar (no faces — the brand uses no faces). Tint comes from the
- * maker; falls back to ink.
+ * maker; falls back to ink. If `avatarUrl` is provided, that image is rendered
+ * on top of the tint so real uploaded avatars take precedence.
  */
 export function Avatar({
   maker,
@@ -11,15 +12,16 @@ export function Avatar({
   ring = false,
   className,
 }: {
-  maker: Pick<Maker, "initials" | "tint">;
+  maker: Pick<Maker, "initials" | "tint"> & { avatarUrl?: string };
   size?: number;
   ring?: boolean;
   className?: string;
 }) {
+  const hasImg = Boolean(maker.avatarUrl);
   return (
     <span
       className={cn(
-        "inline-flex flex-none items-center justify-center rounded-pill font-display font-semibold text-white",
+        "inline-flex flex-none items-center justify-center overflow-hidden rounded-pill font-display font-semibold text-white",
         className,
       )}
       style={{
@@ -33,7 +35,11 @@ export function Avatar({
           : undefined,
       }}
     >
-      {maker.initials}
+      {hasImg ? (
+        <img src={maker.avatarUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+      ) : (
+        maker.initials
+      )}
     </span>
   );
 }
