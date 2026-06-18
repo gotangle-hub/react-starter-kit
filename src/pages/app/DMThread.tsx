@@ -39,7 +39,7 @@ export default function DMThread() {
   const [other, setOther] = useState<ProfileRow | null>(null);
   const [list, setList] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<MentionInputHandle>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const meIdRef = useRef<string | null>(null);
 
@@ -142,7 +142,7 @@ export default function DMThread() {
                       mine ? "bg-tg-blue text-white" : "bg-tg-card text-tg-ink",
                     )}
                   >
-                    {m.body}
+                    {renderWithMentions(m.body)}
                   </span>
                   <span className="mt-0.5 block font-mono text-[9.5px] text-tg-brown-soft">{timeAgo(m.created_at)}</span>
                 </div>
@@ -157,22 +157,18 @@ export default function DMThread() {
         onSubmit={(e) => { e.preventDefault(); send(); }}
       >
         {meMaker && <Avatar maker={meMaker} size={32} />}
-        <input
+        <MentionInput
           ref={inputRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          // Never trigger blur on Enter — G8.
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
-          // Defend against accidental blur right after send.
-          onBlur={(e) => {
-            if (document.activeElement === e.currentTarget) return;
-          }}
+          onChange={setText}
+          onSubmit={send}
           placeholder={`Message ${firstName}…`}
-          className="min-w-0 flex-1 rounded-pill border border-tg-line bg-tg-card px-4 py-2.5 text-[14px] text-tg-ink outline-none placeholder:text-tg-brown-soft focus:border-tg-blue-accent"
+          ariaLabel="Message"
+          className="w-full min-w-0 rounded-pill border border-tg-line bg-tg-card px-4 py-2.5 text-[14px] text-tg-ink outline-none placeholder:text-tg-brown-soft focus:border-tg-blue-accent"
         />
         <button
           type="submit"
-          // Prevent the button from stealing focus on mousedown — keeps the keyboard open (G8).
+          // Prevent the button from stealing focus — keeps the keyboard open (G8).
           onMouseDown={(e) => e.preventDefault()}
           onTouchStart={(e) => { e.preventDefault(); send(); inputRef.current?.focus(); }}
           disabled={!text.trim() || !conversationId}
