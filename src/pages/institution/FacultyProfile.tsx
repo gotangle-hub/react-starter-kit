@@ -8,7 +8,7 @@ import { Meta, Pill } from "@/components/brand/atoms";
 import { TextField } from "@/components/app/fields";
 import { UsernamePicker } from "@/components/app/username-picker";
 import { Button } from "@/components/ui/button";
-import { schools } from "@/lib/schools";
+import { recallInstitution } from "@/services/institutions";
 import { routes } from "@/lib/routes";
 import { updateMyProfile } from "@/services/profile";
 import { checkUsernameAvailable } from "@/services/usernames";
