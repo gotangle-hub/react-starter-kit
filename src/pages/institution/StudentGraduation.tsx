@@ -20,7 +20,10 @@ const TIMELINE: { label: string; detail: string; state: "done" | "active" | "nex
  * link and becomes a free Designer account.
  */
 export default function StudentGraduation() {
-  const school = schools[0];
+  const inst = recallInstitution();
+  const school = inst
+    ? { name: inst.name, tint: inst.tint ?? "#161514", initials: inst.initials ?? inst.name.slice(0, 2).toUpperCase() }
+    : { name: "Your institution", tint: "#161514", initials: "··" };
 
   return (
     <MobileShell header={<BackHeader title="Graduation status" />}>
