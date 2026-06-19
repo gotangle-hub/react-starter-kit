@@ -11,6 +11,7 @@ import { listProfiles, makerFromProfile, getMyProfile, type ProfileRow } from "@
 import { rankItems } from "@/services/feed";
 import { routes } from "@/lib/routes";
 import type { Maker } from "@/lib/profile-shape";
+import { PracticeCard } from "@/components/app/practice-card";
 
 /** 11 · Client home (G2, G6, G7). Post-a-brief CTA, pipeline, matched talent. */
 
