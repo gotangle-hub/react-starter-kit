@@ -59,7 +59,7 @@ export default function SearchVisual() {
           className="mt-6 flex w-full flex-col items-center justify-center gap-3 rounded-xl border-[1.5px] border-dashed border-tg-blue-accent bg-tg-card px-6 py-12 text-center disabled:opacity-60"
         >
           <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2">
-            <ImagePlus size={26} className="text-tg-blue-accent" />
+            {busy ? <LoadingRing size={26} /> : <ImagePlus size={26} className="text-tg-blue-accent" />}
           </span>
           <span className="font-display text-[15.5px] font-semibold text-tg-ink">
             {busy ? "Reading your image…" : "Upload an image"}
