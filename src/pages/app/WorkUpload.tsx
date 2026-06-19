@@ -45,7 +45,7 @@ export default function WorkUpload() {
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] py-3 pb-6">
           <Button variant="primary" full size="lg" disabled={busy} onClick={() => mediaInput.current?.click()}>
-            {busy ? "Uploading…" : "Add to your work"}
+            {busy ? (<><LoadingRing size={15} className="mr-2" />Uploading…</>) : "Add to your work"}
           </Button>
         </div>
       }
