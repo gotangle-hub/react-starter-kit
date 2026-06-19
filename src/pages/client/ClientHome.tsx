@@ -56,6 +56,7 @@ export default function ClientHome() {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[22px] pb-4">
         <RefreshHint />
+        <PracticeCard />
         {/* Post a brief CTA */}
         <div className="relative overflow-hidden rounded-lg bg-tg-emph p-[18px] text-white">
           <div className="font-serif text-[20px] font-medium leading-tight tracking-[-0.01em]">
