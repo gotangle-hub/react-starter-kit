@@ -1,0 +1,1 @@
+SELECT cron.unschedule('refresh-post-metrics-every-2m');
