@@ -1,0 +1,16 @@
+REVOKE EXECUTE ON FUNCTION public.link_institution_membership(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.set_institution_role(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.submit_identity_verification(text, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.create_collaboration(text, text, uuid[]) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.invite_to_collaboration(uuid, uuid[]) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.respond_collab_invite(uuid, boolean) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.accept_class_invite(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.record_boost_impressions(uuid[]) FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.link_institution_membership(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_institution_role(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.submit_identity_verification(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_collaboration(text, text, uuid[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.invite_to_collaboration(uuid, uuid[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.respond_collab_invite(uuid, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.accept_class_invite(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.record_boost_impressions(uuid[]) TO authenticated;
