@@ -50,6 +50,77 @@ export type Database = {
           },
         ]
       }
+      board_items: {
+        Row: {
+          added_at: string
+          board_id: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          added_at?: string
+          board_id: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          added_at?: string
+          board_id?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_items_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_items_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boards: {
+        Row: {
+          cover_path: string | null
+          created_at: string
+          id: string
+          is_private: boolean
+          owner_id: string
+          title: string
+        }
+        Insert: {
+          cover_path?: string | null
+          created_at?: string
+          id?: string
+          is_private?: boolean
+          owner_id: string
+          title: string
+        }
+        Update: {
+          cover_path?: string | null
+          created_at?: string
+          id?: string
+          is_private?: boolean
+          owner_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boards_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boost_impressions: {
         Row: {
           boost_id: string
