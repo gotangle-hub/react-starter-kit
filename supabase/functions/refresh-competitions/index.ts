@@ -244,10 +244,18 @@ Deno.serve(async (req) => {
       last_seen_at: new Date().toISOString(),
     }));
 
-    if (rows.length) {
+    // Dedupe by external_id so upsert never gets two rows with the same key.
+    const seen = new Set<string>();
+    const unique = rows.filter((r) => {
+      if (seen.has(r.external_id)) return false;
+      seen.add(r.external_id);
+      return true;
+    });
+
+    if (unique.length) {
       const { error } = await admin
         .from("competitions")
-        .upsert(rows, { onConflict: "external_id" });
+        .upsert(unique, { onConflict: "external_id" });
       if (error) throw error;
     }
 
