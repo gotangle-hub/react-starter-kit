@@ -105,7 +105,8 @@ export default function StudioProjectUpload() {
         </div>
 
         {progress && (
-          <div className="mt-3 rounded-DEFAULT bg-tg-stone2 p-3">
+          <div className="mt-3 flex items-center gap-2.5 rounded-DEFAULT bg-tg-stone2 p-3">
+            <LoadingRing size={16} />
             <Meta>{progress.phase} · {Math.round(progress.ratio * 100)}%{progress.finalBytes ? ` · ${(progress.finalBytes / 1_000_000).toFixed(1)} MB` : ""}</Meta>
           </div>
         )}
