@@ -26,11 +26,12 @@ export function ReasonSheet({
   reasons: string[];
   note?: string;
   submitLabel: string;
-  onSubmit: () => void;
+  onSubmit: (reason?: string, details?: string) => void;
   danger?: boolean;
 }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [other, setOther] = useState(false);
+  const [otherText, setOtherText] = useState("");
   const accent = danger ? "border-destructive" : "border-tg-blue-accent";
   const dot = danger ? "bg-destructive" : "bg-tg-blue-accent";
 
@@ -68,6 +69,8 @@ export function ReasonSheet({
                 <textarea
                   autoFocus
                   rows={3}
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
                   placeholder="Tell us more…"
                   className="mt-2 w-full resize-none rounded-DEFAULT border border-tg-line bg-tg-card px-3 py-2.5 text-[14px] text-tg-ink outline-none placeholder:text-tg-brown-soft focus:border-tg-blue-accent"
                 />
@@ -82,7 +85,17 @@ export function ReasonSheet({
           )}
         </div>
         <div className="flex-none border-t border-tg-line px-5 py-3 pb-6">
-          <Button full size="lg" variant={danger ? "destructive" : "primary"} disabled={picked === null && !other} onClick={onSubmit}>
+          <Button
+            full
+            size="lg"
+            variant={danger ? "destructive" : "primary"}
+            disabled={picked === null && !other}
+            onClick={() => {
+              const reason = other ? "Other" : picked !== null ? reasons[picked] : undefined;
+              const details = other ? otherText : undefined;
+              onSubmit(reason, details);
+            }}
+          >
             {submitLabel}
           </Button>
         </div>
