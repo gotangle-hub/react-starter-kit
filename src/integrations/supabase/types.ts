@@ -1444,6 +1444,65 @@ export type Database = {
           },
         ]
       }
+      promo_codes: {
+        Row: {
+          active: boolean
+          applies_to: string[]
+          code: string
+          created_at: string
+          months: number
+          plan_target: string
+        }
+        Insert: {
+          active?: boolean
+          applies_to?: string[]
+          code: string
+          created_at?: string
+          months: number
+          plan_target: string
+        }
+        Update: {
+          active?: boolean
+          applies_to?: string[]
+          code?: string
+          created_at?: string
+          months?: number
+          plan_target?: string
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          code: string
+          granted_months: number
+          id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          granted_months: number
+          id?: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          granted_months?: number
+          id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string
@@ -1937,6 +1996,10 @@ export type Database = {
         Returns: string[]
       }
       user_is_collab_seeking: { Args: { _uid: string }; Returns: boolean }
+      validate_promo_code: {
+        Args: { _account_type: string; _code: string }
+        Returns: Json
+      }
     }
     Enums: {
       account_type:
