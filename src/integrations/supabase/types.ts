@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boost_impressions: {
         Row: {
           boost_id: string
@@ -1633,6 +1669,7 @@ export type Database = {
         Args: { _collab: string; _user: string }
         Returns: boolean
       }
+      is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
       is_class_member: {
         Args: { _class: string; _user: string }
         Returns: boolean
@@ -1747,6 +1784,7 @@ export type Database = {
         }
         Returns: number
       }
+      my_block_user_ids: { Args: never; Returns: string[] }
       pass_on_maker: { Args: { _target: string }; Returns: undefined }
       profile_id_by_username: { Args: { _name: string }; Returns: string }
       read_email_batch: {
