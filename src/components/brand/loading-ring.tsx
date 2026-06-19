@@ -22,7 +22,7 @@ export function LoadingRing({ size = 16, className = "", tone = "yellow" }: Prop
     <span
       role="status"
       aria-label="Loading"
-      className={`inline-block animate-spin rounded-pill border-2 border-tg-ink-12 align-[-3px] ${className}`}
+      className={`inline-block animate-spin rounded-pill border-2 border-tg-line align-[-3px] ${className}`}
       style={{
         width: size,
         height: size,
