@@ -1,12 +1,16 @@
 // G3 · Scheduled trigger to recompute post virality metrics.
-// Called by pg_cron every minute. The heavy lifting is in the SQL function
-// public.refresh_post_metrics(); this function just wakes it up so it runs in
-// Postgres rather than blocking an HTTP request.
+// Service-role only — invoked by pg_cron with the project service key.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { isServiceRole } from "../_shared/service-role.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!isServiceRole(req)) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   try {
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,

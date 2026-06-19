@@ -15,29 +15,27 @@ export default function PaymentSuccess() {
   useEffect(() => {
     if (!intentId) return;
     (async () => {
-      const { data, error } = await supabase.functions.invoke("ziina-verify-payment", {
-        body: null,
-        method: "GET" as never,
-        // supabase-js doesn't accept query strings directly; use fetch fallback:
-      } as never).catch(() => ({ data: null, error: null as never }));
-
-      if (error || !data) {
-        // Fallback: direct fetch with query param
-        try {
-          const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ziina-verify-payment?id=${encodeURIComponent(intentId)}`;
-          const res = await fetch(url, {
-            headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          });
-          const json = await res.json();
-          setStatus((json?.status as VerifyStatus) ?? "pending");
-        } catch {
-          setStatus("pending");
-        }
+      // Verify endpoint requires an authenticated user; it scopes the result
+      // to the caller's own order.
+      const { data: sess } = await supabase.auth.getSession();
+      const accessToken = sess.session?.access_token;
+      if (!accessToken) {
+        setStatus("pending");
         return;
       }
-      setStatus((data.status as VerifyStatus) ?? "pending");
+      try {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ziina-verify-payment?id=${encodeURIComponent(intentId)}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const json = await res.json();
+        setStatus((json?.status as VerifyStatus) ?? "pending");
+      } catch {
+        setStatus("pending");
+      }
     })();
   }, [intentId]);
+
 
   if (status === "checking") {
     return (

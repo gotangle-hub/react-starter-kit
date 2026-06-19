@@ -39,14 +39,10 @@ export function useOnboarding() {
         if (!cancelled) setLoaded(true);
         return;
       }
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("onboarding_seen_at")
-        .eq("id", uid)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("get_my_onboarding_seen");
       if (cancelled) return;
       if (!error) {
-        const serverSeen = !!data?.onboarding_seen_at;
+        const serverSeen = !!data;
         setSeen(serverSeen);
         writeCache(serverSeen);
       }

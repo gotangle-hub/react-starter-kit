@@ -3,6 +3,38 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const ZIINA_API = 'https://api-v2.ziina.com/api/payment_intent';
 
+/**
+ * Server-side price catalog (AED minor units / "fils").
+ * Mirrors src/lib/plans.ts and src/pages/studio/PlansCombined.tsx.
+ * Any client-supplied amount is IGNORED — only the value here is charged.
+ */
+const PLAN_PRICES_MINOR: Record<string, { amount: number; currency: string }> = {
+  'designer-pro-monthly': { amount: 6000,  currency: 'AED' },
+  'designer-pro-annual':  { amount: 69000, currency: 'AED' },
+  'studio-lite-monthly':  { amount: 19900, currency: 'AED' },
+  'studio-monthly':       { amount: 39900, currency: 'AED' },
+  'studio-plus-monthly':  { amount: 69900, currency: 'AED' },
+  'client-pro-monthly':   { amount: 12000, currency: 'AED' },
+  'business-monthly':     { amount: 32000, currency: 'AED' },
+};
+
+/** Boost pricing formula — must match src/pages/app/Promote.tsx. */
+const BOOST_DURATION_MULT: Record<number, number> = {
+  3: 0.5,
+  7: 1,
+  14: 1.8,
+};
+const BOOST_BASE_AED = 40;
+
+function priceForBoost(durationDays: number, dailyBudgetMinor: number): number | null {
+  const mult = BOOST_DURATION_MULT[durationDays];
+  if (mult === undefined) return null;
+  const budgetMajor = Math.round(dailyBudgetMinor / 100);
+  // base * mult + budget * 0.2 (AED) → minor units
+  const totalAed = Math.round(BOOST_BASE_AED * mult + budgetMajor * 0.2);
+  return totalAed * 100;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -28,22 +60,58 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { kind, reference, currency, amount, message, success_url, cancel_url, failure_url, test, boost } = body;
+    const { kind, reference, message, success_url, cancel_url, failure_url, test, boost } = body;
 
-    if (!kind || !reference || !currency || !Number.isInteger(amount) || amount <= 0) {
+    if (!kind || !reference || (kind !== 'plan' && kind !== 'boost')) {
       return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    if (kind === 'boost') {
+
+    // ---- Resolve server-authoritative price + currency ----
+    let amount: number;
+    let currency: string;
+
+    if (kind === 'plan') {
+      const entry = PLAN_PRICES_MINOR[reference];
+      if (!entry) {
+        return new Response(JSON.stringify({ error: 'Unknown plan reference' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      amount = entry.amount;
+      currency = entry.currency;
+    } else {
+      // boost
       if (!boost || typeof boost !== 'object' ||
           !['profile','post','callout','community','creator'].includes(boost.boost_kind) ||
           !boost.product_id || !boost.product_name ||
-          !Number.isInteger(boost.duration_days) || boost.duration_days <= 0) {
+          !Number.isInteger(boost.duration_days) || boost.duration_days <= 0 ||
+          !Number.isInteger(boost.daily_budget_minor) || boost.daily_budget_minor < 0) {
         return new Response(JSON.stringify({ error: 'Invalid boost payload' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      const computed = priceForBoost(boost.duration_days, boost.daily_budget_minor);
+      if (computed === null || computed <= 0) {
+        return new Response(JSON.stringify({ error: 'Unsupported boost configuration' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      amount = computed;
+      currency = 'AED';
+    }
+
+    // If client sent an amount, it must match — defence in depth.
+    if (body.amount !== undefined && body.amount !== amount) {
+      return new Response(JSON.stringify({ error: 'Amount mismatch' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (body.currency !== undefined && body.currency !== currency) {
+      return new Response(JSON.stringify({ error: 'Currency mismatch' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const ziinaRes = await fetch(ZIINA_API, {
@@ -107,6 +175,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       id: intent.id,
       redirect_url: intent.redirect_url,
+      amount,
+      currency,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     console.error(err);

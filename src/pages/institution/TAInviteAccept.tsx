@@ -23,17 +23,15 @@ export default function TAInviteAccept() {
 
   useEffect(() => {
     if (!token) return;
-    supabase
-      .from("class_invites")
-      .select("email, classes(name)")
-      .eq("token", token)
-      .maybeSingle()
+    supabase.rpc("get_class_invite_for_acceptance", { _token: token })
       .then(({ data }) => {
-        const row = data as { email?: string; classes?: { name?: string } } | null;
+        const rows = Array.isArray(data) ? data : data ? [data] : [];
+        const row = rows[0] as { email?: string; class_name?: string } | undefined;
         if (row?.email) setEmail(row.email);
-        if (row?.classes?.name) setClassName(row.classes.name);
+        if (row?.class_name) setClassName(row.class_name);
       });
   }, [token]);
+
 
   const accept = async () => {
     if (!token) return;

@@ -1674,6 +1674,13 @@ export type Database = {
         Returns: undefined
       }
       get_auth_methods: { Args: { p_email: string }; Returns: Json }
+      get_class_invite_for_acceptance: {
+        Args: { _token: string }
+        Returns: {
+          class_name: string
+          email: string
+        }[]
+      }
       get_match_deck: {
         Args: {
           _account_types?: string[]
@@ -1734,6 +1741,7 @@ export type Database = {
         }
       }
       get_my_marketing_opt_in: { Args: never; Returns: boolean }
+      get_my_onboarding_seen: { Args: never; Returns: boolean }
       get_practice_status: { Args: never; Returns: Json }
       get_swipe_state: { Args: never; Returns: Json }
       has_role: {
