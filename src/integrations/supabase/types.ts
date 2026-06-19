@@ -955,6 +955,42 @@ export type Database = {
         }
         Relationships: []
       }
+      match_preferences: {
+        Row: {
+          account_types: string[]
+          availability: string | null
+          disciplines: string[]
+          experience_level: string | null
+          intent: string
+          location: string | null
+          recency_days: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_types?: string[]
+          availability?: string | null
+          disciplines?: string[]
+          experience_level?: string | null
+          intent?: string
+          location?: string | null
+          recency_days?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_types?: string[]
+          availability?: string | null
+          disciplines?: string[]
+          experience_level?: string | null
+          intent?: string
+          location?: string | null
+          recency_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
@@ -1123,12 +1159,14 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
+          availability: string | null
           avatar_path: string | null
           banner_path: string | null
           bio: string | null
           created_at: string
           disciplines: string[]
           display_name: string | null
+          experience_level: string | null
           id: string
           institution_email: string | null
           institution_id: string | null
@@ -1137,18 +1175,22 @@ export type Database = {
           links: Json
           location: string | null
           marketing_opt_in: boolean
+          open_to_collaborate: boolean
+          plan: string
           updated_at: string
           username: string
           verified_at: string | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          availability?: string | null
           avatar_path?: string | null
           banner_path?: string | null
           bio?: string | null
           created_at?: string
           disciplines?: string[]
           display_name?: string | null
+          experience_level?: string | null
           id: string
           institution_email?: string | null
           institution_id?: string | null
@@ -1157,18 +1199,22 @@ export type Database = {
           links?: Json
           location?: string | null
           marketing_opt_in?: boolean
+          open_to_collaborate?: boolean
+          plan?: string
           updated_at?: string
           username: string
           verified_at?: string | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          availability?: string | null
           avatar_path?: string | null
           banner_path?: string | null
           bio?: string | null
           created_at?: string
           disciplines?: string[]
           display_name?: string | null
+          experience_level?: string | null
           id?: string
           institution_email?: string | null
           institution_id?: string | null
@@ -1177,6 +1223,8 @@ export type Database = {
           links?: Json
           location?: string | null
           marketing_opt_in?: boolean
+          open_to_collaborate?: boolean
+          plan?: string
           updated_at?: string
           username?: string
           verified_at?: string | null
@@ -1278,6 +1326,24 @@ export type Database = {
         }
         Relationships: []
       }
+      swipe_counts: {
+        Row: {
+          count: number
+          day: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          day?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interests: {
         Row: {
           tag: string
@@ -1341,6 +1407,10 @@ export type Database = {
         }[]
       }
       check_username_available: { Args: { _name: string }; Returns: boolean }
+      count_active_collaborations_owned: {
+        Args: { _uid: string }
+        Returns: number
+      }
       create_class: {
         Args: {
           _allow_student_pins: boolean
@@ -1375,6 +1445,35 @@ export type Database = {
         Returns: undefined
       }
       get_auth_methods: { Args: { p_email: string }; Returns: Json }
+      get_match_deck: {
+        Args: {
+          _account_types?: string[]
+          _availability?: string
+          _disciplines?: string[]
+          _experience?: string
+          _intent?: string
+          _limit?: number
+          _location?: string
+          _recency_days?: number
+        }
+        Returns: {
+          author_account_type: string
+          author_avatar_path: string
+          author_disciplines: string[]
+          author_id: string
+          author_location: string
+          author_name: string
+          author_username: string
+          author_verified: boolean
+          caption: string
+          category: string
+          created_at: string
+          image_path: string
+          media_paths: string[]
+          post_id: string
+          title: string
+        }[]
+      }
       get_my_latest_boost: {
         Args: never
         Returns: {
@@ -1406,6 +1505,7 @@ export type Database = {
         }
       }
       get_my_marketing_opt_in: { Args: never; Returns: boolean }
+      get_swipe_state: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1441,6 +1541,7 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      is_unlimited_account: { Args: { _uid: string }; Returns: boolean }
       like_to_connect: {
         Args: { _target: string }
         Returns: {
@@ -1549,6 +1650,10 @@ export type Database = {
         Returns: undefined
       }
       refresh_post_metrics: { Args: never; Returns: undefined }
+      register_swipe: {
+        Args: { _intent: string; _post_id?: string; _target_user_id: string }
+        Returns: Json
+      }
       respond_collab_invite: {
         Args: { _accept: boolean; _collab: string }
         Returns: undefined
@@ -1564,6 +1669,7 @@ export type Database = {
         Args: { _base: string; _count?: number }
         Returns: string[]
       }
+      user_is_collab_seeking: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
       account_type:
