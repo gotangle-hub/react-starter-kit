@@ -10,6 +10,7 @@ import {
   LogOut,
   Megaphone,
   Shield,
+  ShieldCheck,
   Trash2,
   Users,
   Zap,
