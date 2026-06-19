@@ -7,6 +7,11 @@
     <meta name="description" content="A space for designers — matched, collaborating, discovered, hired." />
     <!-- color-scheme drives the browser's native UI to follow our theme (G15) -->
     <meta name="color-scheme" content="light dark" />
+    <!-- Security headers (defense-in-depth; complements server/CDN headers) -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="geolocation=(self), camera=(self), microphone=(self), payment=(self), interest-cohort=()" />
+    <meta name="robots" content="index, follow" />
     <!-- Apply the resolved theme before first paint to avoid a flash (G15). -->
     <script>
       (function () {
