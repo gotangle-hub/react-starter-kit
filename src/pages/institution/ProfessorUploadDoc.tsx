@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { CheckCircle2, FileText, Layers, Link as LinkIcon, Loader, Lock, Upload } from "lucide-react";
+import { CheckCircle2, FileText, Layers, Link as LinkIcon, Lock, Upload } from "lucide-react";
+import { LoadingRing } from "@/components/brand/loading-ring";
 import { MobileShell } from "@/components/app/mobile-shell";
 import { BackHeader } from "@/components/app/bits";
 import { TextField } from "@/components/app/fields";
