@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { readFileAsDataUrl } from "@/services/search";
 import { compressOnly } from "@/services/uploads";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 /**
  * 29 · Search by image (G4). Entry screen for visual search — upload or take a
