@@ -213,7 +213,7 @@ export default function EditProfileSettings() {
         <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@handle" />
 
         <Button full size="lg" variant="primary" className="mt-2" onClick={save} disabled={busy || loading}>
-          {busy ? "Saving…" : "Save changes"}
+          {busy ? (<><LoadingRing size={15} className="mr-2" />Saving…</>) : "Save changes"}
         </Button>
       </div>
     </SettingsScaffold>
