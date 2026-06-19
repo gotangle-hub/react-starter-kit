@@ -12,6 +12,7 @@ import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/prof
 import type { Maker } from "@/lib/profile-shape";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
 import type { UploadProgress } from "@/services/uploads";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 /** 14 · Add a studio project (G9). Upload + auto-compression, credit the team. */
 export default function StudioProjectUpload() {
