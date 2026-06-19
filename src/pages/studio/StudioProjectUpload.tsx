@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Compass, FileUp, ImagePlus, X } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -10,6 +10,8 @@ import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/profile";
 import type { Maker } from "@/lib/profile-shape";
+import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
+import type { UploadProgress } from "@/services/uploads";
 
 /** 14 · Add a studio project (G9). Upload + auto-compression, credit the team. */
 export default function StudioProjectUpload() {
