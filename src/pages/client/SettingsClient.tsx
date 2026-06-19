@@ -9,6 +9,7 @@ import {
   Lock,
   LogOut,
   Receipt,
+  ShieldCheck,
   Trash2,
   User,
   Zap,
