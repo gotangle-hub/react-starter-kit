@@ -60,6 +60,14 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      // Cap image payload at ~2MB of base64 to prevent abuse of the embedding API.
+      const MAX_IMAGE_CHARS = 2_800_000; // ~2MB after base64 decoding
+      if (typeof body.image_data_url !== "string" || body.image_data_url.length > MAX_IMAGE_CHARS) {
+        return new Response(JSON.stringify({ error: "image too large" }), {
+          status: 413,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       embedInput = [{
         content: [{ type: "image_url", image_url: { url: body.image_data_url } }],
       }];
