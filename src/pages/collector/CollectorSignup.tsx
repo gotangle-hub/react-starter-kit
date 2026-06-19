@@ -26,6 +26,22 @@ export default function CollectorSignup() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [referral, setReferral] = useState("");
+  const [referralMsg, setReferralMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [referralValidCode, setReferralValidCode] = useState<string | null>(null);
+
+  const checkReferral = async () => {
+    setReferralMsg(null);
+    setReferralValidCode(null);
+    const r = await validateReferralCode(referral, "collector");
+    if (!r) return;
+    if (r.ok) {
+      setReferralValidCode(r.code);
+      setReferralMsg({ ok: true, text: `${r.code} applied — ${r.months} months Pro free.` });
+    } else {
+      setReferralMsg({ ok: false, text: r.message });
+    }
+  };
 
   const toggle = (t: string) =>
     setTags((prev) => {
