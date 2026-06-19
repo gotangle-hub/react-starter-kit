@@ -77,6 +77,8 @@ export default function Home() {
         </h1>
         <Meta>Welcome back to Tangle.</Meta>
 
+        <PracticeCard />
+
         <SectionLabel>Active collaborations</SectionLabel>
         <Card className="p-4">
           <Meta className="block">No active collaborations yet.</Meta>
