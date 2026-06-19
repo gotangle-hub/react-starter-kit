@@ -1,76 +1,44 @@
-// G5 · Competition discovery — scheduled refresher.
+// G5 · Competition discovery — live world scan.
 //
-// What it does
-//   1. Pulls competitions from one or more SOURCES (currently a curated list
-//      below; real scrapers/search APIs plug in via `fetchExternalSources`).
-//   2. UPSERTs them into public.competitions (matched on external_id).
-//   3. Marks rows that disappeared from every source as stale so the page can
-//      still show them but the front-end can grey-out / hide if needed.
+// Two passes per run:
+//   1. audience="all"      — worldwide design competitions, open to anyone.
+//   2. audience="students" — worldwide design competitions open to students.
 //
-// How a real source plugs in later (no signup required right now):
-//   - Firecrawl  — cheapest reliable option. Set FIRECRAWL_API_KEY, then
-//                  uncomment `await fetchFromFirecrawl(...)` in
-//                  fetchExternalSources(). ~$0.001 / page scraped on the
-//                  Hobby plan ($16/mo · 3k credits) — a weekly refresh of a
-//                  dozen aggregator pages is well under $1/mo.
-//   - SerpAPI    — $50/mo for 5k searches; only if you want raw Google SERP.
-//   - Bespoke    — drop any async function returning RawCompetition[] into
-//                  fetchExternalSources() and it merges automatically.
+// Both passes call Lovable AI (Gemini) with structured JSON output to produce a
+// fresh, deduplicated list of real, currently-open competitions. Results are
+// UPSERTed into public.competitions (matched on external_id). A small curated
+// seed list is always merged in so the page is never empty if the model fails.
 //
-// To edit the curated list, change CURATED below and redeploy.
+// Triggered by:
+//   • pg_cron every 6h (server-side, no auth required — verify_jwt off).
+//   • Client invocation when the user opens the Competitions / Student
+//     Competitions page (visible "scanning…" indicator).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "google/gemini-2.5-flash";
 
 type RawCompetition = {
   external_id: string;
   title: string;
   organiser: string;
-  field: string;            // Architecture | Interiors | Product | Type | Material | ...
-  location: string;         // Free text: "UAE", "Global", "Campus", etc.
-  deadline?: string;        // ISO YYYY-MM-DD
-  deadline_label?: string;  // Pretty form ("Oct 12")
+  field: string;
+  location: string;
+  deadline?: string;
+  deadline_label?: string;
   prize?: string;
-  prize_kind?: string;      // Cash | Publication | Exhibition | Mentorship | Build
-  eligibility?: string;     // "all" | "students" | "pros"
-  audience?: string;        // "all" | "students"
+  prize_kind?: string;
+  eligibility?: string;
+  audience?: string;
   source_url?: string;
-  source?: string;          // free-text origin id
+  source?: string;
   is_official?: boolean;
 };
 
-// ---------- Curated seed list (edit me) -----------------------------------
+// ---------- Curated seed list (always merged) -----------------------------
 const CURATED: RawCompetition[] = [
-  {
-    external_id: "tashkeel-desert-pavilion-2026",
-    title: "Desert Pavilion 2026",
-    organiser: "Tashkeel",
-    field: "Architecture",
-    location: "UAE",
-    deadline: "2026-08-30",
-    deadline_label: "Aug 30",
-    prize: "120,000 AED",
-    prize_kind: "Cash",
-    eligibility: "all",
-    audience: "all",
-    source_url: "https://tashkeel.org",
-    source: "curated",
-  },
-  {
-    external_id: "architizer-soft-brutalism-open",
-    title: "Soft Brutalism Open",
-    organiser: "A+ Awards",
-    field: "Interiors",
-    location: "Global",
-    deadline: "2026-09-15",
-    deadline_label: "Sep 15",
-    prize: "Publication + €5,000",
-    prize_kind: "Publication",
-    eligibility: "all",
-    audience: "all",
-    source_url: "https://architizer.com",
-    source: "curated",
-  },
   {
     external_id: "riba-adaptive-reuse-prize",
     title: "Adaptive Reuse Prize",
@@ -86,76 +54,155 @@ const CURATED: RawCompetition[] = [
     source_url: "https://riba.org",
     source: "curated",
   },
-  // ---- Student-only calls (shown on StudentCompetitions) ----
   {
-    external_id: "campus-pavilion-brief-2026",
-    title: "Campus Pavilion Brief",
-    organiser: "Inter-school · 5 campuses",
+    external_id: "architizer-a-plus-awards",
+    title: "A+ Awards",
+    organiser: "Architizer",
     field: "Architecture",
-    location: "Campus",
-    deadline: "2026-10-12",
-    deadline_label: "Oct 12",
-    prize: "Build + exhibition",
-    prize_kind: "Build",
-    eligibility: "students",
-    audience: "students",
-    source: "curated",
-  },
-  {
-    external_id: "student-guild-type-for-a-cause",
-    title: "Type for a Cause",
-    organiser: "Student Guild · open call",
-    field: "Type",
     location: "Global",
-    deadline: "2026-11-03",
-    deadline_label: "Nov 03",
-    prize: "Featured + mentorship",
-    prize_kind: "Mentorship",
-    eligibility: "students",
-    audience: "students",
-    source: "curated",
-  },
-  {
-    external_id: "material-futures-2026",
-    title: "Material Futures",
-    organiser: "Faculty showcase",
-    field: "Product",
-    location: "Campus",
-    deadline: "2026-11-20",
-    deadline_label: "Nov 20",
-    prize: "Exhibition slot",
-    prize_kind: "Exhibition",
-    eligibility: "students",
-    audience: "students",
+    deadline: "2026-12-15",
+    deadline_label: "Dec 15",
+    prize: "Publication + cash",
+    prize_kind: "Publication",
+    eligibility: "all",
+    audience: "all",
+    source_url: "https://architizer.com/awards",
     source: "curated",
   },
 ];
 
-// ---------- External source plugins (off by default) ----------------------
-async function fetchExternalSources(): Promise<RawCompetition[]> {
-  const results: RawCompetition[] = [];
-  // const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
-  // if (fcKey) results.push(...(await fetchFromFirecrawl(fcKey)));
-  return results;
+// ---------- AI live-scan ---------------------------------------------------
+async function aiScan(audience: "all" | "students"): Promise<RawCompetition[]> {
+  const key = Deno.env.get("LOVABLE_API_KEY");
+  if (!key) {
+    console.warn("[refresh-competitions] LOVABLE_API_KEY missing — skipping AI scan");
+    return [];
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const studentClause =
+    audience === "students"
+      ? "Only include competitions open to DESIGN STUDENTS (university, college, or recent graduates). Skip professional-only calls."
+      : "Include open calls for designers (any level). Skip student-only calls.";
+
+  const systemPrompt = `You are a research agent for a design competition platform. Today is ${today}. Return ONLY real, currently-open design competitions worldwide whose deadline is after today. Cover architecture, interior, product/industrial, graphic, type, material, fashion, UX, and other design disciplines. Geographic spread: include competitions from multiple continents. ${studentClause} Never invent organisers — only competitions you are confident exist. Output valid JSON.`;
+
+  const userPrompt = `List 20 real ${audience === "students" ? "student" : "open"} design competitions worldwide that are currently accepting entries. For each, return:
+- title: official name
+- organiser: hosting organisation
+- field: ONE of Architecture, Interiors, Product, Graphic, Type, Material, Fashion, UX, Other
+- location: country or "Global"
+- deadline: YYYY-MM-DD (after ${today})
+- deadline_label: short like "Oct 12"
+- prize: short text (e.g. "$10,000", "Publication + €5,000", "Exhibition")
+- prize_kind: ONE of Cash, Publication, Exhibition, Mentorship, Build, Other
+- source_url: official URL`;
+
+  const schema = {
+    type: "object",
+    properties: {
+      competitions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            organiser: { type: "string" },
+            field: { type: "string" },
+            location: { type: "string" },
+            deadline: { type: "string" },
+            deadline_label: { type: "string" },
+            prize: { type: "string" },
+            prize_kind: { type: "string" },
+            source_url: { type: "string" },
+          },
+          required: ["title", "organiser", "field", "location", "deadline"],
+        },
+      },
+    },
+    required: ["competitions"],
+  };
+
+  try {
+    const res = await fetch(LOVABLE_AI_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "return_competitions",
+              description: "Return the list of competitions",
+              parameters: schema,
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "return_competitions" } },
+      }),
+    });
+    if (!res.ok) {
+      console.error("[refresh-competitions] AI gateway error", res.status, await res.text());
+      return [];
+    }
+    const data = await res.json();
+    const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!args) return [];
+    const parsed = JSON.parse(args);
+    const list: any[] = parsed?.competitions ?? [];
+    const today2 = new Date().toISOString().slice(0, 10);
+    return list
+      .filter((c) => c?.title && c?.organiser && c?.deadline && c.deadline >= today2)
+      .map((c) => ({
+        external_id: `ai:${audience}:${slug(c.title)}:${slug(c.organiser)}`,
+        title: String(c.title).slice(0, 200),
+        organiser: String(c.organiser).slice(0, 160),
+        field: normaliseField(c.field),
+        location: String(c.location ?? "Global").slice(0, 80),
+        deadline: c.deadline,
+        deadline_label: c.deadline_label ?? prettyDate(c.deadline),
+        prize: c.prize ?? null,
+        prize_kind: normalisePrizeKind(c.prize_kind),
+        eligibility: audience === "students" ? "students" : "all",
+        audience,
+        source_url: c.source_url ?? null,
+        source: "ai-scan",
+        is_official: false,
+      }));
+  } catch (e) {
+    console.error("[refresh-competitions] AI scan failed", e);
+    return [];
+  }
 }
 
-// Reference impl (kept commented to avoid running without a key).
-// async function fetchFromFirecrawl(apiKey: string): Promise<RawCompetition[]> {
-//   const targets = ["https://www.architizer.com/competitions/", "https://www.bustler.net/competitions"];
-//   const out: RawCompetition[] = [];
-//   for (const url of targets) {
-//     const r = await fetch("https://api.firecrawl.dev/v2/scrape", {
-//       method: "POST",
-//       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-//       body: JSON.stringify({ url, formats: [{ type: "json", prompt: "Extract live design competitions as { title, organiser, field, location, deadline (YYYY-MM-DD), prize, eligibility, source_url }." }] }),
-//     });
-//     const data = await r.json();
-//     for (const c of data?.json?.competitions ?? []) {
-//       out.push({ external_id: `firecrawl:${c.source_url ?? c.title}`, source: "firecrawl", audience: "all", eligibility: c.eligibility ?? "all", ...c });
-//     }
-//   }
-//   return out;
-// }
+function slug(s: string): string {
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+}
+function prettyDate(d: string): string {
+  try {
+    const dt = new Date(d);
+    return dt.toLocaleString("en-GB", { month: "short", day: "2-digit" });
+  } catch {
+    return d;
+  }
+}
+const FIELDS = ["Architecture", "Interiors", "Product", "Graphic", "Type", "Material", "Fashion", "UX", "Other"];
+function normaliseField(f?: string): string {
+  if (!f) return "Other";
+  const hit = FIELDS.find((x) => x.toLowerCase() === f.toLowerCase());
+  return hit ?? "Other";
+}
+const PRIZE_KINDS = ["Cash", "Publication", "Exhibition", "Mentorship", "Build", "Other"];
+function normalisePrizeKind(p?: string): string {
+  if (!p) return "Other";
+  const hit = PRIZE_KINDS.find((x) => x.toLowerCase() === p.toLowerCase());
+  return hit ?? "Other";
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -165,8 +212,19 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const external = await fetchExternalSources();
-    const merged: RawCompetition[] = [...CURATED, ...external];
+    // Optional body lets the caller request a single audience only; default = both.
+    let audiences: ("all" | "students")[] = ["all", "students"];
+    try {
+      const body = await req.json().catch(() => ({}));
+      if (body?.audience === "all" || body?.audience === "students") audiences = [body.audience];
+    } catch { /* no body */ }
+
+    const [allRows, studentRows] = await Promise.all(
+      audiences.map((a) => aiScan(a)),
+    );
+    const aiRows = [...(allRows ?? []), ...(studentRows ?? [])];
+
+    const merged = [...CURATED.filter((c) => audiences.includes(c.audience as any)), ...aiRows];
 
     const rows = merged.map((c) => ({
       external_id: c.external_id,
@@ -186,13 +244,15 @@ Deno.serve(async (req) => {
       last_seen_at: new Date().toISOString(),
     }));
 
-    const { error } = await admin
-      .from("competitions")
-      .upsert(rows, { onConflict: "external_id" });
-    if (error) throw error;
+    if (rows.length) {
+      const { error } = await admin
+        .from("competitions")
+        .upsert(rows, { onConflict: "external_id" });
+      if (error) throw error;
+    }
 
     return new Response(
-      JSON.stringify({ ok: true, upserted: rows.length, at: new Date().toISOString() }),
+      JSON.stringify({ ok: true, upserted: rows.length, audiences, at: new Date().toISOString() }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
