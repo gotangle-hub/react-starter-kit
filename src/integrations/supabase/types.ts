@@ -981,6 +981,35 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_email_patterns: {
+        Row: {
+          faculty_email_regex: string | null
+          institution_id: string
+          student_email_regex: string | null
+          updated_at: string
+        }
+        Insert: {
+          faculty_email_regex?: string | null
+          institution_id: string
+          student_email_regex?: string | null
+          updated_at?: string
+        }
+        Update: {
+          faculty_email_regex?: string | null
+          institution_id?: string
+          student_email_regex?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_email_patterns_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_registration_requests: {
         Row: {
           approx_students: number | null
@@ -1030,13 +1059,11 @@ export type Database = {
           country: string | null
           created_at: string
           domain: string
-          faculty_email_regex: string | null
           id: string
           initials: string | null
           name: string
           slug: string
           sso_provider: string
-          student_email_regex: string | null
           tint: string | null
           updated_at: string
         }
@@ -1046,13 +1073,11 @@ export type Database = {
           country?: string | null
           created_at?: string
           domain: string
-          faculty_email_regex?: string | null
           id?: string
           initials?: string | null
           name: string
           slug: string
           sso_provider?: string
-          student_email_regex?: string | null
           tint?: string | null
           updated_at?: string
         }
@@ -1062,13 +1087,11 @@ export type Database = {
           country?: string | null
           created_at?: string
           domain?: string
-          faculty_email_regex?: string | null
           id?: string
           initials?: string | null
           name?: string
           slug?: string
           sso_provider?: string
-          student_email_regex?: string | null
           tint?: string | null
           updated_at?: string
         }
@@ -1905,8 +1928,6 @@ export type Database = {
       }
       send_practice_nudges: { Args: never; Returns: number }
       set_institution_role: { Args: { _role: string }; Returns: undefined }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       submit_identity_verification: {
         Args: { _id_doc_path: string; _selfie_path: string }
         Returns: Json

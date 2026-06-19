@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // Pull signals in parallel.
     const candidateIds = body.candidates.map((c) => c.id);
-    const [interestsRes, followsRes, interactionsRes, metricsRes, boostsRes, creatorBoostsRes] = await Promise.all([
+    const [interestsRes, followsRes, interactionsRes, metricsRes, boostsRes, creatorBoostsRes, postsRes] = await Promise.all([
       supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
       supabase.from("follows").select("followee_id").eq("follower_id", userId),
       supabase
@@ -84,10 +84,19 @@ Deno.serve(async (req) => {
       // G6 · active boosts — mark candidates promoted + record impressions.
       supabase.rpc("list_active_boosted_post_ids"),
       supabase.rpc("list_active_boosted_creator_ids"),
+      // Server-side author lookup so client-supplied author_id can't be spoofed
+      // to inflate boost impressions for unrelated creators.
+      supabase.from("posts").select("id, author_id").in("id", candidateIds),
     ]);
     const reachByPost = new Map<string, { tier: number; score: number }>();
     for (const m of metricsRes.data ?? []) {
       reachByPost.set(m.post_id, { tier: Number(m.reach_tier) || 0, score: Number(m.score) || 0 });
+    }
+    // Trusted author map (server-derived). Anything not in this map is treated
+    // as having no author for boost / impression purposes.
+    const serverAuthorByPost = new Map<string, string>();
+    for (const p of (postsRes.data ?? []) as Array<{ id: string; author_id: string | null }>) {
+      if (p.author_id) serverAuthorByPost.set(p.id, p.author_id);
     }
     const boostedPosts = new Map<string, string>(); // post_id → boost_id
     for (const b of (boostsRes.data ?? []) as Array<{ post_id: string; boost_id: string; owner_id: string }>) {
@@ -125,8 +134,10 @@ Deno.serve(async (req) => {
       if (c.author_id && follows.has(c.author_id)) s += 2.0;
       s += 0.4 * recency(c.created_at);
       if (typeof c.base_score === "number") s += 0.05 * c.base_score;
-      // G6 · paid boost lifts the candidate above organic.
-      const boosted = boostedPosts.has(c.id) || (c.author_id ? boostedCreators.has(c.author_id) : false);
+      // G6 · paid boost lifts the candidate above organic. Use server-derived
+      // author_id only — client-supplied author_id is NOT trusted here.
+      const trustedAuthor = serverAuthorByPost.get(c.id) ?? null;
+      const boosted = boostedPosts.has(c.id) || (trustedAuthor ? boostedCreators.has(trustedAuthor) : false);
       if (c.promoted || boosted) s += 2.4;
       const reach = reachByPost.get(c.id);
       if (reach) s += 0.9 * reach.tier;
@@ -141,7 +152,8 @@ Deno.serve(async (req) => {
     // Interleave so boosted items are spaced ~1-in-5 instead of all stacked at top.
     const boostedIds = new Set<string>();
     for (const c of body.candidates) {
-      if (boostedPosts.has(c.id) || (c.author_id && boostedCreators.has(c.author_id))) boostedIds.add(c.id);
+      const trustedAuthor = serverAuthorByPost.get(c.id) ?? null;
+      if (boostedPosts.has(c.id) || (trustedAuthor && boostedCreators.has(trustedAuthor))) boostedIds.add(c.id);
     }
     const boostedQ = ranked.filter((id) => boostedIds.has(id));
     const organicQ = ranked.filter((id) => !boostedIds.has(id));
@@ -151,10 +163,13 @@ Deno.serve(async (req) => {
       if (boostedQ.length) woven.push(boostedQ.shift()!);
     }
 
-    // Record impressions for boosted items that appeared in the candidate set.
+    // Record impressions only for candidates that resolved to real posts on the
+    // server. This prevents fake author_id payloads from inflating boost stats.
     const impressionBoostIds: string[] = [];
     for (const c of body.candidates) {
-      const bid = boostedPosts.get(c.id) ?? (c.author_id ? boostedCreators.get(c.author_id) : undefined);
+      if (!serverAuthorByPost.has(c.id)) continue; // unknown / fake post id
+      const trustedAuthor = serverAuthorByPost.get(c.id)!;
+      const bid = boostedPosts.get(c.id) ?? boostedCreators.get(trustedAuthor);
       if (bid) impressionBoostIds.push(bid);
     }
     if (impressionBoostIds.length) {
