@@ -10,6 +10,7 @@ import {
   LogOut,
   Megaphone,
   Shield,
+  ShieldCheck,
   Trash2,
   Users,
   Zap,
@@ -34,6 +35,7 @@ export default function SettingsStudio() {
         title="Account"
         rows={[
           { icon: AtSign, label: "Username & email", to: routes.accountEmail },
+          { icon: ShieldCheck, label: "Get verified", to: routes.verification },
           { icon: Lock, label: "Password & security", to: routes.passwordSecurity },
           { icon: Bell, label: "Notifications", to: routes.notificationSettings },
         ]}

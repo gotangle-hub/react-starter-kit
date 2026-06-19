@@ -7,6 +7,7 @@ import {
   LifeBuoy,
   Lock,
   LogOut,
+  ShieldCheck,
   Trash2,
   User,
   UserPlus,
@@ -32,6 +33,7 @@ export default function SettingsFaculty() {
         title="Account"
         rows={[
           { icon: User, label: "Edit profile", to: routes.editProfile },
+          { icon: ShieldCheck, label: "Get verified", to: routes.verification },
           { icon: AtSign, label: "Username & email", to: routes.accountEmail },
           { icon: Lock, label: "Password & security", to: routes.passwordSecurity },
           { icon: Bell, label: "Notifications", to: routes.notificationSettings },

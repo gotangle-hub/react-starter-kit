@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   LifeBuoy,
   LogOut,
+  ShieldCheck,
   Ticket,
   Trash2,
   Users,
@@ -20,6 +21,7 @@ export default function SettingsInstitution() {
         title="Institution"
         rows={[
           { icon: Building2, label: "Institution profile", to: routes.editProfile },
+          { icon: ShieldCheck, label: "Get verified", to: routes.verification },
           { icon: LayoutGrid, label: "Manage classes", value: "12", to: routes.classList },
           { icon: Ticket, label: "Licenses & seats", value: "480", to: routes.plansCombined },
         ]}
