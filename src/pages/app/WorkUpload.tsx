@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { feedAsset as feed } from "@/lib/feed-asset";
 import { routes } from "@/lib/routes";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
+import { recordPracticeEvent } from "@/services/practice";
 import { LoadingRing } from "@/components/brand/loading-ring";
 
 /**
