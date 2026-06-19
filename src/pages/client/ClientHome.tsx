@@ -11,6 +11,7 @@ import { listProfiles, makerFromProfile, getMyProfile, type ProfileRow } from "@
 import { rankItems } from "@/services/feed";
 import { routes } from "@/lib/routes";
 import type { Maker } from "@/lib/profile-shape";
+import { PracticeCard } from "@/components/app/practice-card";
 
 /** 11 · Client home (G2, G6, G7). Post-a-brief CTA, pipeline, matched talent. */
 
@@ -55,6 +56,7 @@ export default function ClientHome() {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[22px] pb-4">
         <RefreshHint />
+        <PracticeCard />
         {/* Post a brief CTA */}
         <div className="relative overflow-hidden rounded-lg bg-tg-emph p-[18px] text-white">
           <div className="font-serif text-[20px] font-medium leading-tight tracking-[-0.01em]">
