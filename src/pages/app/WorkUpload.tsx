@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { feedAsset as feed } from "@/lib/feed-asset";
 import { routes } from "@/lib/routes";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 /**
  * 48 · Add to your work (G9). Upload photos/video with size limits and automatic
