@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SlidersHorizontal, X, Heart, Handshake, BadgeCheck, MapPin, Loader2 } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
