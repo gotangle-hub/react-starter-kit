@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsernameAvailable } from "@/services/usernames";
+import { validateReferralCode } from "@/lib/referral";
 
 const TAGS = ["Architecture", "Interiors", "Product", "Type & lettering", "Ceramics", "Textiles", "Photography", "Furniture", "Graphic", "Illustration", "Landscape", "Jewellery"];
 
