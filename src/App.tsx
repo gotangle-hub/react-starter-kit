@@ -194,6 +194,8 @@ import EmptyNotifications from "@/pages/app/EmptyNotifications";
 import EmptyCollaborations from "@/pages/app/EmptyCollaborations";
 import EmptySearch from "@/pages/app/EmptySearch";
 import EmptyWork from "@/pages/app/EmptyWork";
+import Practice from "@/pages/app/Practice";
+import PracticeReward from "@/pages/app/PracticeReward";
 import Unsubscribe from "@/pages/Unsubscribe";
 
 /**
