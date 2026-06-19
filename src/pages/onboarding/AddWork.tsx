@@ -7,6 +7,7 @@ import { MobileShell } from "@/components/app/mobile-shell";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 /**
  * 08 · Add your work (G9). The new designer adds their first work — photos/video
