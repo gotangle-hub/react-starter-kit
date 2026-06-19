@@ -62,7 +62,7 @@ function DesignerView({
 }) {
   const streak = Math.min(s.streak, 10);
   const todayIdx = s.today_done ? streak - 1 : streak; // 0-based index of "today" cell
-  const doneSet = new Set<string>(s.recent_days ?? []);
+  
   const headline = headlineForStreak(streak);
 
   return (
