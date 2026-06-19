@@ -70,7 +70,7 @@ export default function StudioProjectUpload() {
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
           <Button full size="lg" onClick={publish} disabled={busy || !file}>
-            {busy ? (progress?.phase === "compressing" ? "Compressing…" : progress?.phase === "extracting" ? "Reading PDF…" : "Uploading…") : "Publish to studio page"}
+            {busy ? (<><LoadingRing size={15} className="mr-2" />{progress?.phase === "compressing" ? "Compressing…" : progress?.phase === "extracting" ? "Reading PDF…" : "Uploading…"}</>) : "Publish to studio page"}
           </Button>
         </div>
       }
