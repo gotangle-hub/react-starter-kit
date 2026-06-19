@@ -7,10 +7,12 @@ import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { readFileAsDataUrl } from "@/services/search";
+import { compressOnly } from "@/services/uploads";
 
 /**
  * 29 · Search by image (G4). Entry screen for visual search — upload or take a
  * photo to search by meaning instead of words. Never names the technology.
+ * Oversized images are auto-compressed locally before being read (G9).
  */
 export default function SearchVisual() {
   const navigate = useNavigate();
@@ -24,8 +26,11 @@ export default function SearchVisual() {
     if (!file) return;
     setBusy(true);
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const compact = await compressOnly(file);
+      const dataUrl = await readFileAsDataUrl(compact);
       navigate(routes.visualSearch, { state: { imageDataUrl: dataUrl } });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Couldn't read that image.");
     } finally {
       setBusy(false);
     }

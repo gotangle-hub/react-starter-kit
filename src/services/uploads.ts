@@ -193,6 +193,31 @@ async function currentUserId(): Promise<string> {
   return data.user.id;
 }
 
+/**
+ * Compress a file to within the stored-size cap WITHOUT uploading. Used by
+ * surfaces that need a smaller local copy (e.g. search-by-image) so the
+ * oversized original never leaves the device.
+ */
+export async function compressOnly(
+  file: File,
+  onProgress?: (p: UploadProgress) => void,
+): Promise<File> {
+  const kind = kindOf(file);
+  if (file.size > MAX_INPUT_BYTES[kind]) {
+    throw new Error(
+      `File too large. ${kind === "video" ? "Trim it or export at a lower resolution first." : "Try a smaller copy."}`,
+    );
+  }
+  if (kind === "pdf") return file;
+  onProgress?.({ phase: "compressing", ratio: 0 });
+  const out =
+    kind === "image"
+      ? await compressImage(file, MAX_BYTES.image)
+      : await compressVideo(file, MAX_BYTES.video, onProgress);
+  onProgress?.({ phase: "done", ratio: 1, finalBytes: out.size });
+  return out;
+}
+
 export const uploadService = {
   /**
    * Compress (if needed) then upload to the given bucket under the caller's

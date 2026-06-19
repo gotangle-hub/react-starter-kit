@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Compass, FileUp, ImagePlus, X } from "lucide-react";
 import { MobileShell } from "@/components/app/mobile-shell";
@@ -10,12 +10,22 @@ import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/profile";
 import type { Maker } from "@/lib/profile-shape";
+import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
+import type { UploadProgress } from "@/services/uploads";
 
 /** 14 · Add a studio project (G9). Upload + auto-compression, credit the team. */
 export default function StudioProjectUpload() {
   const navigate = useNavigate();
   const [me, setMe] = useState<ProfileRow | null>(null);
   const [credited, setCredited] = useState<Set<string>>(new Set());
+  const [title, setTitle] = useState("");
+  const [onExplore, setOnExplore] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const mediaInput = useRef<HTMLInputElement>(null);
+  const pdfInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -36,12 +46,30 @@ export default function StudioProjectUpload() {
 
   const team: Maker[] = me ? [makerFromProfile(me) as Maker] : [];
 
+  const publish = async () => {
+    if (!file) { setErr("Add a photo, video or PDF first."); return; }
+    setBusy(true); setErr(null);
+    try {
+      await uploadAndCreatePost(
+        file,
+        { title: title.trim() || deriveTitleFromFile(file), onExplore },
+        (p) => setProgress(p),
+      );
+      navigate(routes.workPublished);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Couldn't publish that.");
+    } finally {
+      setBusy(false);
+      setProgress(null);
+    }
+  };
+
   return (
     <MobileShell
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
-          <Button full size="lg" onClick={() => navigate(routes.workPublished)}>
-            Publish to studio page
+          <Button full size="lg" onClick={publish} disabled={busy || !file}>
+            {busy ? (progress?.phase === "compressing" ? "Compressing…" : progress?.phase === "extracting" ? "Reading PDF…" : "Uploading…") : "Publish to studio page"}
           </Button>
         </div>
       }
@@ -56,26 +84,36 @@ export default function StudioProjectUpload() {
           Publish a project to the studio page.
         </h1>
         <p className="my-2.5 font-body text-[13px] leading-relaxed text-tg-brown">
-          Photos up to 30 MB, video up to 200 MB. Anything larger is compressed automatically to fit.
+          Photos up to 30 MB, video up to 200 MB. Anything larger is compressed automatically — your original never leaves your device.
         </p>
 
-        {/* Media drop targets — empty until the user adds work */}
+        <input ref={mediaInput} type="file" accept="image/*,video/*" hidden onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input ref={pdfInput} type="file" accept="application/pdf" hidden onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+
         <div className="grid grid-cols-2 gap-2.5">
-          <button type="button" className="flex h-[120px] flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed border-tg-line bg-tg-card">
+          <button type="button" onClick={() => mediaInput.current?.click()} disabled={busy}
+            className="flex h-[120px] flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed border-tg-line bg-tg-card">
             <ImagePlus size={22} className="text-tg-blue-accent" />
-            <Meta>Photo or video</Meta>
+            <Meta>{file && !file.type.includes("pdf") ? file.name : "Photo or video"}</Meta>
           </button>
-          <button type="button" className="flex h-[120px] flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed border-tg-line bg-tg-card px-2.5 text-center">
+          <button type="button" onClick={() => pdfInput.current?.click()} disabled={busy}
+            className="flex h-[120px] flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed border-tg-line bg-tg-card px-2.5 text-center">
             <FileUp size={20} className="text-tg-brown-soft" />
-            <Meta>Link a PDF — pulls out each project</Meta>
+            <Meta>{file && file.type.includes("pdf") ? file.name : "Link a PDF — pulls out each project"}</Meta>
           </button>
         </div>
+
+        {progress && (
+          <div className="mt-3 rounded-DEFAULT bg-tg-stone2 p-3">
+            <Meta>{progress.phase} · {Math.round(progress.ratio * 100)}%{progress.finalBytes ? ` · ${(progress.finalBytes / 1_000_000).toFixed(1)} MB` : ""}</Meta>
+          </div>
+        )}
+        {err && <div className="mt-3 rounded-DEFAULT border border-tg-line bg-tg-card p-3 font-body text-[12.5px] text-tg-ink">{err}</div>}
 
         <div className="mt-4">
-          <TextField label="Project title" placeholder="A title for this project" />
+          <TextField label="Project title" placeholder="A title for this project" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
-        {/* Credit the team */}
         <div className="mb-2.5 mt-5 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-tg-brown">
           Credit the team
         </div>
@@ -102,16 +140,15 @@ export default function StudioProjectUpload() {
           </div>
         )}
 
-        {/* Visibility */}
-        <div className="mt-4 flex items-center gap-3 rounded-DEFAULT bg-tg-stone2 p-3.5">
+        <button type="button" onClick={() => setOnExplore((v) => !v)} className="mt-4 flex w-full items-center gap-3 rounded-DEFAULT bg-tg-stone2 p-3.5 text-left">
           <Compass size={17} className="text-tg-blue-accent" />
           <span className="flex-1 font-body text-[12.5px] leading-snug text-tg-brown">
             Also publish to Explore so anyone can discover it.
           </span>
-          <span className="relative h-6 w-10 flex-none rounded-pill bg-tg-blue">
-            <span className="absolute right-1 top-1 h-4 w-4 rounded-pill bg-white" />
+          <span className={cn("relative h-6 w-10 flex-none rounded-pill", onExplore ? "bg-tg-blue" : "bg-tg-brown-soft/40")}>
+            <span className={cn("absolute top-1 h-4 w-4 rounded-pill bg-white transition-all", onExplore ? "right-1" : "left-1")} />
           </span>
-        </div>
+        </button>
       </div>
     </MobileShell>
   );
