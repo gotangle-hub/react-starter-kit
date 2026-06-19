@@ -30,6 +30,14 @@ export default function WorkUpload() {
         title: deriveTitleFromFile(file),
         onExplore: true,
       });
+      // Daily Practice: stamp tz on first action, evaluate streak. Trigger may
+      // also fire on insert; this call ensures the device tz is stored.
+      const r = await recordPracticeEvent();
+      if (r.granted_now || (r.status && "granted_at" in r.status && r.status.granted_at && !sessionStorage.getItem("practice-reward-shown"))) {
+        sessionStorage.setItem("practice-reward-shown", "1");
+        navigate(routes.practiceReward);
+        return;
+      }
       navigate(`${routes.addToExplore}?postId=${post.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Upload failed";
