@@ -11,6 +11,7 @@ import { routes } from "@/lib/routes";
 import { useAccountType } from "@/hooks/use-account-type";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsernameAvailable } from "@/services/usernames";
+import { validateReferralCode } from "@/lib/referral";
 
 /** 07 · Create your designer profile. All design fields + Other (free text). */
 export default function Signup() {
