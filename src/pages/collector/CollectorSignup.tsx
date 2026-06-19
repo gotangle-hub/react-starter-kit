@@ -161,6 +161,20 @@ export default function CollectorSignup() {
               ))}
             </div>
           </div>
+          <div>
+            <TextField
+              label="Referral code (optional)"
+              placeholder="Have one? Enter it"
+              value={referral}
+              onChange={(e) => { setReferral(e.target.value); setReferralMsg(null); setReferralValidCode(null); }}
+              onBlur={checkReferral}
+            />
+            {referralMsg && (
+              <p className={`mt-1.5 text-[12px] ${referralMsg.ok ? "text-tg-blue-accent" : "text-tg-terra"}`}>
+                {referralMsg.text}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="mt-[18px] flex items-center gap-3 rounded-DEFAULT bg-tg-stone2 p-3.5">
