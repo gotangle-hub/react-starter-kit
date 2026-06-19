@@ -170,6 +170,21 @@ export default function ClientSignup() {
           </div>
 
           <LocationField label="Location" defaultValue="Dubai, UAE" />
+
+          <div>
+            <TextField
+              label="Referral code (optional)"
+              placeholder="Have one? Enter it"
+              value={referral}
+              onChange={(e) => { setReferral(e.target.value); setReferralMsg(null); setReferralValidCode(null); }}
+              onBlur={checkReferral}
+            />
+            {referralMsg && (
+              <p className={`mt-1.5 text-[12px] ${referralMsg.ok ? "text-tg-blue-accent" : "text-tg-terra"}`}>
+                {referralMsg.text}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </MobileShell>
