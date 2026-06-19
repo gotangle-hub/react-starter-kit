@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { uploadService, type UploadProgress, type UploadResult } from "@/services/uploads";
 import { workPublicUrl } from "@/services/profile";
+import { filterOutBlocked } from "@/services/blocks";
 import type { Database } from "@/integrations/supabase/types";
 
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
@@ -84,7 +85,7 @@ export async function listExploreWork(limit = 30): Promise<PostRow[]> {
     .eq("on_explore", true)
     .order("created_at", { ascending: false })
     .limit(limit);
-  return data ?? [];
+  return filterOutBlocked(data ?? [], (p) => p.author_id);
 }
 
 export async function listWorkByUser(userId: string): Promise<PostRow[]> {
@@ -94,7 +95,7 @@ export async function listWorkByUser(userId: string): Promise<PostRow[]> {
     .select("*")
     .eq("author_id", userId)
     .order("created_at", { ascending: false });
-  return data ?? [];
+  return filterOutBlocked(data ?? [], (p) => p.author_id);
 }
 
 /** Resolve the cover image URL for a post (first media item). */
