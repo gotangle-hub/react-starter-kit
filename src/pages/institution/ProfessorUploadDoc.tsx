@@ -157,8 +157,8 @@ export default function ProfessorUploadDoc() {
           </button>
 
           {progress && (
-            <div className="mt-1 flex items-start gap-2.5 rounded-DEFAULT bg-tg-stone2 p-3">
-              <Loader size={15} className="mt-0.5 flex-none animate-spin text-tg-blue-accent" />
+            <div className="mt-1 flex items-center gap-2.5 rounded-DEFAULT bg-tg-stone2 p-3">
+              <LoadingRing size={15} />
               <Meta>{progress.phase} · {Math.round(progress.ratio * 100)}%</Meta>
             </div>
           )}
