@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
+import { filterOutBlocked } from "@/services/blocks";
 import type { Database } from "@/integrations/supabase/types";
 
 export type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
@@ -60,7 +61,8 @@ export function useNotifications() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
-    setItems(data ?? []);
+    const safe = await filterOutBlocked((data ?? []) as NotificationRow[], (n) => n.actor_id);
+    setItems(safe);
     setLoading(false);
   }, [userId]);
 

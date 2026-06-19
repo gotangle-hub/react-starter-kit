@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getProfilesByIds, type ProfileRow } from "@/services/profile";
+import { isBlockedEitherWay } from "@/services/blocks";
 
 export interface ConversationSummary {
   conversationId: string;
@@ -22,6 +23,7 @@ export interface DmMessage {
 
 /** Find or create the 1:1 DM conversation between me and the given user. */
 export async function ensureDmConversation(otherUserId: string): Promise<string> {
+  if (await isBlockedEitherWay(otherUserId)) throw new Error("blocked");
   const { data, error } = await supabase.rpc("ensure_dm_conversation", { _other: otherUserId });
   if (error) throw error;
   return data as string;

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getProfilesByIds, type ProfileRow } from "@/services/profile";
+import { filterOutBlocked } from "@/services/blocks";
 
 export interface CommentRow {
   id: string;
@@ -21,7 +22,7 @@ export async function listComments(postId: string): Promise<CommentWithAuthor[]>
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
   if (error || !data) return [];
-  const rows = data as CommentRow[];
+  const rows = await filterOutBlocked(data as CommentRow[], (r) => r.author_id);
   const profiles = await getProfilesByIds(rows.map((r) => r.author_id));
   return rows.map((r) => ({ ...r, author: profiles.get(r.author_id) ?? null }));
 }

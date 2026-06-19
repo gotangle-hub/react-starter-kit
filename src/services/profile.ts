@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { filterOutBlocked, isBlockedEitherWay } from "@/services/blocks";
 import type { Database } from "@/integrations/supabase/types";
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
@@ -28,6 +29,7 @@ export async function getMyProfile(): Promise<ProfileRow | null> {
 
 export async function getProfileById(id: string): Promise<ProfileRow | null> {
   if (!id) return null;
+  if (await isBlockedEitherWay(id)) return null;
   const { data } = await supabase
     .from("profiles")
     .select(PUBLIC_PROFILE_COLUMNS)
@@ -44,7 +46,8 @@ export async function getProfilesByIds(ids: string[]): Promise<Map<string, Profi
     .from("profiles")
     .select(PUBLIC_PROFILE_COLUMNS)
     .in("id", unique);
-  for (const row of (data ?? []) as ProfileRow[]) map.set(row.id, row);
+  const filtered = await filterOutBlocked((data ?? []) as ProfileRow[], (p) => p.id);
+  for (const row of filtered) map.set(row.id, row);
   return map;
 }
 
@@ -64,7 +67,7 @@ export async function listProfiles(opts: { limit?: number; excludeSelf?: boolean
     .limit(limit);
   if (me) q = q.neq("id", me);
   const { data } = await q;
-  return (data ?? []) as ProfileRow[];
+  return filterOutBlocked((data ?? []) as ProfileRow[], (p) => p.id);
 }
 
 export async function updateMyProfile(patch: ProfileUpdate): Promise<ProfileRow | null> {
