@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   LifeBuoy,
   LogOut,
+  ShieldCheck,
   Ticket,
   Trash2,
   Users,
