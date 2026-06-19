@@ -12,11 +12,56 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ---- Require an authenticated user. ----
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const userId = userData.user.id;
+
+    // Accept ?id=… (GET) or { id } (POST).
+    let intentId: string | null = null;
     const url = new URL(req.url);
-    const intentId = url.searchParams.get('id');
+    intentId = url.searchParams.get('id');
+    if (!intentId && req.method !== 'GET') {
+      try {
+        const body = await req.json();
+        if (typeof body?.id === 'string') intentId = body.id;
+      } catch { /* no body */ }
+    }
     if (!intentId) {
       return new Response(JSON.stringify({ error: 'Missing id' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ---- Scope to the caller's own order. ----
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    const { data: order, error: orderErr } = await admin
+      .from('orders')
+      .select('id, user_id, status')
+      .eq('ziina_intent_id', intentId)
+      .maybeSingle();
+    if (orderErr) throw orderErr;
+    if (!order || order.user_id !== userId) {
+      return new Response(JSON.stringify({ error: 'Not found' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -30,29 +75,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Map Ziina status → order status. Ziina uses statuses like
-    // requires_payment_instrument / pending / completed / failed / canceled.
     const status = intent.status === 'completed' ? 'paid'
       : intent.status === 'failed' ? 'failed'
       : intent.status === 'canceled' ? 'canceled'
       : 'pending';
 
-    const admin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
     await admin.from('orders')
       .update({ status, updated_at: new Date().toISOString() })
-      .eq('ziina_intent_id', intentId);
+      .eq('ziina_intent_id', intentId)
+      .eq('user_id', userId);
 
-    // Activate or fail the linked boost (no-op if none).
     if (status === 'paid') {
       await admin.rpc('activate_boost_by_intent', { _intent_id: intentId });
     } else if (status === 'failed' || status === 'canceled') {
       await admin.rpc('fail_boost_by_intent', { _intent_id: intentId, _status: status });
     }
 
-    return new Response(JSON.stringify({ status, intent }), {
+    return new Response(JSON.stringify({ status }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
