@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsernameAvailable } from "@/services/usernames";
+import { validateReferralCode } from "@/lib/referral";
 
 const TAGS = ["Architecture", "Interiors", "Product", "Type & lettering", "Ceramics", "Textiles", "Photography", "Furniture", "Graphic", "Illustration", "Landscape", "Jewellery"];
 
@@ -25,6 +26,22 @@ export default function CollectorSignup() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [referral, setReferral] = useState("");
+  const [referralMsg, setReferralMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [referralValidCode, setReferralValidCode] = useState<string | null>(null);
+
+  const checkReferral = async () => {
+    setReferralMsg(null);
+    setReferralValidCode(null);
+    const r = await validateReferralCode(referral, "collector");
+    if (!r) return;
+    if (r.ok) {
+      setReferralValidCode(r.code);
+      setReferralMsg({ ok: true, text: `${r.code} applied — ${r.months} months Pro free.` });
+    } else {
+      setReferralMsg({ ok: false, text: r.message });
+    }
+  };
 
   const toggle = (t: string) =>
     setTags((prev) => {
@@ -63,6 +80,7 @@ export default function CollectorSignup() {
           display_name: name || undefined,
           username,
           disciplines: Array.from(tags),
+          ...(referralValidCode ? { referral_code: referralValidCode } : {}),
         },
       },
     });
@@ -142,6 +160,20 @@ export default function CollectorSignup() {
                 <Pill key={t} small on={tags.has(t)} onClick={() => toggle(t)}>{t}</Pill>
               ))}
             </div>
+          </div>
+          <div>
+            <TextField
+              label="Referral code (optional)"
+              placeholder="Have one? Enter it"
+              value={referral}
+              onChange={(e) => { setReferral(e.target.value); setReferralMsg(null); setReferralValidCode(null); }}
+              onBlur={checkReferral}
+            />
+            {referralMsg && (
+              <p className={`mt-1.5 text-[12px] ${referralMsg.ok ? "text-tg-blue-accent" : "text-tg-terra"}`}>
+                {referralMsg.text}
+              </p>
+            )}
           </div>
         </div>
 

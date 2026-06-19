@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsernameAvailable } from "@/services/usernames";
+import { validateReferralCode } from "@/lib/referral";
 
 const CLIENT_TYPES = ["Developer", "Private client", "Brand / company", "Event", "Agency", "Other"];
 const HIRING_FOR = ["One off project", "Ongoing work", "A competition", "Event coverage", "Full time role", "Just looking"];
@@ -26,6 +27,22 @@ export default function ClientSignup() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [referral, setReferral] = useState("");
+  const [referralMsg, setReferralMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [referralValidCode, setReferralValidCode] = useState<string | null>(null);
+
+  const checkReferral = async () => {
+    setReferralMsg(null);
+    setReferralValidCode(null);
+    const r = await validateReferralCode(referral, "client");
+    if (!r) return;
+    if (r.ok) {
+      setReferralValidCode(r.code);
+      setReferralMsg({ ok: true, text: `${r.code} applied — ${r.months} months Pro free.` });
+    } else {
+      setReferralMsg({ ok: false, text: r.message });
+    }
+  };
 
   const handleContinue = async () => {
     setError(null);
@@ -58,6 +75,7 @@ export default function ClientSignup() {
           username,
           client_type: type,
           hiring_for: hiring,
+          ...(referralValidCode ? { referral_code: referralValidCode } : {}),
         },
       },
     });
@@ -152,6 +170,21 @@ export default function ClientSignup() {
           </div>
 
           <LocationField label="Location" defaultValue="Dubai, UAE" />
+
+          <div>
+            <TextField
+              label="Referral code (optional)"
+              placeholder="Have one? Enter it"
+              value={referral}
+              onChange={(e) => { setReferral(e.target.value); setReferralMsg(null); setReferralValidCode(null); }}
+              onBlur={checkReferral}
+            />
+            {referralMsg && (
+              <p className={`mt-1.5 text-[12px] ${referralMsg.ok ? "text-tg-blue-accent" : "text-tg-terra"}`}>
+                {referralMsg.text}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </MobileShell>

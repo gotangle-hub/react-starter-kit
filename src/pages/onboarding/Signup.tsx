@@ -11,6 +11,7 @@ import { routes } from "@/lib/routes";
 import { useAccountType } from "@/hooks/use-account-type";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsernameAvailable } from "@/services/usernames";
+import { validateReferralCode } from "@/lib/referral";
 
 /** 07 · Create your designer profile. All design fields + Other (free text). */
 export default function Signup() {
@@ -29,6 +30,22 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [referral, setReferral] = useState("");
+  const [referralMsg, setReferralMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [referralValidCode, setReferralValidCode] = useState<string | null>(null);
+
+  const checkReferral = async () => {
+    setReferralMsg(null);
+    setReferralValidCode(null);
+    const r = await validateReferralCode(referral, isStudio ? "studio" : (accountType || "designer"));
+    if (!r) return;
+    if (r.ok) {
+      setReferralValidCode(r.code);
+      setReferralMsg({ ok: true, text: `${r.code} applied — ${r.months} months Pro free.` });
+    } else {
+      setReferralMsg({ ok: false, text: r.message });
+    }
+  };
 
   const toggle = (d: string) =>
     setSelected((prev) => {
@@ -69,6 +86,7 @@ export default function Signup() {
           display_name: name || undefined,
           username,
           disciplines: Array.from(selected),
+          ...(referralValidCode ? { referral_code: referralValidCode } : {}),
         },
       },
     });
@@ -168,6 +186,21 @@ export default function Signup() {
           </div>
 
           <LocationField label="Location" defaultValue="Dubai, UAE" />
+
+          <div>
+            <TextField
+              label="Referral code (optional)"
+              placeholder="Have one? Enter it"
+              value={referral}
+              onChange={(e) => { setReferral(e.target.value); setReferralMsg(null); setReferralValidCode(null); }}
+              onBlur={checkReferral}
+            />
+            {referralMsg && (
+              <p className={`mt-1.5 text-[12px] ${referralMsg.ok ? "text-tg-blue-accent" : "text-tg-terra"}`}>
+                {referralMsg.text}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </MobileShell>
