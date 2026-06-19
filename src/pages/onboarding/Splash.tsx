@@ -15,15 +15,18 @@ import { routes } from "@/lib/routes";
 export default function Splash() {
   const navigate = useNavigate();
   const { isAuthenticated } = useSession();
-  const { seen } = useOnboarding();
+  const { seen, loaded } = useOnboarding();
 
   useEffect(() => {
+    // Wait for the server-side onboarding flag before routing, so a returning
+    // user on a fresh device/install never flashes the welcome+tour.
+    if (!loaded) return;
     const t = setTimeout(() => {
       if (isAuthenticated && seen) navigate(routes.home, { replace: true });
       else navigate(routes.welcome1, { replace: true });
     }, 1600);
     return () => clearTimeout(t);
-  }, [isAuthenticated, seen, navigate]);
+  }, [isAuthenticated, seen, loaded, navigate]);
 
   return (
     <MobileShell>

@@ -1274,6 +1274,7 @@ export type Database = {
           links: Json
           location: string | null
           marketing_opt_in: boolean
+          onboarding_seen_at: string | null
           open_to_collaborate: boolean
           plan: string
           plan_expires_at: string | null
@@ -1301,6 +1302,7 @@ export type Database = {
           links?: Json
           location?: string | null
           marketing_opt_in?: boolean
+          onboarding_seen_at?: string | null
           open_to_collaborate?: boolean
           plan?: string
           plan_expires_at?: string | null
@@ -1328,6 +1330,7 @@ export type Database = {
           links?: Json
           location?: string | null
           marketing_opt_in?: boolean
+          onboarding_seen_at?: string | null
           open_to_collaborate?: boolean
           plan?: string
           plan_expires_at?: string | null

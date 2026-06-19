@@ -1,47 +1,79 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * G12 — the welcome dialog and coachmark tour show EXACTLY ONCE, right after
- * sign-up. We persist a per-user "onboarding seen" flag the moment they finish
- * or skip, and never show either again. (Local for now; moves to the user's
- * profile row in Supabase once the backend is wired.)
+ * G12 — the welcome dialog and coachmark tour show EXACTLY ONCE per ACCOUNT,
+ * forever. Source of truth is `profiles.onboarding_seen_at` on the server;
+ * localStorage is only a fast cache so the first paint doesn't flash welcome
+ * for a returning user. The server value always wins on resolve.
  */
 const KEY = "tangle.onboardingSeen";
 
-function read(): boolean {
+function readCache(): boolean {
   try {
     return localStorage.getItem(KEY) === "true";
   } catch {
     return false;
   }
 }
-
-const listeners = new Set<() => void>();
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
+function writeCache(v: boolean) {
+  try {
+    if (v) localStorage.setItem(KEY, "true");
+    else localStorage.removeItem(KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function useOnboarding() {
-  const seen = useSyncExternalStore(subscribe, read, () => false);
+  const [seen, setSeen] = useState<boolean>(readCache);
+  const [loaded, setLoaded] = useState<boolean>(false);
 
-  const markSeen = useCallback(() => {
-    try {
-      localStorage.setItem(KEY, "true");
-    } catch {
-      /* ignore */
-    }
-    listeners.forEach((l) => l());
+  // Fetch server truth and defer to it.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) {
+        if (!cancelled) setLoaded(true);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("onboarding_seen_at")
+        .eq("id", uid)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!error) {
+        const serverSeen = !!data?.onboarding_seen_at;
+        setSeen(serverSeen);
+        writeCache(serverSeen);
+      }
+      setLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const markSeen = useCallback(async () => {
+    setSeen(true);
+    writeCache(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) return;
+    await supabase
+      .from("profiles")
+      .update({ onboarding_seen_at: new Date().toISOString() })
+      .eq("id", uid)
+      .is("onboarding_seen_at", null); // idempotent: first stamp wins
   }, []);
 
   const reset = useCallback(() => {
-    try {
-      localStorage.removeItem(KEY);
-    } catch {
-      /* ignore */
-    }
-    listeners.forEach((l) => l());
+    setSeen(false);
+    writeCache(false);
   }, []);
 
-  return { seen, markSeen, reset };
+  return { seen, loaded, markSeen, reset };
 }
