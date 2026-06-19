@@ -10,16 +10,17 @@ export interface Institution {
   domain: string;
   alt_domains: string[];
   sso_provider: "google" | "microsoft" | "email";
-  faculty_email_regex: string | null;
-  student_email_regex: string | null;
   tint: string | null;
   initials: string | null;
 }
 
+const PUBLIC_COLS =
+  "id, slug, name, city, country, domain, alt_domains, sso_provider, tint, initials";
+
 const SELECTED_KEY = "tangle.selectedInstitution";
 
 export async function searchInstitutions(q: string, limit = 8): Promise<Institution[]> {
-  let req = supabase.from("institutions").select("*").order("name").limit(limit);
+  let req = supabase.from("institutions").select(PUBLIC_COLS).order("name").limit(limit);
   if (q.trim()) {
     const term = `%${q.trim()}%`;
     req = req.or(`name.ilike.${term},city.ilike.${term},domain.ilike.${term}`);
@@ -45,19 +46,20 @@ export function recallInstitution(): Institution | null {
   }
 }
 
-/** Returns "faculty" | "student" based on the institution's regex hints. */
-export function detectRole(email: string, inst: Institution | null): "faculty" | "student" {
-  if (!email || !inst) return "student";
+/** Returns "faculty" | "student" via a secure server RPC; the institution's
+ *  regex patterns never leave the database. Falls back to a simple heuristic. */
+export async function detectRole(email: string, inst: Institution | null): Promise<"faculty" | "student"> {
+  if (!email) return "student";
+  if (inst) {
+    try {
+      const { data, error } = await (supabase as any).rpc("detect_institution_role", {
+        _institution_id: inst.id,
+        _email: email,
+      });
+      if (!error && (data === "faculty" || data === "student")) return data;
+    } catch { /* fall through */ }
+  }
   const local = email.split("@")[0]?.toLowerCase() ?? "";
-  const compile = (re: string | null) => {
-    if (!re) return null;
-    try { return new RegExp(re, "i"); } catch { return null; }
-  };
-  const fac = compile(inst.faculty_email_regex);
-  const stu = compile(inst.student_email_regex);
-  if (fac && fac.test(local)) return "faculty";
-  if (stu && stu.test(local)) return "student";
-  // Default heuristic: 6+ digits in local part = student id; else faculty.
   return /\d{6,}/.test(local) ? "student" : "faculty";
 }
 

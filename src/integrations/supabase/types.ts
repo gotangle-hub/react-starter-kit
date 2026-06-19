@@ -1655,6 +1655,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      detect_institution_role: {
+        Args: { _email: string; _institution_id: string }
+        Returns: string
+      }
       effective_plan: {
         Args: { _expires: string; _plan: string }
         Returns: string
