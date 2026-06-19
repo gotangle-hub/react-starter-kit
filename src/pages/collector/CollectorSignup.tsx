@@ -80,6 +80,7 @@ export default function CollectorSignup() {
           display_name: name || undefined,
           username,
           disciplines: Array.from(tags),
+          ...(referralValidCode ? { referral_code: referralValidCode } : {}),
         },
       },
     });
