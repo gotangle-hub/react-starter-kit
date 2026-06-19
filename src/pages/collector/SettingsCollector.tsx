@@ -1,4 +1,4 @@
-import { AtSign, Ban, Bell, Globe, Heart, LifeBuoy, Lock, LogOut, Trash2, User } from "lucide-react";
+import { AtSign, Ban, Bell, Globe, Heart, LifeBuoy, Lock, LogOut, ShieldCheck, Trash2, User } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
 import { routes } from "@/lib/routes";
 
