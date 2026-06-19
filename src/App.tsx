@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { SessionProvider } from "@/hooks/use-session";
 import { AccountTypeProvider } from "@/hooks/use-account-type";
@@ -209,6 +210,7 @@ export default function App() {
       <SessionProvider>
         <AccountTypeProvider>
         <BrowserRouter>
+          <Toaster position="top-center" richColors />
           <Routes>
             <Route path={routes.foundation} element={<Foundation />} />
 
