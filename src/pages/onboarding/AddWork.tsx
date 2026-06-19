@@ -78,7 +78,7 @@ export default function AddWork() {
           className="mt-5 flex w-full flex-col items-center gap-3 rounded-lg border-[1.5px] border-dashed border-tg-line bg-tg-card px-6 py-10 text-center transition-colors hover:border-tg-blue-accent"
         >
           <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-tg-stone2">
-            <ImagePlus size={24} className="text-tg-blue-accent" />
+            {busy ? <LoadingRing size={26} /> : <ImagePlus size={24} className="text-tg-blue-accent" />}
           </span>
           <span className="font-display text-[15px] font-semibold text-tg-ink">
             {busy ? "Uploading…" : "Upload photos or video"}
