@@ -86,6 +86,7 @@ export default function Signup() {
           display_name: name || undefined,
           username,
           disciplines: Array.from(selected),
+          ...(referralValidCode ? { referral_code: referralValidCode } : {}),
         },
       },
     });
