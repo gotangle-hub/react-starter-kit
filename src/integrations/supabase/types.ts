@@ -1276,6 +1276,7 @@ export type Database = {
           marketing_opt_in: boolean
           open_to_collaborate: boolean
           plan: string
+          plan_expires_at: string | null
           practice_reward_granted_at: string | null
           practice_tz: string | null
           updated_at: string
@@ -1302,6 +1303,7 @@ export type Database = {
           marketing_opt_in?: boolean
           open_to_collaborate?: boolean
           plan?: string
+          plan_expires_at?: string | null
           practice_reward_granted_at?: string | null
           practice_tz?: string | null
           updated_at?: string
@@ -1328,6 +1330,7 @@ export type Database = {
           marketing_opt_in?: boolean
           open_to_collaborate?: boolean
           plan?: string
+          plan_expires_at?: string | null
           practice_reward_granted_at?: string | null
           practice_tz?: string | null
           updated_at?: string
@@ -1578,12 +1581,17 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      effective_plan: {
+        Args: { _expires: string; _plan: string }
+        Returns: string
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
       ensure_dm_conversation: { Args: { _other: string }; Returns: string }
       expire_finished_boosts: { Args: never; Returns: undefined }
+      expire_lapsed_plans: { Args: never; Returns: number }
       fail_boost_by_intent: {
         Args: {
           _intent_id: string
