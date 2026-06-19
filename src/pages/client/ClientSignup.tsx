@@ -75,6 +75,7 @@ export default function ClientSignup() {
           username,
           client_type: type,
           hiring_for: hiring,
+          ...(referralValidCode ? { referral_code: referralValidCode } : {}),
         },
       },
     });
