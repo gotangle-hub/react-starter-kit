@@ -11,6 +11,7 @@ import { routes } from "@/lib/routes";
 import { getMyProfile, updateMyProfile, workPublicUrl } from "@/services/profile";
 import { uploadService } from "@/services/uploads";
 import { checkUsernameAvailable, normalizeUsername } from "@/services/usernames";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 export default function EditProfileSettings() {
   const navigate = useNavigate();
