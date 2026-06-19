@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsernameAvailable } from "@/services/usernames";
+import { validateReferralCode } from "@/lib/referral";
 
 const CLIENT_TYPES = ["Developer", "Private client", "Brand / company", "Event", "Agency", "Other"];
 const HIRING_FOR = ["One off project", "Ongoing work", "A competition", "Event coverage", "Full time role", "Just looking"];
