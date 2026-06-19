@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { feedAsset as feed } from "@/lib/feed-asset";
 import { routes } from "@/lib/routes";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 /**
  * 48 · Add to your work (G9). Upload photos/video with size limits and automatic
@@ -45,7 +46,7 @@ export default function WorkUpload() {
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] py-3 pb-6">
           <Button variant="primary" full size="lg" disabled={busy} onClick={() => mediaInput.current?.click()}>
-            {busy ? "Uploading…" : "Add to your work"}
+            {busy ? (<><LoadingRing size={15} className="mr-2" />Uploading…</>) : "Add to your work"}
           </Button>
         </div>
       }

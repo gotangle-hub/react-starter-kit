@@ -12,6 +12,7 @@ import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/prof
 import type { Maker } from "@/lib/profile-shape";
 import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
 import type { UploadProgress } from "@/services/uploads";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 /** 14 · Add a studio project (G9). Upload + auto-compression, credit the team. */
 export default function StudioProjectUpload() {
@@ -69,7 +70,7 @@ export default function StudioProjectUpload() {
       footer={
         <div className="flex-none border-t border-tg-line px-[22px] pb-7 pt-3">
           <Button full size="lg" onClick={publish} disabled={busy || !file}>
-            {busy ? (progress?.phase === "compressing" ? "Compressing…" : progress?.phase === "extracting" ? "Reading PDF…" : "Uploading…") : "Publish to studio page"}
+            {busy ? (<><LoadingRing size={15} className="mr-2" />{progress?.phase === "compressing" ? "Compressing…" : progress?.phase === "extracting" ? "Reading PDF…" : "Uploading…"}</>) : "Publish to studio page"}
           </Button>
         </div>
       }
@@ -104,7 +105,8 @@ export default function StudioProjectUpload() {
         </div>
 
         {progress && (
-          <div className="mt-3 rounded-DEFAULT bg-tg-stone2 p-3">
+          <div className="mt-3 flex items-center gap-2.5 rounded-DEFAULT bg-tg-stone2 p-3">
+            <LoadingRing size={16} />
             <Meta>{progress.phase} · {Math.round(progress.ratio * 100)}%{progress.finalBytes ? ` · ${(progress.finalBytes / 1_000_000).toFixed(1)} MB` : ""}</Meta>
           </div>
         )}

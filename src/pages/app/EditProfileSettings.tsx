@@ -11,6 +11,7 @@ import { routes } from "@/lib/routes";
 import { getMyProfile, updateMyProfile, workPublicUrl } from "@/services/profile";
 import { uploadService } from "@/services/uploads";
 import { checkUsernameAvailable, normalizeUsername } from "@/services/usernames";
+import { LoadingRing } from "@/components/brand/loading-ring";
 
 export default function EditProfileSettings() {
   const navigate = useNavigate();
@@ -126,23 +127,30 @@ export default function EditProfileSettings() {
             <button
               type="button"
               onClick={() => bannerInput.current?.click()}
-              className="flex h-28 w-full items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-tg-line bg-tg-stone2 text-tg-brown"
+              disabled={busy}
+              className="relative flex h-28 w-full items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-tg-line bg-tg-stone2 text-tg-brown"
               style={
                 bannerUrl
                   ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
                   : undefined
               }
             >
-              {!bannerUrl && (
+              {!bannerUrl && !busy && (
                 <>
                   <ImagePlus size={18} />
                   <span className="font-display text-[13px] font-medium">Upload banner</span>
                 </>
               )}
+              {busy && (
+                <span className="absolute inset-0 flex items-center justify-center bg-tg-card/55">
+                  <LoadingRing size={22} />
+                </span>
+              )}
             </button>
             <button
               type="button"
               onClick={() => avatarInput.current?.click()}
+              disabled={busy}
               className="absolute -bottom-5 left-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-pill border border-dashed border-tg-line bg-tg-card text-tg-brown shadow-card"
               style={
                 avatarUrl
@@ -150,7 +158,7 @@ export default function EditProfileSettings() {
                   : undefined
               }
             >
-              {!avatarUrl && <UserCircle2 size={22} />}
+              {busy ? <LoadingRing size={20} /> : (!avatarUrl && <UserCircle2 size={22} />)}
             </button>
             <input
               ref={bannerInput}
@@ -212,7 +220,7 @@ export default function EditProfileSettings() {
         <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@handle" />
 
         <Button full size="lg" variant="primary" className="mt-2" onClick={save} disabled={busy || loading}>
-          {busy ? "Saving…" : "Save changes"}
+          {busy ? (<><LoadingRing size={15} className="mr-2" />Saving…</>) : "Save changes"}
         </Button>
       </div>
     </SettingsScaffold>
