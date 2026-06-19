@@ -7,6 +7,7 @@ import {
   LifeBuoy,
   Lock,
   LogOut,
+  ShieldCheck,
   Trash2,
   User,
   UserPlus,
