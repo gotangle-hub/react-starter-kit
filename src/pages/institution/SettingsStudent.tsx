@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Lock,
   LogOut,
+  ShieldCheck,
   Sparkles,
   Trash2,
   User,
