@@ -276,6 +276,51 @@ export type Database = {
           },
         ]
       }
+      client_briefs: {
+        Row: {
+          brief_type: string | null
+          budget_text: string | null
+          client_id: string
+          created_at: string
+          description: string | null
+          disciplines: string[]
+          id: string
+          scope: string | null
+          status: string
+          timeline: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brief_type?: string | null
+          budget_text?: string | null
+          client_id: string
+          created_at?: string
+          description?: string | null
+          disciplines?: string[]
+          id?: string
+          scope?: string | null
+          status?: string
+          timeline?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brief_type?: string | null
+          budget_text?: string | null
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          disciplines?: string[]
+          id?: string
+          scope?: string | null
+          status?: string
+          timeline?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collaboration_members: {
         Row: {
           collab_id: string
@@ -1156,6 +1201,24 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_nudges: {
+        Row: {
+          local_date: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          local_date: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          local_date?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
@@ -1177,6 +1240,8 @@ export type Database = {
           marketing_opt_in: boolean
           open_to_collaborate: boolean
           plan: string
+          practice_reward_granted_at: string | null
+          practice_tz: string | null
           updated_at: string
           username: string
           verified_at: string | null
@@ -1201,6 +1266,8 @@ export type Database = {
           marketing_opt_in?: boolean
           open_to_collaborate?: boolean
           plan?: string
+          practice_reward_granted_at?: string | null
+          practice_tz?: string | null
           updated_at?: string
           username: string
           verified_at?: string | null
@@ -1225,6 +1292,8 @@ export type Database = {
           marketing_opt_in?: boolean
           open_to_collaborate?: boolean
           plan?: string
+          practice_reward_granted_at?: string | null
+          practice_tz?: string | null
           updated_at?: string
           username?: string
           verified_at?: string | null
@@ -1391,6 +1460,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _practice_eval_and_grant: { Args: { _uid: string }; Returns: undefined }
       accept_class_invite: { Args: { _token: string }; Returns: string }
       activate_boost_by_intent: {
         Args: { _intent_id: string }
@@ -1505,6 +1575,7 @@ export type Database = {
         }
       }
       get_my_marketing_opt_in: { Args: never; Returns: boolean }
+      get_practice_status: { Args: never; Returns: Json }
       get_swipe_state: { Args: never; Returns: Json }
       has_role: {
         Args: {
@@ -1649,6 +1720,7 @@ export type Database = {
         Args: { _boost_ids: string[] }
         Returns: undefined
       }
+      record_practice_event: { Args: { _tz?: string }; Returns: Json }
       refresh_post_metrics: { Args: never; Returns: undefined }
       register_swipe: {
         Args: { _intent: string; _post_id?: string; _target_user_id: string }
@@ -1658,6 +1730,7 @@ export type Database = {
         Args: { _accept: boolean; _collab: string }
         Returns: undefined
       }
+      send_practice_nudges: { Args: never; Returns: number }
       set_institution_role: { Args: { _role: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
