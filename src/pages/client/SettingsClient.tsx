@@ -27,6 +27,7 @@ export default function SettingsClient() {
           { icon: User, label: "Edit profile", sub: "Name, logo, about", to: routes.editProfile },
           { icon: Briefcase, label: "Company details", sub: "Type, sector, website", to: routes.editProfile },
           { icon: AtSign, label: "Username & email", to: routes.accountEmail },
+          { icon: ShieldCheck, label: "Get verified", to: routes.verification },
           { icon: Lock, label: "Password & security", to: routes.passwordSecurity },
           { icon: Bell, label: "Notifications", to: routes.notificationSettings },
         ]}
