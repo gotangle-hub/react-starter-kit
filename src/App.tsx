@@ -399,6 +399,8 @@ export default function App() {
             <Route path={routes.emptyCollaborations} element={<ProtectedRoute><EmptyCollaborations /></ProtectedRoute>} />
             <Route path={routes.emptySearch} element={<ProtectedRoute><EmptySearch /></ProtectedRoute>} />
             <Route path={routes.emptyWork} element={<ProtectedRoute><EmptyWork /></ProtectedRoute>} />
+            <Route path={routes.practice} element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+            <Route path={routes.practiceReward} element={<ProtectedRoute><PracticeReward /></ProtectedRoute>} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
           </Routes>
         </BrowserRouter>
