@@ -14,6 +14,7 @@ import { rankItems } from "@/services/feed";
 import { getMyProfile, listProfiles, makerFromProfile, type ProfileRow } from "@/services/profile";
 import { routes } from "@/lib/routes";
 import type { Maker } from "@/lib/profile-shape";
+import { PracticeCard } from "@/components/app/practice-card";
 
 const SEGMENTS = ["Dashboard", "Match", "Projects", "Community"];
 
