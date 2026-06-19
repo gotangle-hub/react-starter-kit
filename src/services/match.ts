@@ -92,19 +92,20 @@ export async function fetchDeck(prefs: MatchPreferences, limit = 40): Promise<De
   const { data, error } = await supabase.rpc("get_match_deck", {
     _intent: prefs.intent,
     _disciplines: prefs.disciplines,
-    _location: prefs.location,
-    _availability: prefs.availability,
-    _experience: prefs.experience_level,
+    _location: prefs.location ?? undefined,
+    _availability: prefs.availability ?? undefined,
+    _experience: prefs.experience_level ?? undefined,
     _account_types: prefs.account_types,
-    _recency_days: prefs.recency_days,
+    _recency_days: prefs.recency_days ?? undefined,
     _limit: limit,
   });
   if (error) {
     console.error("[match] fetchDeck failed", error);
     return [];
   }
-  return (data ?? []) as DeckCard[];
+  return (data ?? []) as unknown as DeckCard[];
 }
+
 
 export async function getSwipeState(): Promise<SwipeState> {
   const { data, error } = await supabase.rpc("get_swipe_state");
