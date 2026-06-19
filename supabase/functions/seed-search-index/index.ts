@@ -6,6 +6,7 @@
 // index vectors are comparable.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { isServiceRole } from "../_shared/service-role.ts";
 
 const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
 const EMBED_MODEL = "google/gemini-embedding-2";
