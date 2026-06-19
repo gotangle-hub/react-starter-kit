@@ -132,7 +132,7 @@ export async function registerSwipe(
   const { data, error } = await supabase.rpc("register_swipe", {
     _target_user_id: targetUserId,
     _intent: intent,
-    _post_id: postId ?? null,
+    _post_id: postId ?? undefined,
   });
   if (error) {
     console.error("[match] registerSwipe failed", error);
