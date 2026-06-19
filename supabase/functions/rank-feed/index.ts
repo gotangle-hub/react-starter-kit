@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // Pull signals in parallel.
     const candidateIds = body.candidates.map((c) => c.id);
-    const [interestsRes, followsRes, interactionsRes, metricsRes, boostsRes, creatorBoostsRes] = await Promise.all([
+    const [interestsRes, followsRes, interactionsRes, metricsRes, boostsRes, creatorBoostsRes, postsRes] = await Promise.all([
       supabase.from("user_interests").select("tag, weight").eq("user_id", userId),
       supabase.from("follows").select("followee_id").eq("follower_id", userId),
       supabase
@@ -84,10 +84,19 @@ Deno.serve(async (req) => {
       // G6 · active boosts — mark candidates promoted + record impressions.
       supabase.rpc("list_active_boosted_post_ids"),
       supabase.rpc("list_active_boosted_creator_ids"),
+      // Server-side author lookup so client-supplied author_id can't be spoofed
+      // to inflate boost impressions for unrelated creators.
+      supabase.from("posts").select("id, author_id").in("id", candidateIds),
     ]);
     const reachByPost = new Map<string, { tier: number; score: number }>();
     for (const m of metricsRes.data ?? []) {
       reachByPost.set(m.post_id, { tier: Number(m.reach_tier) || 0, score: Number(m.score) || 0 });
+    }
+    // Trusted author map (server-derived). Anything not in this map is treated
+    // as having no author for boost / impression purposes.
+    const serverAuthorByPost = new Map<string, string>();
+    for (const p of (postsRes.data ?? []) as Array<{ id: string; author_id: string | null }>) {
+      if (p.author_id) serverAuthorByPost.set(p.id, p.author_id);
     }
     const boostedPosts = new Map<string, string>(); // post_id → boost_id
     for (const b of (boostsRes.data ?? []) as Array<{ post_id: string; boost_id: string; owner_id: string }>) {
