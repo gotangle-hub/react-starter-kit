@@ -191,6 +191,10 @@ export const routes = {
   // Sheets / menus
   postMenu: "/post-menu",
   userMenu: "/user-menu",
+
+  // Daily Practice (habit reward)
+  practice: "/practice",
+  practiceReward: "/practice/reward",
 } as const;
 
 export type RouteKey = keyof typeof routes;
