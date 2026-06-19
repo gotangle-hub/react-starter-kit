@@ -76,15 +76,16 @@ export async function savePreferences(prefs: MatchPreferences): Promise<void> {
       user_id: user.id,
       intent: prefs.intent,
       disciplines: prefs.disciplines,
-      location: prefs.location,
-      availability: prefs.availability,
-      experience_level: prefs.experience_level,
+      location: prefs.location ?? undefined,
+      availability: prefs.availability ?? undefined,
+      experience_level: prefs.experience_level ?? undefined,
       account_types: prefs.account_types,
-      recency_days: prefs.recency_days,
+      recency_days: prefs.recency_days ?? undefined,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
   );
+
 }
 
 export async function fetchDeck(prefs: MatchPreferences, limit = 40): Promise<DeckCard[]> {
