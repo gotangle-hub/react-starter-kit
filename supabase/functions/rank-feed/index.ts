@@ -134,8 +134,10 @@ Deno.serve(async (req) => {
       if (c.author_id && follows.has(c.author_id)) s += 2.0;
       s += 0.4 * recency(c.created_at);
       if (typeof c.base_score === "number") s += 0.05 * c.base_score;
-      // G6 · paid boost lifts the candidate above organic.
-      const boosted = boostedPosts.has(c.id) || (c.author_id ? boostedCreators.has(c.author_id) : false);
+      // G6 · paid boost lifts the candidate above organic. Use server-derived
+      // author_id only — client-supplied author_id is NOT trusted here.
+      const trustedAuthor = serverAuthorByPost.get(c.id) ?? null;
+      const boosted = boostedPosts.has(c.id) || (trustedAuthor ? boostedCreators.has(trustedAuthor) : false);
       if (c.promoted || boosted) s += 2.4;
       const reach = reachByPost.get(c.id);
       if (reach) s += 0.9 * reach.tier;
@@ -150,7 +152,8 @@ Deno.serve(async (req) => {
     // Interleave so boosted items are spaced ~1-in-5 instead of all stacked at top.
     const boostedIds = new Set<string>();
     for (const c of body.candidates) {
-      if (boostedPosts.has(c.id) || (c.author_id && boostedCreators.has(c.author_id))) boostedIds.add(c.id);
+      const trustedAuthor = serverAuthorByPost.get(c.id) ?? null;
+      if (boostedPosts.has(c.id) || (trustedAuthor && boostedCreators.has(trustedAuthor))) boostedIds.add(c.id);
     }
     const boostedQ = ranked.filter((id) => boostedIds.has(id));
     const organicQ = ranked.filter((id) => !boostedIds.has(id));
@@ -160,10 +163,13 @@ Deno.serve(async (req) => {
       if (boostedQ.length) woven.push(boostedQ.shift()!);
     }
 
-    // Record impressions for boosted items that appeared in the candidate set.
+    // Record impressions only for candidates that resolved to real posts on the
+    // server. This prevents fake author_id payloads from inflating boost stats.
     const impressionBoostIds: string[] = [];
     for (const c of body.candidates) {
-      const bid = boostedPosts.get(c.id) ?? (c.author_id ? boostedCreators.get(c.author_id) : undefined);
+      if (!serverAuthorByPost.has(c.id)) continue; // unknown / fake post id
+      const trustedAuthor = serverAuthorByPost.get(c.id)!;
+      const bid = boostedPosts.get(c.id) ?? boostedCreators.get(trustedAuthor);
       if (bid) impressionBoostIds.push(bid);
     }
     if (impressionBoostIds.length) {
