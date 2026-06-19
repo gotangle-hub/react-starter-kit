@@ -2,6 +2,7 @@
 // Returns ordered match objects. Never surfaces the powering technology to
 // the UI — only the matches.
 import { supabase } from "@/integrations/supabase/client";
+import { getBlockedIds } from "@/services/blocks";
 
 export type SearchMode = "text" | "people" | "image";
 export interface SearchMatch {

@@ -4,6 +4,7 @@
 // signed-in user. Falls back to the original order if the call fails or the
 // user is signed out, so the UI never breaks.
 import { supabase } from "@/integrations/supabase/client";
+import { filterOutBlocked } from "@/services/blocks";
 
 export interface Rankable {
   id: string;
@@ -19,18 +20,22 @@ export async function rankItems<T extends Rankable>(
   items: T[],
 ): Promise<T[]> {
   if (!items.length) return items;
+  // G15-blocks: drop anything authored by (or representing) a blocked user.
+  const safe = await filterOutBlocked(items, (it) =>
+    kind === "makers" ? it.id : it.author_id ?? null,
+  );
+  if (!safe.length) return safe;
   try {
     const { data, error } = await supabase.functions.invoke("rank-feed", {
-      body: { kind, candidates: items.map(stripForWire) },
+      body: { kind, candidates: safe.map(stripForWire) },
     });
-    if (error || !data?.ranked) return items;
-    const byId = new Map(items.map((it) => [it.id, it]));
+    if (error || !data?.ranked) return safe;
+    const byId = new Map(safe.map((it) => [it.id, it]));
     const ordered = (data.ranked as string[]).map((id) => byId.get(id)).filter(Boolean) as T[];
-    // Append any candidates the ranker dropped (defensive).
-    for (const it of items) if (!data.ranked.includes(it.id)) ordered.push(it);
+    for (const it of safe) if (!data.ranked.includes(it.id)) ordered.push(it);
     return ordered;
   } catch {
-    return items;
+    return safe;
   }
 }
 
