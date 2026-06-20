@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { getMyProfile, workPublicUrl, type ProfileRow } from "@/services/profile";
 import { listMyWork, postCoverUrl, type PostRow } from "@/services/work";
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { ProfileDesktop } from "@/components/web/pages/profile-desktop";
 
 /**
  * 47 · Your profile (G7). Banner + avatar (avatar overlaps but never drops below
@@ -19,6 +21,12 @@ import { listMyWork, postCoverUrl, type PostRow } from "@/services/work";
  * your work. No banner takes the page background for the current mode (G15).
  */
 export default function DesignerProfile() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <ProfileDesktop />;
+  return <DesignerProfileMobile />;
+}
+
+function DesignerProfileMobile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [works, setWorks] = useState<PostRow[]>([]);
