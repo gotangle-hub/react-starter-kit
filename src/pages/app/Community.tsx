@@ -7,6 +7,9 @@ import { NameRow, Meta } from "@/components/brand/atoms";
 import { getMyProfile, makerFromProfile, type ProfileRow } from "@/services/profile";
 import type { Maker } from "@/lib/profile-shape";
 
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { CommunityDesktop } from "@/components/web/pages/community-desktop";
+
 /**
  * 39 · Community (G2, G3, G7, G8). A thoughts feed for Designer + Institutional
  * accounts. The compose box keeps the keyboard open after posting (G8).
@@ -15,6 +18,12 @@ import type { Maker } from "@/lib/profile-shape";
  * empty state); when the table lands the list will populate from it.
  */
 export default function Community() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <CommunityDesktop />;
+  return <CommunityMobile />;
+}
+
+function CommunityMobile() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [me, setMe] = useState<Maker | null>(null);
   const [text, setText] = useState("");
