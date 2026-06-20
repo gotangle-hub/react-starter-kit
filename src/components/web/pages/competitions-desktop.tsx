@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Pin, Users } from "lucide-react";
-import { MobileShell } from "@/components/app/mobile-shell";
-import { BackHeader, RefreshHint } from "@/components/app/bits";
+
+import { WebPage } from "@/components/web/web-page";
 import { Pill, Meta } from "@/components/brand/atoms";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import {
   listCompetitions,
@@ -24,24 +23,12 @@ const FILTERS = {
   Eligibility: ["Any eligibility", "all", "students", "pros"],
 };
 
-import { useWebViewport } from "@/hooks/use-is-desktop";
-import { CompetitionsDesktop } from "@/components/web/pages/competitions-desktop";
-
 /**
- * 34 · Competitions — live world scan (G5, G7, G4).
- * Data is loaded from public.competitions and visibly re-scanned by invoking
- * the refresh-competitions edge function. Filters apply on the client. The
- * powering technology is never named (G4).
+ * Desktop Competitions (reference: `web.jsx` → `WebCompetitions`).
+ * Header with live-scan status, filter rail across the top, 3-up card grid.
  */
-export default function ProjectsAI() {
-  const viewport = useWebViewport();
-  if (viewport !== "mobile") return <CompetitionsDesktop />;
-  return <ProjectsAIMobile />;
-}
-
-function ProjectsAIMobile() {
+export function CompetitionsDesktop() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"world" | "tangle">("world");
   const [active, setActive] = useState<Record<string, string>>({
     Field: "Any field",
     Location: "Anywhere",
@@ -68,7 +55,6 @@ function ProjectsAIMobile() {
   }
 
   useEffect(() => {
-    // Trigger a backend refresh on mount, then load; also poll periodically.
     refreshCompetitions().finally(load);
     const t = setInterval(() => {
       refreshCompetitions().finally(load);
@@ -77,40 +63,39 @@ function ProjectsAIMobile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-filter when pills change.
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active.Field, active.Location, active.Deadline, active.Prize, active.Eligibility]);
 
   return (
-    <MobileShell header={<BackHeader title="Find competitions" />}>
-      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] pb-8">
-        <RefreshHint />
-
-        <div className="mt-1 flex gap-5 border-b border-tg-line">
-          <Tab label="Live scan" on={tab === "world"} onClick={() => setTab("world")} />
-          <Tab label="Tangle" on={tab === "tangle"} onClick={() => navigate(routes.tangleComps)} />
+    <WebPage maxWidth={1240}>
+      <header className="mb-5 flex items-end justify-between gap-6">
+        <div>
+          <h1 className="font-serif text-[34px] leading-none tracking-[-0.02em]">Competitions</h1>
+          <div className="mt-2.5 flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5">
+              {scanning && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tg-blue opacity-60" />
+              )}
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-tg-blue" />
+            </span>
+            <span className="font-display text-[13px] font-semibold text-tg-ink">
+              {scanning ? "Scanning the world for live calls…" : "Up to date"}
+            </span>
+            <Meta>· {items.length} open</Meta>
+          </div>
         </div>
+      </header>
 
-        <div className="mt-4 flex items-center gap-2.5">
-          <span className="relative flex h-2.5 w-2.5">
-            {scanning && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-tg-blue opacity-60" />
-            )}
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-pill bg-tg-blue" />
-          </span>
-          <span className="font-display text-[13px] font-semibold text-tg-ink">
-            {scanning ? "Scanning the world for live calls…" : "Up to date"}
-          </span>
-        </div>
-        <Meta className="mt-1 block">
-          {items.length} open competitions found · repopulating as results arrive
-        </Meta>
-
-        <div className="mt-4 flex flex-col gap-2.5">
-          {Object.entries(FILTERS).map(([group, opts]) => (
-            <div key={group} className="flex gap-2 overflow-x-auto pb-0.5">
+      {/* Filters */}
+      <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-tg-line bg-tg-bg p-3">
+        {Object.entries(FILTERS).map(([group, opts]) => (
+          <div key={group} className="flex items-center gap-2 overflow-x-auto">
+            <span className="w-[80px] flex-none font-mono text-[10.5px] uppercase tracking-[0.1em] text-tg-brown-soft">
+              {group}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
               {opts.map((o) => (
                 <Pill
                   key={o}
@@ -122,10 +107,17 @@ function ProjectsAIMobile() {
                 </Pill>
               ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
 
-        <div className="mt-5 flex flex-col gap-3">
+      {/* Grid */}
+      {items.length === 0 && !scanning ? (
+        <div className="rounded-2xl border border-dashed border-tg-line p-16 text-center">
+          <Meta>No live calls match those filters yet.</Meta>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 min-[1100px]:grid-cols-3">
           {items.map((k) => (
             <CompCard
               key={k.id}
@@ -139,29 +131,18 @@ function ProjectsAIMobile() {
                 setUserStateMap((s) => ({ ...s, [k.id]: { ...(s[k.id] ?? { pinned: false, interested: false }), interested: next } }));
                 await setUserState(k.id, { interested: next });
               }}
+              onCollab={() => {
+                const params = new URLSearchParams({
+                  comp: k.title,
+                  meta: `${k.organiser} · Closes ${k.deadline_label ?? k.deadline ?? ""}`,
+                });
+                navigate(`/partner?${params.toString()}`);
+              }}
             />
           ))}
-          {!items.length && !scanning && (
-            <Meta className="mt-6 block text-center">No live calls match those filters yet.</Meta>
-          )}
         </div>
-      </div>
-    </MobileShell>
-  );
-}
-
-function Tab({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "-mb-px border-b-2 pb-2.5 font-display text-[14px] font-semibold transition-colors",
-        on ? "border-tg-blue-accent text-tg-ink" : "border-transparent text-tg-brown",
       )}
-    >
-      {label}
-    </button>
+    </WebPage>
   );
 }
 
@@ -170,23 +151,25 @@ function CompCard({
   state,
   onPin,
   onInterested,
+  onCollab,
 }: {
   k: Competition;
   state: { pinned: boolean; interested: boolean };
   onPin: (next: boolean) => void;
   onInterested: (next: boolean) => void;
+  onCollab: () => void;
 }) {
   return (
-    <Card className="p-4">
+    <Card className="flex h-full flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-tg-brown">
+          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-tg-brown">
             {k.field} · {k.location}
           </span>
-          <h2 className="mt-1.5 font-display text-[16.5px] font-semibold leading-[1.2] text-tg-ink">
+          <h2 className="mt-2 font-serif text-[20px] leading-[1.2] tracking-[-0.01em] text-tg-ink">
             {k.title}
           </h2>
-          <Meta className="mt-1 block">
+          <Meta className="mt-1.5 block">
             {k.organiser}
             {k.source_url ? ` · ${k.source_url.replace(/^https?:\/\//, "")}` : ""}
           </Meta>
@@ -201,12 +184,12 @@ function CompCard({
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-y-2 border-y border-tg-line-soft py-3">
+      <div className="my-4 grid grid-cols-2 gap-y-2 border-y border-tg-line-soft py-3">
         <Field label="Closes" value={k.deadline_label ?? k.deadline ?? "—"} />
         <Field label="Prize" value={k.prize ?? "—"} />
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <span className="font-mono text-[11.5px] text-tg-brown">
           {k.interested_count} interested
         </span>
@@ -219,24 +202,18 @@ function CompCard({
         </button>
       </div>
 
-      <div className="mt-3.5 flex gap-2">
+      <div className="mt-auto flex gap-2 pt-4">
         <Button
           variant={state.interested ? "outline" : "primary"}
           size="sm"
           onClick={() => onInterested(!state.interested)}
+          className="flex-1"
         >
           {state.interested ? "Interested" : "I'm interested"}
         </Button>
-        <Button
-          variant="outlineAccent"
-          size="sm"
-          onClick={() => {
-            const params = new URLSearchParams({ comp: k.title, meta: `${k.organiser} · Closes ${k.deadline_label ?? k.deadline ?? ""}` });
-            window.location.assign(`/partner?${params.toString()}`);
-          }}
-        >
+        <Button variant="outlineAccent" size="sm" onClick={onCollab} className="flex-1">
           <Users size={14} className="mr-1.5" />
-          Create collaboration
+          Collaborate
         </Button>
       </div>
     </Card>
