@@ -13,12 +13,20 @@ import { getProfilesByIds, makerFromProfile } from "@/services/profile";
 import { countCommentsForPosts } from "@/services/comments";
 import { cn } from "@/lib/utils";
 import type { Maker } from "@/lib/profile-shape";
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { ExploreDesktop } from "@/components/web/pages/explore-desktop";
 
 /**
  * 22/23 · Explore (G2, G3, G6, G7). Edge-to-edge personalised feed with NO
  * chrome, built from real published work. Tapping reveals overlay controls.
  */
 export default function Explore() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <ExploreDesktop />;
+  return <ExploreMobile />;
+}
+
+function ExploreMobile() {
   const navigate = useNavigate();
   const [revealed, setRevealed] = useState(false);
   const [index, setIndex] = useState(0);
