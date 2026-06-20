@@ -10,7 +10,7 @@ export function RightRail() {
   const { accountType } = useAccountType();
 
   return (
-    <aside className="sticky top-0 hidden h-[100dvh] w-[320px] flex-none flex-col gap-6 overflow-y-auto bg-tg-page-board px-6 py-8 desktop-rail:flex">
+    <aside className="sticky top-0 hidden h-[100dvh] w-[320px] flex-none flex-col gap-6 overflow-y-auto bg-tg-page-board px-6 py-8 min-[1440px]:flex">
       <div className="rounded-2xl border border-tg-line bg-tg-bg p-4">
         <p className="text-[11px] uppercase tracking-[0.14em] text-tg-brown-soft">
           Signed in as
