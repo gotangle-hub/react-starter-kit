@@ -141,48 +141,6 @@ export default function Checkout() {
     >
       <BackHeader title="Checkout" onBack={() => navigate(-1)} />
       <div className="px-[22px] py-4">{summary}</div>
-        <div className="rounded-lg border border-tg-line bg-tg-card p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-display text-[15px] font-semibold text-tg-ink">
-              {intent.label}
-            </span>
-            <span className="font-mono text-[13px] text-tg-brown">
-              {intent.kind === "plan" ? "Subscription" : "One-off"}
-            </span>
-          </div>
-          {intent.sublabel && (
-            <Meta className="mt-1 block">{intent.sublabel}</Meta>
-          )}
-          <div className="mt-4 flex flex-col gap-2 border-t border-tg-line-soft pt-3">
-            <Row label="Subtotal" value={`${totals.subtotal.toFixed(2)} ${intent.currency}`} />
-            <Row label="VAT (5%)" value={`${totals.vat.toFixed(2)} ${intent.currency}`} />
-            <div className="mt-1 flex items-center justify-between border-t border-tg-line-soft pt-2.5">
-              <span className="font-display text-[15px] font-semibold text-tg-ink">Total</span>
-              <span className="font-display text-[16px] font-semibold text-tg-ink">
-                {totals.totalMajor.toFixed(2)} {intent.currency}
-              </span>
-            </div>
-            <Meta>Price includes VAT.</Meta>
-          </div>
-        </div>
-
-        <div className="mt-5 rounded-lg border border-tg-line bg-tg-card p-4">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-pill bg-tg-stone2">
-              <ShieldCheck size={16} className="text-tg-blue-accent" />
-            </span>
-            <div>
-              <div className="font-display text-[13px] font-semibold text-tg-ink">
-                Secure hosted payment
-              </div>
-              <Meta className="mt-1 block">
-                You&rsquo;ll continue on Ziina&rsquo;s secure page to enter card or Apple Pay
-                details, then come straight back to Tangle.
-              </Meta>
-            </div>
-          </div>
-        </div>
-      </div>
     </MobileShell>
   );
 }
