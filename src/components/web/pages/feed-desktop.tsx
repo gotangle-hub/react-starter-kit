@@ -46,7 +46,7 @@ export function FeedDesktop() {
       setMakers(peerMap);
       const ranked = await rankItems(
         "posts",
-        work.map((w) => ({ id: w.id, category: w.discipline ?? "general", base_score: 0 })),
+        work.map((w) => ({ id: w.id, category: w.category ?? "general", base_score: 0 })),
       );
       const byId = new Map(work.map((w) => [w.id, w]));
       setPosts(ranked.map((r) => byId.get(r.id)).filter(Boolean) as PostRow[]);
