@@ -1,4 +1,4 @@
-import { AtSign, Ban, Bell, Globe, Heart, LifeBuoy, Lock, LogOut, ShieldCheck, Trash2, User } from "lucide-react";
+import { AtSign, Ban, Bell, Globe, Heart, LifeBuoy, Lock, LogOut, Mail, ShieldCheck, Trash2, User } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
 import { routes } from "@/lib/routes";
 
@@ -24,7 +24,13 @@ export default function SettingsCollector() {
           { icon: Ban, label: "Blocked accounts", to: routes.blockedAccounts },
         ]}
       />
-      <SettingsGroup title="Support" rows={[{ icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp }]} />
+      <SettingsGroup
+        title="Support"
+        rows={[
+          { icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
+        ]}
+      />
       <SettingsGroup
         rows={[
           { icon: LogOut, label: "Log out", danger: true, to: routes.logoutConfirm },

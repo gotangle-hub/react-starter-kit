@@ -6,6 +6,7 @@ import {
   Building2,
   GraduationCap,
   LifeBuoy,
+  Mail,
   Lock,
   LogOut,
   ShieldCheck,
@@ -53,7 +54,13 @@ export default function SettingsStudent() {
         </p>
       </div>
 
-      <SettingsGroup title="Support" rows={[{ icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp }]} />
+      <SettingsGroup
+        title="Support"
+        rows={[
+          { icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
+        ]}
+      />
       <SettingsGroup
         rows={[
           { icon: LogOut, label: "Log out", danger: true, to: routes.logoutConfirm },
