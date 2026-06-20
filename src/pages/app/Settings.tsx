@@ -31,7 +31,10 @@ function SettingsBody() {
       />
       <SettingsGroup
         title="Support"
-        rows={[{ icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp }]}
+        rows={[
+          { icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
+        ]}
       />
       <SettingsGroup
         title=""
