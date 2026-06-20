@@ -1,4 +1,4 @@
-import { User, ShieldCheck, AtSign, Lock, Bell, Ban, Zap, CreditCard, Megaphone, LifeBuoy, LogOut, Trash2 } from "lucide-react";
+import { User, ShieldCheck, AtSign, Lock, Bell, Ban, Zap, CreditCard, Megaphone, LifeBuoy, Mail, LogOut, Trash2 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
 import { WebPage } from "@/components/web/web-page";
 import { useWebViewport } from "@/hooks/use-is-desktop";
