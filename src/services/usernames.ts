@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
+export const USERNAME_REGEX = /^[a-z0-9_.-]{3,20}$/;
 
 export function normalizeUsername(raw: string): string {
   return raw.trim().toLowerCase();
@@ -10,7 +10,7 @@ export function validateUsernameFormat(name: string): string | null {
   const v = normalizeUsername(name);
   if (v.length < 3) return "At least 3 characters.";
   if (v.length > 20) return "Up to 20 characters.";
-  if (!USERNAME_REGEX.test(v)) return "Lowercase letters, digits, _ and . only.";
+  if (!USERNAME_REGEX.test(v)) return "Lowercase letters, digits, _ . and - only.";
   return null;
 }
 
