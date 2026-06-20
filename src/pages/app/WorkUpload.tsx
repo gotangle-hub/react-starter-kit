@@ -1,201 +1,90 @@
-import { useRef, useState } from "react";
-import { FileUp, ImagePlus, Play, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { MobileShell } from "@/components/app/mobile-shell";
-import { BackHeader } from "@/components/app/bits";
-import { Meta } from "@/components/brand/atoms";
-import { Button } from "@/components/ui/button";
-import { feedAsset as feed } from "@/lib/feed-asset";
-import { routes } from "@/lib/routes";
-import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
-import { recordPracticeEvent } from "@/services/practice";
-import { LoadingRing } from "@/components/brand/loading-ring";
+import React, { useState } from 'react';
+import { uploadWork } from '@/services/uploads';
+import { useSession } from '@/hooks/use-session';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
-import { useWebViewport } from "@/hooks/use-is-desktop";
-import { ShareWorkDesktop } from "@/components/web/pages/share-work-desktop";
-
-/**
- * 48 · Add to your work (G9). Upload photos/video with size limits and automatic
- * compression — oversized files are reduced before saving, the original never
- * leaves the device. The PDF path extracts each project from the file as images.
- */
 export default function WorkUpload() {
-  const viewport = useWebViewport();
-  if (viewport !== "mobile") return <ShareWorkDesktop />;
-  return <WorkUploadMobile />;
-}
+  const { user } = useSession();
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-function WorkUploadMobile() {
-  const navigate = useNavigate();
-  const mediaInput = useRef<HTMLInputElement>(null);
-  const pdfInput = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function handleFile(file: File | undefined) {
-    if (!file) return;
-    setBusy(true);
-    try {
-      const { post } = await uploadAndCreatePost(file, {
-        title: deriveTitleFromFile(file),
-        onExplore: true,
-      });
-      // Daily Practice: stamp tz on first action, evaluate streak. Trigger may
-      // also fire on insert; this call ensures the device tz is stored.
-      const r = await recordPracticeEvent();
-      if (r.granted_now || (r.status && "granted_at" in r.status && r.status.granted_at && !sessionStorage.getItem("practice-reward-shown"))) {
-        sessionStorage.setItem("practice-reward-shown", "1");
-        navigate(routes.practiceReward);
-        return;
-      }
-      navigate(`${routes.addToExplore}?postId=${post.id}`);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Upload failed";
-      // eslint-disable-next-line no-alert
-      alert(msg);
-    } finally {
-      setBusy(false);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !file || !title) {
+      setError('Please select a file and enter a title');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await uploadWork(user.id, file, title, description);
+      setSuccess(true);
+      setFile(null);
+      setTitle('');
+      setDescription('');
+      // TODO: Refresh work list or redirect
+    } catch (err: any) {
+      setError(err.message || 'Upload failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-xl font-semibold mb-2">Work uploaded successfully!</h2>
+        <p className="text-muted-foreground">Your work is now visible in your profile and Explore.</p>
+      </div>
+    );
   }
 
-
   return (
-    <MobileShell
-      header={<BackHeader title="Add work" />}
-      footer={
-        <div className="flex-none border-t border-tg-line px-[22px] py-3 pb-6">
-          <Button variant="primary" full size="lg" disabled={busy} onClick={() => mediaInput.current?.click()}>
-            {busy ? (<><LoadingRing size={15} className="mr-2" />Uploading…</>) : "Add to your work"}
-          </Button>
-        </div>
-      }
-    >
-      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-4">
-        <h1 className="font-serif text-[26px] font-medium leading-[1.08] tracking-[-0.02em] text-tg-ink">
-          Show the work, and how you got there.
-        </h1>
-        <p className="mt-2 font-body text-[13.5px] leading-relaxed text-tg-brown">
-          Photos up to 30 MB, video up to 200 MB. Anything larger is compressed automatically to
-          fit — your original file never leaves your device.
-        </p>
-
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          {/* Added photo */}
-          <div className="relative overflow-hidden rounded-lg border border-tg-line">
-            <div
-              className="h-[130px] w-full"
-              style={{
-                backgroundImage: `url(${feed("spec-full.jpg")})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-            <span className="absolute bottom-2 left-2 rounded-chip bg-black/55 px-1.5 py-1 font-mono text-[10px] text-white">
-              Photo · 6 MB
-            </span>
-          </div>
-
-          {/* Added video */}
-          <div className="relative overflow-hidden rounded-lg border border-tg-line">
-            <div
-              className="h-[130px] w-full"
-              style={{
-                backgroundImage: `url(${feed("spec-negative.jpg")})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-            <span className="absolute inset-0 flex items-center justify-center">
-              <span className="flex h-9 w-9 items-center justify-center rounded-pill bg-black/55 text-white">
-                <Play size={16} />
-              </span>
-            </span>
-            <span className="absolute bottom-2 right-2 rounded-chip bg-black/55 px-1.5 py-1 font-mono text-[10px] text-white">
-              0:42
-            </span>
-          </div>
-
-          {/* Compressing (automatic) */}
-          <div className="flex h-[130px] flex-col justify-center gap-2 rounded-lg border border-tg-line bg-tg-card p-3.5">
-            <span className="inline-flex items-center gap-1.5 font-display text-[9.5px] font-bold uppercase tracking-[0.1em] text-tg-blue-accent">
-              <Sparkles size={13} className="text-tg-blue-accent" />
-              Compressing
-            </span>
-            <div className="h-1.5 overflow-hidden rounded-pill bg-tg-stone2">
-              <div className="h-full w-[64%] bg-tg-blue" />
-            </div>
-            <Meta>184 MB → 28 MB</Meta>
-            <span className="font-body text-[10.5px] text-tg-brown-soft">Original stays on your device</span>
-          </div>
-
-          {/* PDF extract */}
-          <div className="flex h-[130px] flex-col justify-center gap-2 rounded-lg border border-tg-line bg-tg-card p-3.5">
-            <span className="inline-flex items-center gap-1.5 font-display text-[9.5px] font-bold uppercase tracking-[0.1em] text-tg-terra">
-              <FileUp size={13} className="text-tg-terra" />
-              Reading PDF
-            </span>
-            <span className="font-body text-[12px] leading-snug text-tg-ink">
-              4 projects found in <b>portfolio.pdf</b>
-            </span>
-            <div className="flex gap-1.5">
-              {["spec-handles.jpg", "spec-blades.jpg", "spec-full.jpg", "spec-negative.jpg"].map((im) => (
-                <span
-                  key={im}
-                  className="h-[30px] flex-1 rounded-chip"
-                  style={{
-                    backgroundImage: `url(${feed(im)})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Add photo/video target */}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => mediaInput.current?.click()}
-            className="flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-tg-line bg-tg-card"
-          >
-            <ImagePlus size={22} className="text-tg-blue-accent" />
-            <Meta>Photo or video</Meta>
-          </button>
-
-          {/* Link a PDF */}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => pdfInput.current?.click()}
-            className="flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-tg-line bg-tg-card px-2.5 text-center"
-          >
-            <FileUp size={20} className="text-tg-brown-soft" />
-            <Meta>Link a PDF — each project is pulled out for you</Meta>
-          </button>
-
-          {/* Hidden real file inputs — no visual change */}
-          <input
-            ref={mediaInput}
-            type="file"
-            accept="image/*,video/*"
-            hidden
-            onChange={(e) => handleFile(e.target.files?.[0])}
-          />
-          <input
-            ref={pdfInput}
-            type="file"
-            accept="application/pdf"
-            hidden
-            onChange={(e) => handleFile(e.target.files?.[0])}
-          />
-
-        </div>
-
-        <p className="mt-5 font-body text-[12.5px] leading-relaxed text-tg-brown-soft">
-          By adding work you confirm it is your own, or that you have the rights to share it, and
-          that you will credit anyone involved.
-        </p>
+    <form onSubmit={handleSubmit} className="space-y-4 p-6">
+      <div>
+        <label className="block text-sm font-medium mb-1">Title (required)</label>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Brand Identity for Acme Corp"
+          required
+        />
       </div>
-    </MobileShell>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Description (optional)</label>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Short description of the project..."
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">File</label>
+        <Input type="file" onChange={handleFileChange} required />
+      </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+      <Button type="submit" disabled={loading || !file || !title} className="w-full">
+        {loading ? 'Uploading...' : 'Upload Work'}
+      </Button>
+    </form>
   );
 }
