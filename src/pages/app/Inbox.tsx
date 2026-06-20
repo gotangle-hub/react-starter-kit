@@ -17,11 +17,20 @@ function timeAgo(iso: string): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { MessagesDesktop } from "@/components/web/pages/messages-desktop";
+
 /**
  * 43 · Messages (G7). Real conversations from the database, newest first.
  * Pull to refresh (G7). Unread badge derived from last_read_at vs last_message_at.
  */
 export default function Inbox() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <MessagesDesktop />;
+  return <InboxMobile />;
+}
+
+function InboxMobile() {
   const navigate = useNavigate();
   const [items, setItems] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
