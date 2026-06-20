@@ -6,12 +6,20 @@ import { BackHeader, RefreshHint } from "@/components/app/bits";
 import { Meta } from "@/components/brand/atoms";
 import { routes } from "@/lib/routes";
 import { listMyBoards, type Board } from "@/services/boards";
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { PinUpsDesktop } from "@/components/web/pages/pinups-desktop";
 
 /**
  * 27 · Pin ups (G7). Reads the user's boards from `boards` + `board_items`.
  * The empty state matches the original design — only the data is real now.
  */
 export default function PinBoards() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <PinUpsDesktop />;
+  return <PinBoardsMobile />;
+}
+
+function PinBoardsMobile() {
   const navigate = useNavigate();
   const [boards, setBoards] = useState<Board[] | null>(null);
 
