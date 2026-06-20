@@ -59,7 +59,16 @@ function FilterSelect({
  * community submissions; ships NO placeholder salaries. Filters for Location,
  * Title and Field; primary action is an anonymous submission.
  */
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { SalaryDesktop } from "@/components/web/pages/salary-desktop";
+
 export default function SalaryDB() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <SalaryDesktop />;
+  return <SalaryDBMobile />;
+}
+
+function SalaryDBMobile() {
   const navigate = useNavigate();
   const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
