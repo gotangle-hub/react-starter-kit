@@ -14,8 +14,17 @@ import { logInteraction } from "@/services/feed";
 import { TrendingBadge } from "@/components/brand/trending-badge";
 import type { Maker } from "@/lib/profile-shape";
 
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { ProjectDetailDesktop } from "@/components/web/pages/project-detail-desktop";
+
 /** 24 · Project detail (G3). Full project from real data — images, title, maker, credits, caption. */
 export default function ProjectDetail() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <ProjectDetailDesktop />;
+  return <ProjectDetailMobile />;
+}
+
+function ProjectDetailMobile() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [post, setPost] = useState<PostRow | null>(null);

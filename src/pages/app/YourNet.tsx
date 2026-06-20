@@ -20,7 +20,16 @@ import { path, routes } from "@/lib/routes";
  * 53 · Your network (G7). Real accepted connections from connection_requests,
  * with an incoming-requests section at the top (Accept / Ignore).
  */
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { YourNetDesktop } from "@/components/web/pages/your-net-desktop";
+
 export default function YourNet() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <YourNetDesktop />;
+  return <YourNetMobile />;
+}
+
+function YourNetMobile() {
   const navigate = useNavigate();
   const [accepted, setAccepted] = useState<{ otherId: string; profile: ProfileRow | null }[]>([]);
   const [incoming, setIncoming] = useState<{ row: ConnectionRequestRow; profile: ProfileRow | null }[]>([]);
