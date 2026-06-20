@@ -1,5 +1,9 @@
 project_id = "fbtvxznbwjyktlkxzkpl"
 
+[auth.email]
+otp_expiry = 1800
+
+
 [functions]
   [functions.auth-email-hook]
     verify_jwt = false
