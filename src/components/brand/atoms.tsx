@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/brand/verified-badge";
 import type { Maker } from "@/lib/profile-shape";
@@ -32,12 +32,20 @@ export function Pill({
   small?: boolean;
   onClick?: () => void;
 }) {
+  const lastFire = useRef(0);
+  const fire = () => {
+    const now = Date.now();
+    if (now - lastFire.current < 350) return; // dedupe touch+click double-fire
+    lastFire.current = now;
+    onClick?.();
+  };
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={fire}
+      style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
       className={cn(
-        "inline-flex items-center rounded-pill border font-body tracking-body transition-colors duration-fast",
+        "inline-flex items-center rounded-pill border font-body tracking-body transition-colors duration-fast select-none",
         small ? "px-2.5 py-1 text-[11.5px]" : "px-3 py-1.5 text-[13px]",
         on
           ? "border-tg-inv bg-tg-inv text-tg-inv-text"
