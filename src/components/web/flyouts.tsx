@@ -265,7 +265,7 @@ function NotificationsPanel() {
             <span className="h-9 w-9 flex-none rounded-full bg-tg-stone2" />
             <div className="min-w-0 flex-1">
               <p className="font-body text-[13.5px] leading-snug text-tg-ink">
-                {n.body ?? n.kind}
+                {n.body ?? n.type}
               </p>
               <Meta className="mt-1 block">
                 {new Date(n.created_at).toLocaleString()}
