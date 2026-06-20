@@ -10,10 +10,12 @@ import {
   MessageCircle,
   PlusSquare,
   Search,
+  Settings,
   Trophy,
   User,
   Users,
 } from "lucide-react";
+
 import type { LucideIcon } from "lucide-react";
 import type { AccountType } from "@/lib/types";
 import { useAccountType } from "@/hooks/use-account-type";
@@ -138,8 +140,9 @@ export function WebSidebar({ collapsed = false }: { collapsed?: boolean }) {
           }
           title={collapsed ? "Settings" : undefined}
         >
-          <Search size={22} strokeWidth={1.75} className="opacity-0" aria-hidden />
-          {!collapsed && <span className="text-[13px] text-tg-brown-soft">Settings</span>}
+          <Settings size={22} strokeWidth={1.75} />
+          {!collapsed && <span className="text-[15px]">Settings</span>}
+
         </NavLink>
       </div>
     </aside>
