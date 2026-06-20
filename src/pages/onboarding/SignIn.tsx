@@ -47,6 +47,19 @@ export default function SignIn() {
     navigate(routes.home);
   };
 
+  const handleApple = async () => {
+    setError(null);
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin + routes.home,
+    });
+    if (result.error) {
+      setError(result.error.message ?? "Apple sign-in failed.");
+      return;
+    }
+    if (result.redirected) return;
+    navigate(routes.home);
+  };
+
   return (
     <MobileShell
       footer={
