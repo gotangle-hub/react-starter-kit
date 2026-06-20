@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useWebViewport } from "@/hooks/use-is-desktop";
 import { useSession } from "@/hooks/use-session";
 import { WebSidebar } from "@/components/web/web-sidebar";
+import { WebFlyouts } from "@/components/web/flyouts";
 import { cn } from "@/lib/utils";
 
 /**
