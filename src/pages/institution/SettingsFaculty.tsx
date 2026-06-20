@@ -5,6 +5,7 @@ import {
   BookOpen,
   Building2,
   LifeBuoy,
+  Mail,
   Lock,
   LogOut,
   ShieldCheck,
@@ -43,7 +44,13 @@ export default function SettingsFaculty() {
         title="Privacy"
         rows={[{ icon: Ban, label: "Blocked accounts", to: routes.blockedAccounts }]}
       />
-      <SettingsGroup title="Support" rows={[{ icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp }]} />
+      <SettingsGroup
+        title="Support"
+        rows={[
+          { icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
+        ]}
+      />
       <SettingsGroup
         rows={[
           { icon: LogOut, label: "Log out", danger: true, to: routes.logoutConfirm },

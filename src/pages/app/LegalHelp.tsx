@@ -1,4 +1,4 @@
-import { FileText, Shield, Copyright, LifeBuoy, HelpCircle } from "lucide-react";
+import { FileText, Shield, Copyright, Mail, HelpCircle } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
 import { routes } from "@/lib/routes";
 
@@ -16,10 +16,11 @@ export default function LegalHelp() {
       <SettingsGroup
         title="Support"
         rows={[
-          { icon: LifeBuoy, label: "Contact support", sub: "tangle.collab@gmail.com" },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
           { icon: HelpCircle, label: "FAQ" },
         ]}
       />
     </SettingsScaffold>
   );
 }
+

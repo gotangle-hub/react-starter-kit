@@ -1,4 +1,4 @@
-import { User, ShieldCheck, AtSign, Lock, Bell, Ban, Zap, CreditCard, Megaphone, LifeBuoy, LogOut, Trash2 } from "lucide-react";
+import { User, ShieldCheck, AtSign, Lock, Bell, Ban, Zap, CreditCard, Megaphone, LifeBuoy, Mail, LogOut, Trash2 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
 import { WebPage } from "@/components/web/web-page";
 import { useWebViewport } from "@/hooks/use-is-desktop";
@@ -31,7 +31,10 @@ function SettingsBody() {
       />
       <SettingsGroup
         title="Support"
-        rows={[{ icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp }]}
+        rows={[
+          { icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
+        ]}
       />
       <SettingsGroup
         title=""

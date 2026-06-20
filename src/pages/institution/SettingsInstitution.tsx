@@ -3,6 +3,7 @@ import {
   Building2,
   LayoutGrid,
   LifeBuoy,
+  Mail,
   LogOut,
   ShieldCheck,
   Ticket,
@@ -37,7 +38,13 @@ export default function SettingsInstitution() {
         title="Plan"
         rows={[{ icon: Wallet, label: "Campus subscription", value: "Manage", to: routes.plansCombined }]}
       />
-      <SettingsGroup title="Support" rows={[{ icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp }]} />
+      <SettingsGroup
+        title="Support"
+        rows={[
+          { icon: LifeBuoy, label: "Help & legal", to: routes.legalHelp },
+          { icon: Mail, label: "Contact us", sub: "help@gotangle.app", onClick: () => { window.location.href = "mailto:help@gotangle.app"; } },
+        ]}
+      />
       <SettingsGroup
         rows={[
           { icon: LogOut, label: "Log out", danger: true, to: routes.logoutConfirm },
