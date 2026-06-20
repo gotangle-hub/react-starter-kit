@@ -15,6 +15,8 @@ import { getMyProfile, listProfiles, makerFromProfile, type ProfileRow } from "@
 import { routes } from "@/lib/routes";
 import type { Maker } from "@/lib/profile-shape";
 import { PracticeCard } from "@/components/app/practice-card";
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { FeedDesktop } from "@/components/web/pages/feed-desktop";
 
 const SEGMENTS = ["Dashboard", "Match", "Projects", "Community"];
 
@@ -28,6 +30,13 @@ function SectionLabel({ children }: { children: string }) {
 
 /** 16 · Home / Dashboard (G2, G7). Personalised home built from real data. */
 export default function Home() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <FeedDesktop />;
+
+  return <HomeMobile />;
+}
+
+function HomeMobile() {
   const navigate = useNavigate();
   const [seg, setSeg] = useState("Dashboard");
   const [me, setMe] = useState<ProfileRow | null>(null);
