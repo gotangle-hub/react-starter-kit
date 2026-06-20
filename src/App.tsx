@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { SessionProvider } from "@/hooks/use-session";
 import { AccountTypeProvider } from "@/hooks/use-account-type";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { DesktopFrame } from "@/components/web/desktop-frame";
 import { routes } from "@/lib/routes";
 
 import Foundation from "@/pages/Foundation";
@@ -236,173 +237,173 @@ export default function App() {
             {/* Tab roots */}
             <Route path={routes.home} element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path={routes.explore} element={<ProtectedRoute><Explore /></ProtectedRoute>} />
-            <Route path={routes.search} element={<ProtectedRoute><SearchText /></ProtectedRoute>} />
+            <Route path={routes.search} element={<ProtectedRoute><DesktopFrame><SearchText /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.messages} element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path={routes.profile} element={<ProtectedRoute><DesignerProfile /></ProtectedRoute>} />
 
             {/* Match */}
             <Route path={routes.match} element={<ProtectedRoute><Match /></ProtectedRoute>} />
-            <Route path={routes.mutualMatch} element={<ProtectedRoute><MutualMatch /></ProtectedRoute>} />
-            <Route path={routes.matchFilters} element={<ProtectedRoute><MatchFilters /></ProtectedRoute>} />
-            <Route path={routes.swipeCap} element={<ProtectedRoute><SwipeCap /></ProtectedRoute>} />
-            <Route path={routes.whoLiked} element={<ProtectedRoute><WhoLiked /></ProtectedRoute>} />
+            <Route path={routes.mutualMatch} element={<ProtectedRoute><DesktopFrame><MutualMatch /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.matchFilters} element={<ProtectedRoute><DesktopFrame><MatchFilters /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.swipeCap} element={<ProtectedRoute><DesktopFrame><SwipeCap /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.whoLiked} element={<ProtectedRoute><DesktopFrame><WhoLiked /></DesktopFrame></ProtectedRoute>} />
 
             {/* Discover detail */}
             <Route path={routes.projectDetail} element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
-            <Route path={routes.comments} element={<ProtectedRoute><CommentsSheet /></ProtectedRoute>} />
-            <Route path={routes.pinToBoard} element={<ProtectedRoute><PinToBoard /></ProtectedRoute>} />
+            <Route path={routes.comments} element={<ProtectedRoute><DesktopFrame><CommentsSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.pinToBoard} element={<ProtectedRoute><DesktopFrame><PinToBoard /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.pinBoards} element={<ProtectedRoute><PinBoards /></ProtectedRoute>} />
-            <Route path={routes.searchVisual} element={<ProtectedRoute><SearchVisual /></ProtectedRoute>} />
-            <Route path={routes.visualSearch} element={<ProtectedRoute><VisualSearch /></ProtectedRoute>} />
-            <Route path={routes.visualSearchDetail} element={<ProtectedRoute><VisualSearchDetail /></ProtectedRoute>} />
-            <Route path={routes.searchPeople} element={<ProtectedRoute><SearchPeople /></ProtectedRoute>} />
+            <Route path={routes.searchVisual} element={<ProtectedRoute><DesktopFrame><SearchVisual /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.visualSearch} element={<ProtectedRoute><DesktopFrame><VisualSearch /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.visualSearchDetail} element={<ProtectedRoute><DesktopFrame><VisualSearchDetail /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.searchPeople} element={<ProtectedRoute><DesktopFrame><SearchPeople /></DesktopFrame></ProtectedRoute>} />
 
             {/* Opportunities */}
-            <Route path={routes.callouts} element={<ProtectedRoute><ProjectsCallouts /></ProtectedRoute>} />
+            <Route path={routes.callouts} element={<ProtectedRoute><DesktopFrame><ProjectsCallouts /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.competitions} element={<ProtectedRoute><ProjectsAI /></ProtectedRoute>} />
-            <Route path={routes.tangleComps} element={<ProtectedRoute><ProjectsTangle /></ProtectedRoute>} />
-            <Route path={routes.partnerMatch} element={<ProtectedRoute><PartnerMatch /></ProtectedRoute>} />
-            <Route path={routes.postCallout} element={<ProtectedRoute><PostCallout /></ProtectedRoute>} />
-            <Route path={routes.applyFlow} element={<ProtectedRoute><ApplyFlow /></ProtectedRoute>} />
+            <Route path={routes.tangleComps} element={<ProtectedRoute><DesktopFrame><ProjectsTangle /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.partnerMatch} element={<ProtectedRoute><DesktopFrame><PartnerMatch /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.postCallout} element={<ProtectedRoute><DesktopFrame><PostCallout /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.applyFlow} element={<ProtectedRoute><DesktopFrame><ApplyFlow /></DesktopFrame></ProtectedRoute>} />
 
             {/* Community + collaboration */}
             <Route path={routes.community} element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path={routes.collabs} element={<ProtectedRoute><CollabTracker /></ProtectedRoute>} />
-            <Route path={routes.brief} element={<ProtectedRoute><BriefPanel /></ProtectedRoute>} />
-            <Route path={routes.request} element={<ProtectedRoute><RequestFlow /></ProtectedRoute>} />
+            <Route path={routes.brief} element={<ProtectedRoute><DesktopFrame><BriefPanel /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.request} element={<ProtectedRoute><DesktopFrame><RequestFlow /></DesktopFrame></ProtectedRoute>} />
 
             {/* Messages detail */}
-            <Route path={routes.projectChat} element={<ProtectedRoute><ProjectChat /></ProtectedRoute>} />
+            <Route path={routes.projectChat} element={<ProtectedRoute><DesktopFrame><ProjectChat /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.dmThread} element={<ProtectedRoute><DMThread /></ProtectedRoute>} />
-            <Route path={routes.notifications} element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path={routes.notifications} element={<ProtectedRoute><DesktopFrame><Notifications /></DesktopFrame></ProtectedRoute>} />
 
             {/* Profile & identity */}
             <Route path={routes.workUpload} element={<ProtectedRoute><WorkUpload /></ProtectedRoute>} />
-            <Route path={routes.addToExplore} element={<ProtectedRoute><AddToExplorePrompt /></ProtectedRoute>} />
-            <Route path={routes.inviteSheet} element={<ProtectedRoute><InviteSheet /></ProtectedRoute>} />
-            <Route path={routes.createSheet} element={<ProtectedRoute><CreateSheet /></ProtectedRoute>} />
+            <Route path={routes.addToExplore} element={<ProtectedRoute><DesktopFrame><AddToExplorePrompt /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.inviteSheet} element={<ProtectedRoute><DesktopFrame><InviteSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.createSheet} element={<ProtectedRoute><DesktopFrame><CreateSheet /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.verification} element={<ProtectedRoute><Verification /></ProtectedRoute>} />
             <Route path={routes.yourNet} element={<ProtectedRoute><YourNet /></ProtectedRoute>} />
             <Route path={routes.publicProfile} element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
 
             {/* Salary */}
             <Route path={routes.salary} element={<ProtectedRoute><SalaryDB /></ProtectedRoute>} />
-            <Route path={routes.salarySubmit} element={<ProtectedRoute><SalarySubmit /></ProtectedRoute>} />
-            <Route path={routes.salarySubmitted} element={<ProtectedRoute><SalarySubmitted /></ProtectedRoute>} />
+            <Route path={routes.salarySubmit} element={<ProtectedRoute><DesktopFrame><SalarySubmit /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.salarySubmitted} element={<ProtectedRoute><DesktopFrame><SalarySubmitted /></DesktopFrame></ProtectedRoute>} />
 
             {/* Money */}
-            <Route path={routes.promote} element={<ProtectedRoute><Promote /></ProtectedRoute>} />
+            <Route path={routes.promote} element={<ProtectedRoute><DesktopFrame><Promote /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.billing} element={<ProtectedRoute><Billing /></ProtectedRoute>} />
             <Route path={routes.checkout} element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
 
             {/* Settings */}
             <Route path={routes.settings} element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path={routes.editProfile} element={<ProtectedRoute><EditProfileSettings /></ProtectedRoute>} />
-            <Route path={routes.accountEmail} element={<ProtectedRoute><AccountEmail /></ProtectedRoute>} />
-            <Route path={routes.passwordSecurity} element={<ProtectedRoute><PasswordSecurity /></ProtectedRoute>} />
-            <Route path={routes.notificationSettings} element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
-            <Route path={routes.blockedAccounts} element={<ProtectedRoute><BlockedAccounts /></ProtectedRoute>} />
-            <Route path={routes.logoutConfirm} element={<ProtectedRoute><LogOutConfirm /></ProtectedRoute>} />
-            <Route path={routes.deleteAccount} element={<ProtectedRoute><DeleteAccountConfirm /></ProtectedRoute>} />
+            <Route path={routes.editProfile} element={<ProtectedRoute><DesktopFrame><EditProfileSettings /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.accountEmail} element={<ProtectedRoute><DesktopFrame><AccountEmail /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.passwordSecurity} element={<ProtectedRoute><DesktopFrame><PasswordSecurity /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.notificationSettings} element={<ProtectedRoute><DesktopFrame><NotificationSettings /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.blockedAccounts} element={<ProtectedRoute><DesktopFrame><BlockedAccounts /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.logoutConfirm} element={<ProtectedRoute><DesktopFrame><LogOutConfirm /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.deleteAccount} element={<ProtectedRoute><DesktopFrame><DeleteAccountConfirm /></DesktopFrame></ProtectedRoute>} />
 
             {/* Help & legal */}
-            <Route path={routes.legalHelp} element={<ProtectedRoute><LegalHelp /></ProtectedRoute>} />
-            <Route path={routes.terms} element={<ProtectedRoute><TermsConditions /></ProtectedRoute>} />
-            <Route path={routes.privacy} element={<ProtectedRoute><PrivacyPolicy /></ProtectedRoute>} />
-            <Route path={routes.copyright} element={<ProtectedRoute><CopyrightPolicy /></ProtectedRoute>} />
+            <Route path={routes.legalHelp} element={<ProtectedRoute><DesktopFrame><LegalHelp /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.terms} element={<ProtectedRoute><DesktopFrame><TermsConditions /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.privacy} element={<ProtectedRoute><DesktopFrame><PrivacyPolicy /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.copyright} element={<ProtectedRoute><DesktopFrame><CopyrightPolicy /></DesktopFrame></ProtectedRoute>} />
 
             {/* Safety / moderation */}
-            <Route path={routes.reportPost} element={<ProtectedRoute><ReportPostSheet /></ProtectedRoute>} />
-            <Route path={routes.reportPostSent} element={<ProtectedRoute><ReportPostSent /></ProtectedRoute>} />
-            <Route path={routes.reportUser} element={<ProtectedRoute><ReportUserSheet /></ProtectedRoute>} />
-            <Route path={routes.reportUserSent} element={<ProtectedRoute><ReportUserSent /></ProtectedRoute>} />
-            <Route path={routes.blockSheet} element={<ProtectedRoute><BlockSheet /></ProtectedRoute>} />
-            <Route path={routes.blockConfirm} element={<ProtectedRoute><BlockConfirm /></ProtectedRoute>} />
-            <Route path={routes.unconnectSheet} element={<ProtectedRoute><UnconnectSheet /></ProtectedRoute>} />
-            <Route path={routes.unconnectConfirm} element={<ProtectedRoute><UnconnectConfirm /></ProtectedRoute>} />
-            <Route path={routes.uncollaborateSheet} element={<ProtectedRoute><UncollaborateSheet /></ProtectedRoute>} />
-            <Route path={routes.uncollaborateConfirm} element={<ProtectedRoute><UncollaborateConfirm /></ProtectedRoute>} />
-            <Route path={routes.postMenu} element={<ProtectedRoute><PostActionMenu /></ProtectedRoute>} />
-            <Route path={routes.userMenu} element={<ProtectedRoute><UserActionMenu /></ProtectedRoute>} />
+            <Route path={routes.reportPost} element={<ProtectedRoute><DesktopFrame><ReportPostSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.reportPostSent} element={<ProtectedRoute><DesktopFrame><ReportPostSent /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.reportUser} element={<ProtectedRoute><DesktopFrame><ReportUserSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.reportUserSent} element={<ProtectedRoute><DesktopFrame><ReportUserSent /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.blockSheet} element={<ProtectedRoute><DesktopFrame><BlockSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.blockConfirm} element={<ProtectedRoute><DesktopFrame><BlockConfirm /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.unconnectSheet} element={<ProtectedRoute><DesktopFrame><UnconnectSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.unconnectConfirm} element={<ProtectedRoute><DesktopFrame><UnconnectConfirm /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.uncollaborateSheet} element={<ProtectedRoute><DesktopFrame><UncollaborateSheet /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.uncollaborateConfirm} element={<ProtectedRoute><DesktopFrame><UncollaborateConfirm /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.postMenu} element={<ProtectedRoute><DesktopFrame><PostActionMenu /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.userMenu} element={<ProtectedRoute><DesktopFrame><UserActionMenu /></DesktopFrame></ProtectedRoute>} />
 
             {/* Confirmation states */}
-            <Route path={routes.applicationSent} element={<ProtectedRoute><ApplicationSent /></ProtectedRoute>} />
-            <Route path={routes.requestSent} element={<ProtectedRoute><RequestSent /></ProtectedRoute>} />
-            <Route path={routes.collabRequestSent} element={<ProtectedRoute><CollabRequestSent /></ProtectedRoute>} />
-            <Route path={routes.inviteAccepted} element={<ProtectedRoute><InviteAccepted /></ProtectedRoute>} />
-            <Route path={routes.interestedConfirm} element={<ProtectedRoute><InterestedConfirm /></ProtectedRoute>} />
-            <Route path={routes.workPublished} element={<ProtectedRoute><WorkPublished /></ProtectedRoute>} />
-            <Route path={routes.planUpgraded} element={<ProtectedRoute><PlanUpgraded /></ProtectedRoute>} />
-            <Route path={routes.paymentSuccess} element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
-            <Route path={routes.boostConfirm} element={<ProtectedRoute><BoostConfirm /></ProtectedRoute>} />
+            <Route path={routes.applicationSent} element={<ProtectedRoute><DesktopFrame><ApplicationSent /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.requestSent} element={<ProtectedRoute><DesktopFrame><RequestSent /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.collabRequestSent} element={<ProtectedRoute><DesktopFrame><CollabRequestSent /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.inviteAccepted} element={<ProtectedRoute><DesktopFrame><InviteAccepted /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.interestedConfirm} element={<ProtectedRoute><DesktopFrame><InterestedConfirm /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.workPublished} element={<ProtectedRoute><DesktopFrame><WorkPublished /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.planUpgraded} element={<ProtectedRoute><DesktopFrame><PlanUpgraded /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.paymentSuccess} element={<ProtectedRoute><DesktopFrame><PaymentSuccess /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.boostConfirm} element={<ProtectedRoute><DesktopFrame><BoostConfirm /></DesktopFrame></ProtectedRoute>} />
 
             {/* Collector journey */}
             <Route path={routes.collectorSignup} element={<CollectorSignup />} />
             <Route path={routes.collectorConsent} element={<CollectorConsent />} />
             <Route path={routes.tourCollector} element={<TourCollector />} />
-            <Route path={routes.collectorHome} element={<ProtectedRoute><CollectorHome /></ProtectedRoute>} />
-            <Route path={routes.collectorExplore} element={<ProtectedRoute><CollectorExplore /></ProtectedRoute>} />
-            <Route path={routes.collectorSaved} element={<ProtectedRoute><CollectorSaved /></ProtectedRoute>} />
-            <Route path={routes.collectorProfile} element={<ProtectedRoute><CollectorProfile /></ProtectedRoute>} />
-            <Route path={routes.settingsCollector} element={<ProtectedRoute><SettingsCollector /></ProtectedRoute>} />
-            <Route path={routes.followConfirm} element={<ProtectedRoute><FollowConfirm /></ProtectedRoute>} />
-            <Route path={routes.emptySaved} element={<ProtectedRoute><EmptySaved /></ProtectedRoute>} />
+            <Route path={routes.collectorHome} element={<ProtectedRoute><DesktopFrame><CollectorHome /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.collectorExplore} element={<ProtectedRoute><DesktopFrame><CollectorExplore /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.collectorSaved} element={<ProtectedRoute><DesktopFrame><CollectorSaved /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.collectorProfile} element={<ProtectedRoute><DesktopFrame><CollectorProfile /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.settingsCollector} element={<ProtectedRoute><DesktopFrame><SettingsCollector /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.followConfirm} element={<ProtectedRoute><DesktopFrame><FollowConfirm /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptySaved} element={<ProtectedRoute><DesktopFrame><EmptySaved /></DesktopFrame></ProtectedRoute>} />
 
             {/* Institution & student journey */}
             <Route path={routes.institutionFind} element={<InstitutionFind />} />
             <Route path={routes.institutionRegister} element={<InstitutionRegister />} />
             <Route path={routes.institutionLogin} element={<InstitutionLogin />} />
             <Route path={routes.institutionRoleDetect} element={<InstitutionRoleDetect />} />
-            <Route path={routes.institutionProfile} element={<ProtectedRoute><InstitutionProfile /></ProtectedRoute>} />
-            <Route path={routes.facultyProfile} element={<ProtectedRoute><FacultyProfile /></ProtectedRoute>} />
+            <Route path={routes.institutionProfile} element={<ProtectedRoute><DesktopFrame><InstitutionProfile /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.facultyProfile} element={<ProtectedRoute><DesktopFrame><FacultyProfile /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.institutionConsent} element={<InstitutionConsent />} />
             <Route path={routes.tourStudent} element={<TourStudent />} />
             <Route path={routes.tourFaculty} element={<TourFaculty />} />
-            <Route path={routes.studentCompetitions} element={<ProtectedRoute><StudentCompetitions /></ProtectedRoute>} />
-            <Route path={routes.studentClasses} element={<ProtectedRoute><StudentClasses /></ProtectedRoute>} />
-            <Route path={routes.studentClassPage} element={<ProtectedRoute><StudentClassPage /></ProtectedRoute>} />
-            <Route path={routes.classList} element={<ProtectedRoute><ClassList /></ProtectedRoute>} />
-            <Route path={routes.classPage} element={<ProtectedRoute><ClassPage /></ProtectedRoute>} />
-            <Route path={routes.studioClassPage} element={<ProtectedRoute><StudioClassPage /></ProtectedRoute>} />
-            <Route path={routes.theoreticalClassPage} element={<ProtectedRoute><TheoreticalClassPage /></ProtectedRoute>} />
-            <Route path={routes.professorCreateClass} element={<ProtectedRoute><ProfessorCreateClass /></ProtectedRoute>} />
-            <Route path={routes.professorUploadDoc} element={<ProtectedRoute><ProfessorUploadDoc /></ProtectedRoute>} />
-            <Route path={routes.taInvited} element={<ProtectedRoute><TAInvited /></ProtectedRoute>} />
+            <Route path={routes.studentCompetitions} element={<ProtectedRoute><DesktopFrame><StudentCompetitions /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.studentClasses} element={<ProtectedRoute><DesktopFrame><StudentClasses /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.studentClassPage} element={<ProtectedRoute><DesktopFrame><StudentClassPage /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.classList} element={<ProtectedRoute><DesktopFrame><ClassList /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.classPage} element={<ProtectedRoute><DesktopFrame><ClassPage /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.studioClassPage} element={<ProtectedRoute><DesktopFrame><StudioClassPage /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.theoreticalClassPage} element={<ProtectedRoute><DesktopFrame><TheoreticalClassPage /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.professorCreateClass} element={<ProtectedRoute><DesktopFrame><ProfessorCreateClass /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.professorUploadDoc} element={<ProtectedRoute><DesktopFrame><ProfessorUploadDoc /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.taInvited} element={<ProtectedRoute><DesktopFrame><TAInvited /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.taInviteEmail} element={<TAInviteEmail />} />
-            <Route path={routes.taInviteAccept} element={<ProtectedRoute><TAInviteAccept /></ProtectedRoute>} />
-            <Route path={routes.classChat} element={<ProtectedRoute><ClassChat /></ProtectedRoute>} />
-            <Route path={routes.settingsStudent} element={<ProtectedRoute><SettingsStudent /></ProtectedRoute>} />
-            <Route path={routes.studentGraduation} element={<ProtectedRoute><StudentGraduation /></ProtectedRoute>} />
-            <Route path={routes.settingsFaculty} element={<ProtectedRoute><SettingsFaculty /></ProtectedRoute>} />
-            <Route path={routes.settingsInstitution} element={<ProtectedRoute><SettingsInstitution /></ProtectedRoute>} />
-            <Route path={routes.emptyClasses} element={<ProtectedRoute><EmptyClasses /></ProtectedRoute>} />
+            <Route path={routes.taInviteAccept} element={<ProtectedRoute><DesktopFrame><TAInviteAccept /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.classChat} element={<ProtectedRoute><DesktopFrame><ClassChat /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.settingsStudent} element={<ProtectedRoute><DesktopFrame><SettingsStudent /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.studentGraduation} element={<ProtectedRoute><DesktopFrame><StudentGraduation /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.settingsFaculty} element={<ProtectedRoute><DesktopFrame><SettingsFaculty /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.settingsInstitution} element={<ProtectedRoute><DesktopFrame><SettingsInstitution /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptyClasses} element={<ProtectedRoute><DesktopFrame><EmptyClasses /></DesktopFrame></ProtectedRoute>} />
 
             {/* Client journey */}
             <Route path={routes.clientSignup} element={<ClientSignup />} />
             <Route path={routes.clientConsent} element={<ClientConsent />} />
             <Route path={routes.tourClient} element={<TourClient />} />
-            <Route path={routes.clientHome} element={<ProtectedRoute><ClientHome /></ProtectedRoute>} />
-            <Route path={routes.settingsClient} element={<ProtectedRoute><SettingsClient /></ProtectedRoute>} />
+            <Route path={routes.clientHome} element={<ProtectedRoute><DesktopFrame><ClientHome /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.settingsClient} element={<ProtectedRoute><DesktopFrame><SettingsClient /></DesktopFrame></ProtectedRoute>} />
 
             {/* Studio journey */}
             <Route path={routes.plansCombined} element={<PlansCombined />} />
             <Route path={routes.studioConsent} element={<StudioConsent />} />
             <Route path={routes.tourStudio} element={<TourStudio />} />
-            <Route path={routes.studioPage} element={<ProtectedRoute><StudioPage /></ProtectedRoute>} />
-            <Route path={routes.studioProjectUpload} element={<ProtectedRoute><StudioProjectUpload /></ProtectedRoute>} />
-            <Route path={routes.studioTeam} element={<ProtectedRoute><StudioTeam /></ProtectedRoute>} />
+            <Route path={routes.studioPage} element={<ProtectedRoute><DesktopFrame><StudioPage /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.studioProjectUpload} element={<ProtectedRoute><DesktopFrame><StudioProjectUpload /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.studioTeam} element={<ProtectedRoute><DesktopFrame><StudioTeam /></DesktopFrame></ProtectedRoute>} />
             <Route path={routes.talentPool} element={<ProtectedRoute><TalentPool /></ProtectedRoute>} />
-            <Route path={routes.settingsStudio} element={<ProtectedRoute><SettingsStudio /></ProtectedRoute>} />
+            <Route path={routes.settingsStudio} element={<ProtectedRoute><DesktopFrame><SettingsStudio /></DesktopFrame></ProtectedRoute>} />
 
             {/* Empty states */}
-            <Route path={routes.emptyMatches} element={<ProtectedRoute><EmptyMatches /></ProtectedRoute>} />
-            <Route path={routes.emptyMessages} element={<ProtectedRoute><EmptyMessages /></ProtectedRoute>} />
-            <Route path={routes.emptyNotifications} element={<ProtectedRoute><EmptyNotifications /></ProtectedRoute>} />
-            <Route path={routes.emptyCollaborations} element={<ProtectedRoute><EmptyCollaborations /></ProtectedRoute>} />
-            <Route path={routes.emptySearch} element={<ProtectedRoute><EmptySearch /></ProtectedRoute>} />
-            <Route path={routes.emptyWork} element={<ProtectedRoute><EmptyWork /></ProtectedRoute>} />
-            <Route path={routes.practice} element={<ProtectedRoute><Practice /></ProtectedRoute>} />
-            <Route path={routes.practiceReward} element={<ProtectedRoute><PracticeReward /></ProtectedRoute>} />
+            <Route path={routes.emptyMatches} element={<ProtectedRoute><DesktopFrame><EmptyMatches /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptyMessages} element={<ProtectedRoute><DesktopFrame><EmptyMessages /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptyNotifications} element={<ProtectedRoute><DesktopFrame><EmptyNotifications /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptyCollaborations} element={<ProtectedRoute><DesktopFrame><EmptyCollaborations /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptySearch} element={<ProtectedRoute><DesktopFrame><EmptySearch /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.emptyWork} element={<ProtectedRoute><DesktopFrame><EmptyWork /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.practice} element={<ProtectedRoute><DesktopFrame><Practice /></DesktopFrame></ProtectedRoute>} />
+            <Route path={routes.practiceReward} element={<ProtectedRoute><DesktopFrame><PracticeReward /></DesktopFrame></ProtectedRoute>} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
           </Routes>
         </BrowserRouter>
