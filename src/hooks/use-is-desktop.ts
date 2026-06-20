@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 
 /**
- * Viewport detection for the responsive web shell.
+ * Viewport detection for the responsive WEB shell. Breakpoints match the
+ * reference spec (`Lovable Prompt - Tangle on Web.md`):
  *
- *   mobile   <1024px        → bottom tab bar, no sidebar
- *   tablet   1024–1439px    → icon-only collapsed sidebar, no right rail
- *   desktop  ≥1440px        → full labelled sidebar + right rail
+ *   mobile   <700px          → bottom tab bar, no sidebar, no rail (existing mobile UI)
+ *   tablet   700–1099px      → icon-only collapsed sidebar, no right rail
+ *   desktop  ≥1100px         → full labelled sidebar + right rail
  *
- * The native app (Capacitor) always reports `mobile` regardless of viewport so
- * the App Store build is identical to today's mobile experience.
+ * The native Capacitor app ALWAYS reports `mobile` regardless of viewport, so
+ * the iOS/Android build keeps today's mobile experience byte-for-byte
+ * identical — the web shell never renders inside the app store binary.
  */
 export type WebViewport = "mobile" | "tablet" | "desktop";
 
-const TABLET_BREAKPOINT = 1024;
-const DESKTOP_BREAKPOINT = 1440;
+export const TABLET_BREAKPOINT = 700;
+export const DESKTOP_BREAKPOINT = 1100;
 
 function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
@@ -44,6 +46,12 @@ export function useWebViewport(): WebViewport {
 
 /** Convenience: true when we're rendering any web layout (tablet or desktop). */
 export function useIsDesktop(): boolean {
-  const vp = useWebViewport();
-  return vp !== "mobile";
+  return useWebViewport() !== "mobile";
+}
+
+/** Convenience: true ONLY inside the native Capacitor app (iOS / Android binaries). */
+export function useIsNativeApp(): boolean {
+  const [native, setNative] = useState<boolean>(() => isNativeApp());
+  useEffect(() => setNative(isNativeApp()), []);
+  return native;
 }
