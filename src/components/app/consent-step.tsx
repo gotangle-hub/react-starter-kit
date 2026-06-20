@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, Info, ShieldCheck } from "lucide-react";
 import { Chip } from "@/components/brand/chip";
@@ -110,11 +110,19 @@ function ConsentRow({
   checked: boolean;
   onToggle: () => void;
 }) {
+  const lastFire = useRef(0);
+  const fire = () => {
+    const now = Date.now();
+    if (now - lastFire.current < 350) return; // dedupe touch+click double-fire on WebView
+    lastFire.current = now;
+    onToggle();
+  };
   return (
     <button
       type="button"
-      onClick={onToggle}
-      className="flex w-full items-start gap-3 border-b border-tg-line-soft py-2.5 text-left"
+      onClick={fire}
+      style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+      className="flex w-full select-none items-start gap-3 border-b border-tg-line-soft py-2.5 text-left"
     >
       <span
         className={cn(
