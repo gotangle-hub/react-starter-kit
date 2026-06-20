@@ -4,10 +4,10 @@ const config: CapacitorConfig = {
   appId: "app.gotangle.tangle",
   appName: "Tangle",
   webDir: "dist",
-  // Hot-reload from the Lovable sandbox while developing on a device.
-  // REMOVE the `server` block before submitting to the App Store / Play Store.
+  // Loads the live published site on the device so it works without a Lovable auth token.
+  // REMOVE the `server` block before submitting to the App Store / Play Store to ship bundled assets.
   server: {
-    url: "https://4165f83d-1f61-402f-bb8d-cc91c478e200.lovableproject.com?forceHideBadge=true",
+    url: "https://gotangle.app",
     cleartext: true,
   },
   plugins: {
