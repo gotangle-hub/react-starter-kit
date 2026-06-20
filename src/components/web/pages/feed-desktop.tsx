@@ -137,9 +137,9 @@ export function FeedDesktop() {
                     {p.title}
                   </div>
                 )}
-                {p.discipline && (
+                {p.category && (
                   <span className="absolute left-3.5 top-3.5 rounded-full bg-tg-ink/90 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-white">
-                    {p.discipline}
+                    {p.category}
                   </span>
                 )}
               </button>
