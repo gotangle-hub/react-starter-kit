@@ -11,12 +11,21 @@ import { uploadAndCreatePost, deriveTitleFromFile } from "@/services/work";
 import { recordPracticeEvent } from "@/services/practice";
 import { LoadingRing } from "@/components/brand/loading-ring";
 
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { ShareWorkDesktop } from "@/components/web/pages/share-work-desktop";
+
 /**
  * 48 · Add to your work (G9). Upload photos/video with size limits and automatic
  * compression — oversized files are reduced before saving, the original never
  * leaves the device. The PDF path extracts each project from the file as images.
  */
 export default function WorkUpload() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <ShareWorkDesktop />;
+  return <WorkUploadMobile />;
+}
+
+function WorkUploadMobile() {
   const navigate = useNavigate();
   const mediaInput = useRef<HTMLInputElement>(null);
   const pdfInput = useRef<HTMLInputElement>(null);
