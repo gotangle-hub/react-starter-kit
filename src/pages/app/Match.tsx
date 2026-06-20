@@ -20,9 +20,17 @@ import {
 } from "@/services/match";
 import { disciplines as ALL_DISCIPLINES } from "@/lib/disciplines";
 import { cn } from "@/lib/utils";
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { DiscoverDesktop } from "@/components/web/pages/discover-desktop";
 
 /** 17 · Swipe to discover WORK. Card = one piece of work; maker shown small. */
 export default function Match() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <DiscoverDesktop />;
+  return <MatchMobile />;
+}
+
+function MatchMobile() {
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState<MatchPreferences | null>(null);
   const [deck, setDeck] = useState<DeckCard[]>([]);
