@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { authService } from "@/services/auth";
 import { lovable } from "@/integrations/lovable/index";
+import { isNative, platform } from "@/lib/native";
+import { nativeGoogleSignIn, nativeAppleSignIn } from "@/services/native-auth";
 
 /** 05 · Sign in (G1). Only reachable when logged out. */
 export default function SignIn() {
@@ -36,28 +38,47 @@ export default function SignIn() {
 
   const handleGoogle = async () => {
     setError(null);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + routes.home,
-    });
-    if (result.error) {
-      setError(result.error.message ?? "Google sign-in failed.");
-      return;
+    try {
+      if (isNative()) {
+        await nativeGoogleSignIn();
+        navigate(routes.home);
+        return;
+      }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + routes.home,
+      });
+      if (result.error) {
+        setError(result.error.message ?? "Google sign-in failed.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate(routes.home);
+    } catch (e: any) {
+      setError(e?.message ?? "Google sign-in failed.");
     }
-    if (result.redirected) return;
-    navigate(routes.home);
   };
 
   const handleApple = async () => {
     setError(null);
-    const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin + routes.home,
-    });
-    if (result.error) {
-      setError(result.error.message ?? "Apple sign-in failed.");
-      return;
+    try {
+      // Native Apple is iOS-only; Android falls back to web OAuth.
+      if (isNative() && platform() === "ios") {
+        await nativeAppleSignIn();
+        navigate(routes.home);
+        return;
+      }
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin + routes.home,
+      });
+      if (result.error) {
+        setError(result.error.message ?? "Apple sign-in failed.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate(routes.home);
+    } catch (e: any) {
+      setError(e?.message ?? "Apple sign-in failed.");
     }
-    if (result.redirected) return;
-    navigate(routes.home);
   };
 
   return (
