@@ -6,6 +6,8 @@ import { VerifiedBadge } from "@/components/brand/verified-badge";
 import { Meta } from "@/components/brand/atoms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { WebPage } from "@/components/web/web-page";
+import { useWebViewport } from "@/hooks/use-is-desktop";
 import {
   getMyVerificationStatus,
   getMyLatestInquiryId,
@@ -99,9 +101,9 @@ export default function Verification() {
     }
   }
 
-  return (
-    <MobileShell header={<BackHeader title="Get verified" />}>
-      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-5">
+  const viewport = useWebViewport();
+  const body = (
+    <>
         <div className="flex items-center gap-2">
           <VerifiedBadge size={26} />
           <h1 className="font-serif text-[27px] font-medium leading-none tracking-[-0.02em] text-tg-ink">
@@ -193,7 +195,22 @@ export default function Verification() {
             <Meta className="mt-1.5 block">The yellow tick now sits beside your name across Tangle.</Meta>
           </div>
         )}
-      </div>
+    </>
+  );
+
+  if (viewport !== "mobile") {
+    return (
+      <WebPage maxWidth={720}>
+        <h1 className="mb-6 font-serif text-[34px] font-medium leading-none tracking-[-0.02em] text-tg-ink">
+          Get verified
+        </h1>
+        {body}
+      </WebPage>
+    );
+  }
+  return (
+    <MobileShell header={<BackHeader title="Get verified" />}>
+      <div className="min-h-0 flex-1 overflow-y-auto px-[22px] py-5">{body}</div>
     </MobileShell>
   );
 }
