@@ -94,7 +94,7 @@ export default function SignIn() {
         </p>
 
         <div className="mt-7 flex flex-col gap-2.5">
-          <SocialButton brand="apple" disabled />
+          <SocialButton brand="apple" onClick={handleApple} />
           <SocialButton brand="google" onClick={handleGoogle} />
         </div>
 
