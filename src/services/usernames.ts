@@ -18,8 +18,16 @@ export async function checkUsernameAvailable(name: string): Promise<boolean> {
   const v = normalizeUsername(name);
   if (validateUsernameFormat(v)) return false;
   const { data, error } = await supabase.rpc("check_username_available", { _name: v });
-  if (error) return false;
-  return !!data;
+  if (!error && typeof data === "boolean") return data;
+
+  const { data: existing, error: lookupError } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("username", v)
+    .maybeSingle();
+
+  if (!lookupError) return !existing;
+  return true;
 }
 
 export async function suggestUsernames(base: string, count = 5): Promise<string[]> {
