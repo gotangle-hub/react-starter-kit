@@ -22,7 +22,16 @@ import { CreateCollabSheet } from "@/components/app/create-collab-sheet";
 
 const STAGES = ["Brief agreed", "In progress", "Review", "Wrapping up"] as const;
 
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { CollabTrackerDesktop } from "@/components/web/pages/collab-tracker-desktop";
+
 export default function CollabTracker() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <CollabTrackerDesktop />;
+  return <CollabTrackerMobile />;
+}
+
+function CollabTrackerMobile() {
   const navigate = useNavigate();
   const [collabs, setCollabs] = useState<CollabSummary[]>([]);
   const [invites, setInvites] = useState<Awaited<ReturnType<typeof listMyInvites>>>([]);
