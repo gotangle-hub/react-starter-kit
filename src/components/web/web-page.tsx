@@ -59,6 +59,7 @@ export function WebPage({
           )}
         </div>
       </main>
+      {showSidebar && <WebFlyouts />}
     </div>
   );
 }
