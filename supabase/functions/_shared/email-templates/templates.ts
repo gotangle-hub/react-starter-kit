@@ -91,7 +91,7 @@ export function renderSignup(data: TemplateData): { html: string; text: string }
     "Let's confirm it's you.",
     "Enter this code in the app to finish setting up your Tangle account. It keeps your work and your network secure.",
     codeBlock(token),
-    "This code expires in 10 minutes. If you didn't request it, you can safely ignore this email — no account will be created."
+    "This code expires in 30 minutes. If you didn't request it, you can safely ignore this email — no account will be created."
   )
   const text = `Tangle
 
@@ -99,7 +99,7 @@ Your verification code: ${token}
 
 Enter this code in the app to finish setting up your Tangle account. It keeps your work and your network secure.
 
-This code expires in 10 minutes. If you didn't request it, you can safely ignore this email — no account will be created.
+This code expires in 30 minutes. If you didn't request it, you can safely ignore this email — no account will be created.
 
 Tangle — a network built on ideas, made with people who share your passion.`
   return { html, text }
@@ -135,7 +135,7 @@ export function renderRecovery(data: TemplateData): { html: string; text: string
     "Set a new password.",
     "We got a request to reset your Tangle password. Enter this 6-digit code in the app to choose a new one.",
     codeBlock(token),
-    "This code expires in 1 hour. If you didn't request this, your password is still safe — just ignore this email."
+    "This code expires in 30 minutes. If you didn't request this, your password is still safe — just ignore this email."
   )
   const text = `Tangle
 
@@ -143,7 +143,7 @@ Your password reset code: ${token}
 
 Enter this 6-digit code in the app to choose a new password.
 
-This code expires in 1 hour. If you didn't request this, your password is still safe — just ignore this email.
+This code expires in 30 minutes. If you didn't request this, your password is still safe — just ignore this email.
 
 Tangle — a network built on ideas, made with people who share your passion.`
   return { html, text }
@@ -179,7 +179,7 @@ export function renderEmailChange(data: TemplateData): { html: string; text: str
     "Confirm your new email.",
     "Enter this code to confirm the new email address on your Tangle account.",
     codeBlock(token),
-    "This code expires in 10 minutes. If you didn't ask to change your email, please secure your account."
+    "This code expires in 30 minutes. If you didn't ask to change your email, please secure your account."
   )
   const text = `Tangle
 
@@ -187,7 +187,7 @@ Your verification code: ${token}
 
 Enter this code to confirm the new email address on your Tangle account.
 
-This code expires in 10 minutes. If you didn't ask to change your email, please secure your account.
+This code expires in 30 minutes. If you didn't ask to change your email, please secure your account.
 
 Tangle — a network built on ideas, made with people who share your passion.`
   return { html, text }
@@ -201,7 +201,7 @@ export function renderReauthentication(data: TemplateData): { html: string; text
     "Quick security check.",
     "Enter this code to confirm this action on your Tangle account.",
     codeBlock(token),
-    "This code expires in 10 minutes. If this wasn't you, please secure your account."
+    "This code expires in 30 minutes. If this wasn't you, please secure your account."
   )
   const text = `Tangle
 
@@ -209,7 +209,7 @@ Your verification code: ${token}
 
 Enter this code to confirm this action on your Tangle account.
 
-This code expires in 10 minutes. If this wasn't you, please secure your account.
+This code expires in 30 minutes. If this wasn't you, please secure your account.
 
 Tangle — a network built on ideas, made with people who share your passion.`
   return { html, text }
