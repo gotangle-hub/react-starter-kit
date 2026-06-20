@@ -5,6 +5,7 @@ import { useAccountType } from "@/hooks/use-account-type";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { TIcon, type TIconName } from "@/components/web/t-icon";
+import { useWebFlyout } from "@/components/web/flyouts";
 
 /**
  * Tangle WEB sidebar — Instagram-style left rail. Ported to match the uploaded
@@ -122,33 +123,49 @@ export function WebSidebar({ collapsed = false }: { collapsed?: boolean }) {
 
       {/* Primary nav */}
       <nav className="flex flex-col gap-[3px]">
-        {items.map(({ to, icon, label }) => (
-          <NavLink
-            key={`${label}-${to}`}
-            to={to}
-            end={to === "/"}
-            className={navLinkClass}
-            title={collapsed ? label : undefined}
-          >
-            {({ isActive }) => (
-              <>
-                <span className="text-tg-blue-accent">
-                  <TIcon name={icon} size={25} active={isActive} />
-                </span>
-                {!collapsed && (
-                  <span
-                    className={cn(
-                      "text-[16px] leading-none tracking-[0.01em]",
-                      isActive ? "font-bold" : "font-normal",
-                    )}
-                  >
-                    {label}
+        {items.map(({ to, icon, label }) => {
+          // Search & Notifications open as flyout panels (Instagram pattern), not routes
+          const flyout: "search" | "notifications" | null =
+            icon === "search" ? "search" : icon === "notifications" ? "notifications" : null;
+          if (flyout) {
+            return (
+              <FlyoutButton
+                key={`${label}-${flyout}`}
+                flyout={flyout}
+                icon={icon}
+                label={label}
+                collapsed={collapsed}
+              />
+            );
+          }
+          return (
+            <NavLink
+              key={`${label}-${to}`}
+              to={to}
+              end={to === "/"}
+              className={navLinkClass}
+              title={collapsed ? label : undefined}
+            >
+              {({ isActive }) => (
+                <>
+                  <span className="text-tg-blue-accent">
+                    <TIcon name={icon} size={25} active={isActive} />
                   </span>
-                )}
-              </>
-            )}
-          </NavLink>
-        ))}
+                  {!collapsed && (
+                    <span
+                      className={cn(
+                        "text-[16px] leading-none tracking-[0.01em]",
+                        isActive ? "font-bold" : "font-normal",
+                      )}
+                    >
+                      {label}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="flex-1" />
