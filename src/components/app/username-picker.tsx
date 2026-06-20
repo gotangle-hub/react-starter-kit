@@ -37,31 +37,42 @@ export function UsernamePicker({
     [value],
   );
   const debounce = useRef<number | null>(null);
+  const validityChangeRef = useRef(onValidityChange);
 
   useEffect(() => {
+    validityChangeRef.current = onValidityChange;
+  }, [onValidityChange]);
+
+  useEffect(() => {
+    let cancelled = false;
     if (debounce.current) window.clearTimeout(debounce.current);
     setSuggestions([]);
     if (formatError !== null || value.length === 0) {
       setChecking(false);
       setAvailable(null);
-      onValidityChange?.({ valid: false, available: false, checking: false, normalized: normalizeUsername(value) });
+      validityChangeRef.current?.({ valid: false, available: false, checking: false, normalized: normalizeUsername(value) });
       return;
     }
     setChecking(true);
-    onValidityChange?.({ valid: false, available: false, checking: true, normalized: normalizeUsername(value) });
+    validityChangeRef.current?.({ valid: false, available: false, checking: true, normalized: normalizeUsername(value) });
     debounce.current = window.setTimeout(async () => {
       const ok = await checkUsernameAvailable(value);
+      if (cancelled) return;
       setChecking(false);
       setAvailable(ok);
       if (!ok) {
         const base = baseSuggestion && baseSuggestion.length > 0 ? baseSuggestion : value;
         const sugg = await suggestUsernames(base, 5);
+        if (cancelled) return;
         setSuggestions(sugg);
       }
-      onValidityChange?.({ valid: true, available: ok, checking: false, normalized: normalizeUsername(value) });
+      validityChangeRef.current?.({ valid: true, available: ok, checking: false, normalized: normalizeUsername(value) });
     }, 350);
-    return () => { if (debounce.current) window.clearTimeout(debounce.current); };
-  }, [value, formatError, baseSuggestion, onValidityChange]);
+    return () => {
+      cancelled = true;
+      if (debounce.current) window.clearTimeout(debounce.current);
+    };
+  }, [value, formatError, baseSuggestion]);
 
   const showStatus = value.length > 0;
   const status: "checking" | "ok" | "taken" | "format" | null = !showStatus
