@@ -26,6 +26,9 @@ function timeAgo(iso: string): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { MessagesDesktopRouteParam } from "@/components/web/pages/messages-desktop";
+
 /**
  * 45 · Direct message (G8). The `:id` param is the OTHER user's id; we
  * find-or-create the 1:1 conversation server-side. After send the input stays
@@ -33,6 +36,12 @@ function timeAgo(iso: string): string {
  * deliberately taps outside.
  */
 export default function DMThread() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <MessagesDesktopRouteParam />;
+  return <DMThreadMobile />;
+}
+
+function DMThreadMobile() {
   const { id: otherUserId } = useParams<{ id: string }>();
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [me, setMe] = useState<ProfileRow | null>(null);
