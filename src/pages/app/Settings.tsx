@@ -1,10 +1,12 @@
 import { User, ShieldCheck, AtSign, Lock, Bell, Ban, Zap, CreditCard, Megaphone, LifeBuoy, LogOut, Trash2 } from "lucide-react";
 import { SettingsScaffold, SettingsGroup } from "@/components/app/settings-kit";
+import { WebPage } from "@/components/web/web-page";
+import { useWebViewport } from "@/hooks/use-is-desktop";
 import { routes } from "@/lib/routes";
 
-export default function Settings() {
+function SettingsBody() {
   return (
-    <SettingsScaffold title="Settings">
+    <>
       <SettingsGroup
         title="Account"
         rows={[
@@ -38,6 +40,25 @@ export default function Settings() {
           { icon: Trash2, label: "Delete account", danger: true, to: routes.deleteAccount },
         ]}
       />
+    </>
+  );
+}
+
+export default function Settings() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") {
+    return (
+      <WebPage maxWidth={760}>
+        <h1 className="mb-8 font-serif text-[34px] font-medium leading-none tracking-[-0.02em] text-tg-ink">
+          Settings
+        </h1>
+        <SettingsBody />
+      </WebPage>
+    );
+  }
+  return (
+    <SettingsScaffold title="Settings">
+      <SettingsBody />
     </SettingsScaffold>
   );
 }
