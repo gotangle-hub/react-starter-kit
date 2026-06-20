@@ -24,7 +24,16 @@ import { listWorkByUser, postCoverUrl, type PostRow } from "@/services/work";
  * below the banner edge; with no banner the area takes the page background for
  * the current mode (G15).
  */
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { PublicProfileDesktop } from "@/components/web/pages/public-profile-desktop";
+
 export default function PublicProfile() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <PublicProfileDesktop />;
+  return <PublicProfileMobile />;
+}
+
+function PublicProfileMobile() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [profile, setProfile] = useState<ProfileRow | null>(null);

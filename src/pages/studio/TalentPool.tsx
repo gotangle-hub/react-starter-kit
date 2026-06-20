@@ -17,7 +17,16 @@ import type { Maker } from "@/lib/profile-shape";
  * Shortlist folders are user-built; with no folders yet we surface the empty
  * state and a strong search affordance (G14).
  */
+import { useWebViewport } from "@/hooks/use-is-desktop";
+import { TalentPoolDesktop } from "@/components/web/pages/talent-pool-desktop";
+
 export default function TalentPool() {
+  const viewport = useWebViewport();
+  if (viewport !== "mobile") return <TalentPoolDesktop />;
+  return <TalentPoolMobile />;
+}
+
+function TalentPoolMobile() {
   const navigate = useNavigate();
   const [me, setMe] = useState<ProfileRow | null>(null);
   const [people, setPeople] = useState<Maker[]>([]);
