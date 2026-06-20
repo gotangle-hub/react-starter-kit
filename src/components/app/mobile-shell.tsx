@@ -30,10 +30,12 @@ export function MobileShell({
   header?: ReactNode;
 }) {
   const isDesktop = useIsDesktop();
+  const { isAuthenticated } = useSession();
+  const showSidebar = isDesktop && isAuthenticated;
 
   return (
     <div className="flex min-h-[100dvh] w-full bg-tg-page-board lg:justify-start">
-      {isDesktop && <WebSidebar />}
+      {showSidebar && <WebSidebar />}
       <div className="flex min-h-[100dvh] flex-1 justify-center">
         <div
           className={cn(
