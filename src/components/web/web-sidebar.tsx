@@ -205,3 +205,44 @@ export function WebSidebar({ collapsed = false }: { collapsed?: boolean }) {
     </aside>
   );
 }
+
+function FlyoutButton({
+  flyout,
+  icon,
+  label,
+  collapsed,
+}: {
+  flyout: "search" | "notifications";
+  icon: TIconName;
+  label: string;
+  collapsed: boolean;
+}) {
+  const { open, openFlyout } = useWebFlyout();
+  const isActive = open === flyout;
+  return (
+    <button
+      type="button"
+      onClick={() => openFlyout(flyout)}
+      title={collapsed ? label : undefined}
+      className={cn(
+        "flex items-center gap-4 rounded-xl px-3 py-3 text-left transition-colors duration-fast",
+        "hover:bg-tg-page-board",
+        isActive ? "font-semibold text-tg-ink" : "font-normal text-tg-ink",
+      )}
+    >
+      <span className="text-tg-blue-accent">
+        <TIcon name={icon} size={25} active={isActive} />
+      </span>
+      {!collapsed && (
+        <span
+          className={cn(
+            "text-[16px] leading-none tracking-[0.01em]",
+            isActive ? "font-bold" : "font-normal",
+          )}
+        >
+          {label}
+        </span>
+      )}
+    </button>
+  );
+}
