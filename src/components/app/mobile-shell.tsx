@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
+import { useSession } from "@/hooks/use-session";
 import { WebSidebar } from "@/components/web/web-sidebar";
 
 /**
