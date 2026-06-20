@@ -28,7 +28,7 @@ export function PinUpsDesktop() {
   }, []);
 
   return (
-    <WebPage maxWidth={1100} rightRail={<RightRail />}>
+    <WebPage maxWidth={1100} rail={<RightRail />}>
       <div className="flex items-end justify-between">
         <div>
           <h1 className="font-serif text-[34px] font-medium leading-none tracking-[-0.02em] text-tg-ink">
