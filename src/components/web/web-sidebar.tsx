@@ -1,89 +1,97 @@
 import { NavLink } from "react-router-dom";
-import {
-  Bell,
-  Bookmark,
-  Building2,
-  Compass,
-  GraduationCap,
-  Grid2x2,
-  House,
-  MessageCircle,
-  PlusSquare,
-  Search,
-  Settings,
-  Trophy,
-  User,
-  Users,
-} from "lucide-react";
 
-import type { LucideIcon } from "lucide-react";
 import type { AccountType } from "@/lib/types";
 import { useAccountType } from "@/hooks/use-account-type";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { TIcon, type TIconName } from "@/components/web/t-icon";
+
+/**
+ * Tangle WEB sidebar — Instagram-style left rail. Ported to match the uploaded
+ * reference (`web.jsx` → `WebSidebar`) exactly: `.tangle` wordmark with the
+ * `.t` in the blue accent, custom `TIcon` set in the same accent, Profile +
+ * More pinned to the bottom. Single source of truth — used at tablet (collapsed
+ * to 76px, icons only) and desktop (244px with labels). Hidden on mobile and
+ * NEVER renders inside the native Capacitor app (per `useIsDesktop`).
+ *
+ * Each account type keeps its own destination set per the spec, but every set
+ * uses the same custom icon vocabulary and the same chrome.
+ */
 
 interface NavEntry {
   to: string;
-  icon: LucideIcon;
+  icon: TIconName;
   label: string;
 }
 
-/**
- * Desktop sidebar nav (Instagram-style). Mirrors the per-account tab sets in
- * `app-tab-bar.tsx` and adds a couple of extra destinations that fit naturally
- * on a wider nav. Hidden below the desktop breakpoint — the bottom tab bar
- * continues to handle navigation on mobile/native.
- */
 const NAV_SETS: Record<AccountType, NavEntry[]> = {
   designer: [
-    { to: routes.home, icon: House, label: "Home" },
-    { to: routes.explore, icon: Grid2x2, label: "Explore" },
-    { to: routes.search, icon: Search, label: "Search" },
-    { to: routes.match, icon: Users, label: "Match" },
-    { to: routes.messages, icon: MessageCircle, label: "Messages" },
-    { to: routes.notifications, icon: Bell, label: "Notifications" },
-    { to: routes.community, icon: Compass, label: "Community" },
-    { to: routes.competitions, icon: Trophy, label: "Competitions" },
-    { to: routes.createSheet, icon: PlusSquare, label: "Create" },
-    { to: routes.profile, icon: User, label: "You" },
+    { to: routes.home, icon: "home", label: "Home" },
+    { to: routes.search, icon: "search", label: "Search" },
+    { to: routes.explore, icon: "explore", label: "Explore" },
+    { to: routes.match, icon: "discover", label: "Discover" },
+    { to: routes.competitions, icon: "competitions", label: "Competitions" },
+    { to: routes.community, icon: "community", label: "Community" },
+    { to: routes.messages, icon: "messages", label: "Messages" },
+    { to: routes.notifications, icon: "notifications", label: "Notifications" },
+    { to: routes.createSheet, icon: "create", label: "Share work" },
   ],
   studio: [
-    { to: routes.home, icon: House, label: "Home" },
-    { to: routes.explore, icon: Grid2x2, label: "Explore" },
-    { to: routes.talentPool, icon: Users, label: "Talent" },
-    { to: routes.messages, icon: MessageCircle, label: "Messages" },
-    { to: routes.studioPage, icon: Building2, label: "Studio" },
-    { to: routes.profile, icon: User, label: "You" },
+    { to: routes.home, icon: "home", label: "Home" },
+    { to: routes.search, icon: "search", label: "Search" },
+    { to: routes.explore, icon: "explore", label: "Explore" },
+    { to: routes.talentPool, icon: "community", label: "Talent pool" },
+    { to: routes.competitions, icon: "competitions", label: "Competitions" },
+    { to: routes.messages, icon: "messages", label: "Messages" },
+    { to: routes.notifications, icon: "notifications", label: "Notifications" },
+    { to: routes.studioPage, icon: "discover", label: "Studio page" },
+    { to: routes.createSheet, icon: "create", label: "Share work" },
   ],
   client: [
-    { to: routes.clientHome, icon: House, label: "Home" },
-    { to: routes.explore, icon: Grid2x2, label: "Explore" },
-    { to: routes.talentPool, icon: Users, label: "Talent" },
-    { to: routes.messages, icon: MessageCircle, label: "Messages" },
-    { to: routes.profile, icon: User, label: "You" },
+    { to: routes.clientHome, icon: "home", label: "Home" },
+    { to: routes.search, icon: "search", label: "Search" },
+    { to: routes.explore, icon: "explore", label: "Explore" },
+    { to: routes.talentPool, icon: "community", label: "Talent pool" },
+    { to: routes.messages, icon: "messages", label: "Messages" },
+    { to: routes.notifications, icon: "notifications", label: "Notifications" },
+    { to: routes.postCallout, icon: "create", label: "Post brief" },
   ],
   student: [
-    { to: routes.studentClasses, icon: GraduationCap, label: "Classes" },
-    { to: routes.explore, icon: Grid2x2, label: "Explore" },
-    { to: routes.studentCompetitions, icon: Trophy, label: "Compete" },
-    { to: routes.community, icon: Users, label: "Community" },
-    { to: routes.messages, icon: MessageCircle, label: "Messages" },
-    { to: routes.profile, icon: User, label: "You" },
+    { to: routes.home, icon: "home", label: "Home" },
+    { to: routes.search, icon: "search", label: "Search" },
+    { to: routes.explore, icon: "explore", label: "Explore" },
+    { to: routes.studentClasses, icon: "discover", label: "Classes" },
+    { to: routes.studentCompetitions, icon: "competitions", label: "Competitions" },
+    { to: routes.community, icon: "community", label: "Community" },
+    { to: routes.messages, icon: "messages", label: "Messages" },
+    { to: routes.notifications, icon: "notifications", label: "Notifications" },
+    { to: routes.createSheet, icon: "create", label: "Share work" },
   ],
   institution: [
-    { to: routes.classList, icon: GraduationCap, label: "Classes" },
-    { to: routes.explore, icon: Grid2x2, label: "Explore" },
-    { to: routes.community, icon: Users, label: "Community" },
-    { to: routes.messages, icon: MessageCircle, label: "Messages" },
-    { to: routes.profile, icon: User, label: "You" },
+    { to: routes.classList, icon: "discover", label: "Classes" },
+    { to: routes.search, icon: "search", label: "Search" },
+    { to: routes.explore, icon: "explore", label: "Explore" },
+    { to: routes.community, icon: "community", label: "Community" },
+    { to: routes.messages, icon: "messages", label: "Messages" },
+    { to: routes.notifications, icon: "notifications", label: "Notifications" },
   ],
   collector: [
-    { to: routes.collectorHome, icon: Compass, label: "Discover" },
-    { to: routes.collectorExplore, icon: Grid2x2, label: "Explore" },
-    { to: routes.collectorSaved, icon: Bookmark, label: "Saved" },
-    { to: routes.collectorProfile, icon: User, label: "You" },
+    { to: routes.collectorHome, icon: "home", label: "Discover" },
+    { to: routes.search, icon: "search", label: "Search" },
+    { to: routes.collectorExplore, icon: "explore", label: "Explore" },
+    { to: routes.collectorSaved, icon: "discover", label: "Saved" },
+    { to: routes.messages, icon: "messages", label: "Messages" },
+    { to: routes.notifications, icon: "notifications", label: "Notifications" },
   ],
 };
+
+function navLinkClass({ isActive }: { isActive: boolean }) {
+  return cn(
+    "flex items-center gap-4 rounded-xl px-3 py-3 transition-colors duration-fast",
+    "hover:bg-tg-page-board",
+    isActive ? "font-semibold text-tg-ink" : "font-normal text-tg-ink",
+  );
+}
 
 export function WebSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const { accountType } = useAccountType();
@@ -92,57 +100,89 @@ export function WebSidebar({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-[100dvh] flex-none flex-col border-r border-tg-line bg-tg-bg text-tg-ink lg:flex",
-        collapsed ? "w-[76px]" : "w-[244px]",
+        "sticky top-0 hidden h-[100dvh] flex-none flex-col border-r border-tg-line bg-tg-bg text-tg-ink",
+        // Spec: sidebar visible from 700px (tablet, collapsed) and 1100px (desktop, full)
+        "min-[700px]:flex",
+        collapsed ? "w-[76px] px-3 py-6" : "w-[244px] px-3.5 py-6",
       )}
     >
-      {/* Brand */}
-      <div className={cn("flex items-center px-6 pb-6 pt-7", collapsed && "justify-center px-0")}>
-        <span className="font-serif text-2xl tracking-tight text-tg-ink">
-          {collapsed ? "·t" : "·tangle"}
+      {/* Brand — `.tangle` wordmark, the `.t` in the blue accent (yellow in dark) */}
+      <div
+        className={cn(
+          "mb-5 flex items-center px-2.5 pb-2",
+          collapsed && "justify-center px-0",
+        )}
+      >
+        <span className="font-serif text-[26px] leading-none tracking-tight text-tg-ink">
+          <span className="italic text-tg-blue-accent">.</span>
+          <span className="text-tg-blue-accent">t</span>
+          {!collapsed && "angle"}
         </span>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 px-3">
-        {items.map(({ to, icon: Icon, label }) => (
+      {/* Primary nav */}
+      <nav className="flex flex-col gap-[3px]">
+        {items.map(({ to, icon, label }) => (
           <NavLink
-            key={label}
+            key={`${label}-${to}`}
             to={to}
             end={to === "/"}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-4 rounded-xl px-3 py-3 transition-colors duration-fast",
-                "hover:bg-tg-page-board",
-                isActive ? "font-semibold text-tg-blue-accent" : "text-tg-ink",
-              )
-            }
+            className={navLinkClass}
             title={collapsed ? label : undefined}
           >
             {({ isActive }) => (
               <>
-                <Icon size={24} strokeWidth={isActive ? 2.25 : 1.75} />
-                {!collapsed && <span className="text-[15px]">{label}</span>}
+                <span className="text-tg-blue-accent">
+                  <TIcon name={icon} size={25} active={isActive} />
+                </span>
+                {!collapsed && (
+                  <span
+                    className={cn(
+                      "text-[16px] leading-none tracking-[0.01em]",
+                      isActive ? "font-bold" : "font-normal",
+                    )}
+                  >
+                    {label}
+                  </span>
+                )}
               </>
             )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="px-3 pb-6">
-        <NavLink
-          to={routes.settings}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-4 rounded-xl px-3 py-3 transition-colors duration-fast",
-              "hover:bg-tg-page-board",
-              isActive ? "font-semibold text-tg-blue-accent" : "text-tg-ink",
-            )
-          }
-          title={collapsed ? "Settings" : undefined}
-        >
-          <Settings size={22} strokeWidth={1.75} />
-          {!collapsed && <span className="text-[15px]">Settings</span>}
+      <div className="flex-1" />
 
+      {/* Profile + More pinned to bottom (per spec) */}
+      <div className="flex flex-col gap-[3px]">
+        <NavLink to={routes.profile} className={navLinkClass} title={collapsed ? "Profile" : undefined}>
+          {({ isActive }) => (
+            <>
+              <span className="text-tg-blue-accent">
+                <TIcon name="profile" size={25} active={isActive} />
+              </span>
+              {!collapsed && (
+                <span className={cn("text-[16px] leading-none", isActive ? "font-bold" : "font-normal")}>
+                  Profile
+                </span>
+              )}
+            </>
+          )}
+        </NavLink>
+
+        <NavLink to={routes.settings} className={navLinkClass} title={collapsed ? "More" : undefined}>
+          {({ isActive }) => (
+            <>
+              <span className="text-tg-blue-accent">
+                <TIcon name="more" size={25} active={isActive} />
+              </span>
+              {!collapsed && (
+                <span className={cn("text-[16px] leading-none", isActive ? "font-bold" : "font-normal")}>
+                  More
+                </span>
+              )}
+            </>
+          )}
         </NavLink>
       </div>
     </aside>
