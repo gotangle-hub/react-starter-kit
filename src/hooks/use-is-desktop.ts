@@ -1,36 +1,49 @@
 import { useEffect, useState } from "react";
 
 /**
- * True when the current viewport is desktop-class (≥1024px) AND the app is
- * running in a real web browser (not the Capacitor native iOS/Android shell).
+ * Viewport detection for the responsive web shell.
  *
- * The native app should always render the mobile UI regardless of viewport, so
- * we hard-gate to false whenever Capacitor is detected. This keeps the App
- * Store build identical to today's mobile experience.
+ *   mobile   <1024px        → bottom tab bar, no sidebar
+ *   tablet   1024–1439px    → icon-only collapsed sidebar, no right rail
+ *   desktop  ≥1440px        → full labelled sidebar + right rail
+ *
+ * The native app (Capacitor) always reports `mobile` regardless of viewport so
+ * the App Store build is identical to today's mobile experience.
  */
-const DESKTOP_BREAKPOINT = 1024;
+export type WebViewport = "mobile" | "tablet" | "desktop";
+
+const TABLET_BREAKPOINT = 1024;
+const DESKTOP_BREAKPOINT = 1440;
 
 function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
-  // Capacitor injects `window.Capacitor` when running inside the native shell.
   const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
   return Boolean(cap?.isNativePlatform?.());
 }
 
-export function useIsDesktop(): boolean {
-  const [isDesktop, setIsDesktop] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    if (isNativeApp()) return false;
-    return window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`).matches;
-  });
+function readViewport(): WebViewport {
+  if (typeof window === "undefined" || isNativeApp()) return "mobile";
+  const w = window.innerWidth;
+  if (w >= DESKTOP_BREAKPOINT) return "desktop";
+  if (w >= TABLET_BREAKPOINT) return "tablet";
+  return "mobile";
+}
+
+export function useWebViewport(): WebViewport {
+  const [vp, setVp] = useState<WebViewport>(() => readViewport());
 
   useEffect(() => {
     if (typeof window === "undefined" || isNativeApp()) return;
-    const mql = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
-    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
+    const handler = () => setVp(readViewport());
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, []);
 
-  return isDesktop;
+  return vp;
+}
+
+/** Convenience: true when we're rendering any web layout (tablet or desktop). */
+export function useIsDesktop(): boolean {
+  const vp = useWebViewport();
+  return vp !== "mobile";
 }
