@@ -14,7 +14,7 @@
     "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
     "@capacitor/ios": "^8.4.1",
-    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
+    "@capgo/capacitor-social-login": "^3.3.29",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.1",
     "@supabase/supabase-js": "^2.108.2",
